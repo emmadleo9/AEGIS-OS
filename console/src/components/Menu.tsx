@@ -16,6 +16,7 @@ import {
   Users,
   Smartphone,
   Activity,
+  Globe,
 } from "lucide-react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { LinkButton } from "./LinkButton";
@@ -205,7 +206,16 @@ export default function Menu() {
               size={32}
               className="bg-primary text-primary-foreground text-[14px] border border-sidebar-border"
             />
-          </div>
+        {/* World View button */}
+        <LinkButton
+          to="/world"
+          title="World View"
+          isActive={pathname.startsWith("/world")}
+          className="mt-[10px]"
+        >
+          <Globe className="w-[24px] h-[24px] stroke-[2]" />
+        </LinkButton>
+      </div>
         </Dropdown>
       </div>
     </div>
