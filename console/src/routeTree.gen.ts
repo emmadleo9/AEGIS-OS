@@ -12,11 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorldRouteImport } from './routes/world'
 import { Route as WhatsappRouteImport } from './routes/whatsapp'
 import { Route as SocialRouteImport } from './routes/social'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as AuthRouteImport } from './routes/_auth'
-import { Route as AuthIndexRouteImport } from './routes/_auth/index'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as OauthTiktokRouteImport } from './routes/oauth/tiktok'
 import { Route as OauthInstagramRouteImport } from './routes/oauth/instagram'
 import { Route as OauthConsentRouteImport } from './routes/oauth/consent'
@@ -91,6 +92,11 @@ const SocialRoute = SocialRouteImport.update({
   path: '/social',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -110,10 +116,10 @@ const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthIndexRoute = AuthIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const OauthTiktokRoute = OauthTiktokRouteImport.update({
   id: '/oauth/tiktok',
@@ -441,9 +447,11 @@ const AuthIntegrationsWhatsappOrgAddressIdTemplatesTemplateIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/login': typeof LoginRoute
+  '/news': typeof NewsRoute
   '/social': typeof SocialRoute
   '/whatsapp': typeof WhatsappRoute
   '/world': typeof WorldRoute
@@ -451,7 +459,6 @@ export interface FileRoutesByFullPath {
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/instagram': typeof OauthInstagramRoute
   '/oauth/tiktok': typeof OauthTiktokRoute
-  '/': typeof AuthIndexRoute
   '/agents/$agentId': typeof AuthAgentsAgentIdRoute
   '/agents/new': typeof AuthAgentsNewRoute
   '/contacts/$addressId': typeof AuthContactsAddressIdRoute
@@ -508,9 +515,11 @@ export interface FileRoutesByFullPath {
   '/integrations/whatsapp/$orgAddressId/templates': typeof AuthIntegrationsWhatsappOrgAddressIdTemplatesIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/devices': typeof DevicesRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/login': typeof LoginRoute
+  '/news': typeof NewsRoute
   '/social': typeof SocialRoute
   '/whatsapp': typeof WhatsappRoute
   '/world': typeof WorldRoute
@@ -518,7 +527,6 @@ export interface FileRoutesByTo {
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/instagram': typeof OauthInstagramRoute
   '/oauth/tiktok': typeof OauthTiktokRoute
-  '/': typeof AuthIndexRoute
   '/agents/$agentId': typeof AuthAgentsAgentIdRoute
   '/agents/new': typeof AuthAgentsNewRoute
   '/contacts/$addressId': typeof AuthContactsAddressIdRoute
@@ -576,10 +584,12 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/devices': typeof DevicesRoute
   '/diagnostics': typeof DiagnosticsRoute
   '/login': typeof LoginRoute
+  '/news': typeof NewsRoute
   '/social': typeof SocialRoute
   '/whatsapp': typeof WhatsappRoute
   '/world': typeof WorldRoute
@@ -587,7 +597,6 @@ export interface FileRoutesById {
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/instagram': typeof OauthInstagramRoute
   '/oauth/tiktok': typeof OauthTiktokRoute
-  '/_auth/': typeof AuthIndexRoute
   '/_auth/agents/$agentId': typeof AuthAgentsAgentIdRoute
   '/_auth/agents/new': typeof AuthAgentsNewRoute
   '/_auth/contacts/$addressId': typeof AuthContactsAddressIdRoute
@@ -646,9 +655,11 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/devices'
     | '/diagnostics'
     | '/login'
+    | '/news'
     | '/social'
     | '/whatsapp'
     | '/world'
@@ -656,7 +667,6 @@ export interface FileRouteTypes {
     | '/oauth/consent'
     | '/oauth/instagram'
     | '/oauth/tiktok'
-    | '/'
     | '/agents/$agentId'
     | '/agents/new'
     | '/contacts/$addressId'
@@ -713,9 +723,11 @@ export interface FileRouteTypes {
     | '/integrations/whatsapp/$orgAddressId/templates'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/devices'
     | '/diagnostics'
     | '/login'
+    | '/news'
     | '/social'
     | '/whatsapp'
     | '/world'
@@ -723,7 +735,6 @@ export interface FileRouteTypes {
     | '/oauth/consent'
     | '/oauth/instagram'
     | '/oauth/tiktok'
-    | '/'
     | '/agents/$agentId'
     | '/agents/new'
     | '/contacts/$addressId'
@@ -780,10 +791,12 @@ export interface FileRouteTypes {
     | '/integrations/whatsapp/$orgAddressId/templates'
   id:
     | '__root__'
+    | '/'
     | '/_auth'
     | '/devices'
     | '/diagnostics'
     | '/login'
+    | '/news'
     | '/social'
     | '/whatsapp'
     | '/world'
@@ -791,7 +804,6 @@ export interface FileRouteTypes {
     | '/oauth/consent'
     | '/oauth/instagram'
     | '/oauth/tiktok'
-    | '/_auth/'
     | '/_auth/agents/$agentId'
     | '/_auth/agents/new'
     | '/_auth/contacts/$addressId'
@@ -849,10 +861,12 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   DevicesRoute: typeof DevicesRoute
   DiagnosticsRoute: typeof DiagnosticsRoute
   LoginRoute: typeof LoginRoute
+  NewsRoute: typeof NewsRoute
   SocialRoute: typeof SocialRoute
   WhatsappRoute: typeof WhatsappRoute
   WorldRoute: typeof WorldRoute
@@ -889,6 +903,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SocialRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -917,12 +938,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/': {
-      id: '/_auth/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthIndexRouteImport
-      parentRoute: typeof AuthRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/oauth/tiktok': {
       id: '/oauth/tiktok'
@@ -1334,7 +1355,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
-  AuthIndexRoute: typeof AuthIndexRoute
   AuthAgentsAgentIdRoute: typeof AuthAgentsAgentIdRoute
   AuthAgentsNewRoute: typeof AuthAgentsNewRoute
   AuthContactsAddressIdRoute: typeof AuthContactsAddressIdRoute
@@ -1388,7 +1408,6 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthIndexRoute: AuthIndexRoute,
   AuthAgentsAgentIdRoute: AuthAgentsAgentIdRoute,
   AuthAgentsNewRoute: AuthAgentsNewRoute,
   AuthContactsAddressIdRoute: AuthContactsAddressIdRoute,
@@ -1461,10 +1480,12 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   DevicesRoute: DevicesRoute,
   DiagnosticsRoute: DiagnosticsRoute,
   LoginRoute: LoginRoute,
+  NewsRoute: NewsRoute,
   SocialRoute: SocialRoute,
   WhatsappRoute: WhatsappRoute,
   WorldRoute: WorldRoute,

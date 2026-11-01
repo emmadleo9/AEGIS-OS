@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SocialHub } from "@/pages/SocialHub";
+import { SocialHub } from "@/features/social/SocialHub";
 
 export const Route = createFileRoute("/social")({
   component: SocialHub,
