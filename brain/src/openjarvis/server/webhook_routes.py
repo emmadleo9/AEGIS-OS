@@ -321,26 +321,6 @@ def create_webhook_router(
     ) -> Response:
         body_bytes = await request.body()
 
-        # --- Detect OpenWA webhook format ------------------------------------
-        # OpenWA posts { event, sessionId, data: {...} } — no Meta-style `entry`.
-        # Trusted internal network (gateway -> brain), so no HMAC here.
-        try:
-            body_json = json.loads(body_bytes)
-        except Exception:
-            body_json = None
-
-        is_openwa = (
-            isinstance(body_json, dict)
-            and "event" in body_json
-            and "sessionId" in body_json
-            and "data" in body_json
-            and "entry" not in body_json
-        )
-
-        if is_openwa:
-            return await _handle_openwa_webhook(request, body_json, bridge)
-
-        # --- WhatsApp Cloud API (Meta) ---------------------------------------
         # Fail closed: reject when no app secret is configured to verify HMAC.
         if not whatsapp_app_secret:
             logger.error("WhatsApp webhook rejected: app secret not configured.")
@@ -378,65 +358,6 @@ def create_webhook_router(
                     task.add_done_callback(_log_task_exception)
 
         return Response("OK", status_code=200)
-
-
-async def _handle_openwa_webhook(
-    request: Request,
-    payload: dict,
-    bridge: Any,
-) -> Response:
-    """Handle an inbound OpenWA webhook and reply via the AEGIS WhatsApp tool.
-
-    OpenWA delivers { event, sessionId, data: {...} }. We extract the sender
-    and message text, run them through the channel bridge (LLM + tools), and
-    send the reply back through the OpenWA gateway using aegis_whatsapp_send.
-    """
-    event = payload.get("event", "")
-    session_id = payload.get("sessionId", "")
-    data = payload.get("data", {}) or {}
-
-    # Only act on message events
-    if event not in ("message.received", "message.created"):
-        logger.debug("OpenWA webhook ignored: event=%s", event)
-        return Response("OK", status_code=200)
-
-    # Extract sender + text from OpenWA message payload
-    sender = data.get("from") or data.get("sender") or data.get("chatId", "")
-    text = data.get("body") or data.get("text", "") or data.get("message", "")
-
-    if not sender or not text:
-        logger.debug("OpenWA webhook missing sender/text: sender=%r text=%r", sender, text)
-        return Response("OK", status_code=200)
-
-    logger.info(
-        "OpenWA webhook: session=%s event=%s sender=%s text=%s",
-        session_id, event, sender, text[:120],
-    )
-
-    # Process through the channel bridge (LLM + tools)
-    response = ""
-    if bridge:
-        try:
-            response = bridge.handle_incoming(sender, text, "whatsapp")
-        except Exception as exc:
-            logger.exception("OpenWA bridge.handle_incoming failed")
-            response = f"Error: {exc}"
-    else:
-        response = "AEGIS brain is not fully configured (no channel bridge)."
-
-    # Reply via OpenWA gateway using the aegis_whatsapp_send tool
-    if response and bridge:
-        try:
-            from openjarvis.tools.aegis_whatsapp import AegisWhatsAppTool
-
-            tool = AegisWhatsAppTool()
-            result = tool.execute(chat_id=sender, text=response)
-            if not result.success:
-                logger.warning("OpenWA reply failed: %s", result.content)
-        except Exception as exc:
-            logger.exception("OpenWA reply via aegis_whatsapp_send failed")
-
-    return Response("OK", status_code=200)
 
     # ----------------------------------------------------------
     # SendBlue (iMessage / SMS)

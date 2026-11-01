@@ -12,7 +12,7 @@ import { formatPhoneNumber } from "@/utils/FormatUtils";
 
 type Translate = (s: string) => string;
 
-/** Where to ask AEGIS about a decision on an account. */
+/** Where to ask OpenBSP about a decision on an account. */
 const COMMUNITY = "https://chat.whatsapp.com/Ch6AwZizSDt5quzHodcYh5";
 
 /** Where Meta reviews what it decided on a WhatsApp Business account. */
@@ -114,7 +114,7 @@ function removed(detail: string | undefined, t: Translate) {
   switch (detail) {
     case "ACCOUNT_DISCONNECTED":
       return t(
-        "El número se desconectó de AEGIS desde la app WhatsApp Business.",
+        "El número se desconectó de OpenBSP desde la app WhatsApp Business.",
       );
     case "CHANGE_NUMBER":
       return t("Se cambió el número en la app WhatsApp Business.");
@@ -126,7 +126,7 @@ function removed(detail: string | undefined, t: Translate) {
       return t("El número se volvió a registrar en WhatsApp.");
     default:
       return t(
-        "Se quitó desde Meta el acceso de AEGIS a la cuenta de WhatsApp Business.",
+        "Se quitó desde Meta el acceso de OpenBSP a la cuenta de WhatsApp Business.",
       );
   }
 }
@@ -172,7 +172,7 @@ function cause(
     case "violation":
       return [
         `${t(
-          "Meta reportó una infracción de sus políticas en la cuenta de WhatsApp Business. Para proteger la plataforma, AEGIS la desconectó.",
+          "Meta reportó una infracción de sus políticas en la cuenta de WhatsApp Business. Para proteger la plataforma, OpenBSP la desconectó.",
         )}${issue.detail ? ` (${issue.detail.toLowerCase().replaceAll("_", " ")})` : ""}`,
         reinstated,
       ];
@@ -203,7 +203,7 @@ function cause(
               "El acceso a Instagram expiró o fue revocado, como pasa al cambiar la contraseña.",
             )
           : t(
-              "El acceso que la cuenta le dio a AEGIS expiró o fue revocado.",
+              "El acceso que la cuenta le dio a OpenBSP expiró o fue revocado.",
             ),
         t("No se pueden enviar mensajes hasta volver a conectar la cuenta."),
       ];
@@ -211,11 +211,11 @@ function cause(
       return [
         row.service === "instagram"
           ? t(
-              "AEGIS fue quitado de la configuración de la cuenta de Instagram.",
+              "OpenBSP fue quitado de la configuración de la cuenta de Instagram.",
             )
           : row.service === "slack"
             ? t(
-                "AEGIS fue quitado del espacio de trabajo de Slack, o se revocó su acceso.",
+                "OpenBSP fue quitado del espacio de trabajo de Slack, o se revocó su acceso.",
               )
             : removed(issue.detail, t),
         t(
@@ -225,7 +225,7 @@ function cause(
     case "offboarded":
       return [
         t(
-          "La app WhatsApp Business dejó de compartir el número con AEGIS, por un cambio de teléfono o porque el número se volvió a registrar.",
+          "La app WhatsApp Business dejó de compartir el número con OpenBSP, por un cambio de teléfono o porque el número se volvió a registrar.",
         ),
         t(
           "Mientras tanto no se envían ni reciben mensajes. Se vuelve a conectar sola cuando se configure la app de nuevo.",
@@ -241,7 +241,7 @@ function cause(
 
 /**
  * Where to take a decision Meta made on a WhatsApp Business account: a review
- * at Meta, questions to AEGIS.
+ * at Meta, questions to OpenBSP.
  */
 export function MetaReview() {
   const { translate: t } = useTranslation();
@@ -251,7 +251,7 @@ export function MetaReview() {
       <a href={BUSINESS_SUPPORT} target="_blank" rel="noreferrer">
         Business Support Home
       </a>
-      . {t("Para consultas a AEGIS, escribinos en la")}{" "}
+      . {t("Para consultas a OpenBSP, escribinos en la")}{" "}
       <a href={COMMUNITY} target="_blank" rel="noreferrer">
         {t("comunidad")}
       </a>

@@ -1,7 +1,6 @@
-# AEGIS-OS — Console (AEGIS) — minimal Dockerfile
 FROM node:22-slim
 WORKDIR /app
-COPY . .
+COPY package*.json ./
 RUN npm install
-EXPOSE 3000
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+COPY . .
+CMD ["npx","serve","-s","build","-l","3000"]
