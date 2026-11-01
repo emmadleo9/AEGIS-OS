@@ -11,6 +11,17 @@ import { ApiKeyRole } from '../auth/entities/api-key.entity';
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 
+  // System stats endpoint for diagnostics HUD
+  @Get('system')
+  @ApiOperation({ summary: 'Get system statistics for diagnostics HUD' })
+  @ApiResponse({
+    status: 200,
+    description: 'Real-time system statistics (CPU, memory, uptime, etc.)',
+  })
+  async getSystemStats() {
+    return this.statsService.getSystemStats();
+  }
+
   // Global, cross-session aggregates with no scope param. The ADMIN role gate alone does not keep a
   // session-restricted key out — role and session scope are independent — so these also require an
   // unrestricted key. (Per-session stats below stays scope-gated by its :sessionId route param.)

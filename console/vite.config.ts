@@ -7,7 +7,6 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    // Please make sure that '@tanstack/router-plugin' is passed before '@vitejs/plugin-react'
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
@@ -25,6 +24,19 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:2785',
+        changeOrigin: true,
+      },
+      '/system': {
+        target: 'http://localhost:2785',
+        changeOrigin: true,
+      },
     },
   },
 });
