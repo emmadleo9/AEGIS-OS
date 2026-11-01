@@ -1,64 +1,38 @@
-import {
-  createClient,
-  type FunctionInvokeOptions,
-} from "@supabase/supabase-js";
-import type { Database } from "./types/database_types";
-import type { IncomingMessage, OutgoingMessage } from "./types/message_types";
-import type { IncomingStatus, OutgoingStatus } from "./types/status_types";
+// AEGIS API client — points to gateway and brain instead of Supabase
 
-//===================================
-// Shared types — mirrored from open-bsp-api/.../_shared/types/*.
-// Re-exported here so existing `@/supabase/client` imports keep working.
-//===================================
+const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || "http://localhost:2785";
+const BRAIN_URL = import.meta.env.VITE_BRAIN_URL || "http://localhost:8000";
 
-export * from "./types/whatsapp_webhook_payload_types";
-export * from "./types/whatsapp_endpoint_types";
-export * from "./types/whatsapp_template_types";
-export * from "./types/whatsapp_webhook_message_types";
-export * from "./types/instagram_webhook_payload_types";
-export * from "./types/status_types";
-export * from "./types/message_types";
-export * from "./types/extra_types";
-export * from "./types/ui_types";
-export * from "./types/database_types";
+export { GATEWAY_URL, BRAIN_URL };
 
-//===================================
-// Supabase client (UI-only)
-//===================================
-
-export const supabase = createClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      flowType: "pkce",
-      detectSessionInUrl: true,
+export async function gatewayFetch(
+  path: string,
+  opts: RequestInit = {},
+): Promise<Response> {
+  const apiKey = import.meta.env.VITE_API_MASTER_KEY || "aegis_master_key";
+  return fetch(`${GATEWAY_URL}/api${path}`, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": apiKey,
+      ...opts.headers,
     },
-  },
-);
-
-supabase.realtime.reconnectAfterMs = (attempt: number) => {
-  return Math.min(10 * 1000, attempt * 1000);
-};
-
-/**
- * `functions.invoke` defaults its response body to `any` and types its failure
- * branch as `{ error: any }`, so every caller that destructures it inherits an
- * `any`. This is the one place that touches it: give it the body type you
- * expect, and get either that body or a thrown error.
- */
-export async function invokeFunction<T>(
-  name: string,
-  options?: FunctionInvokeOptions,
-): Promise<T | null> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- supabase-js types `error` as `any`
-  const { data, error } = await supabase.functions.invoke<T>(name, options);
-
-  if (error) throw error;
-
-  return data;
+  });
 }
 
-export type Status = IncomingStatus & OutgoingStatus;
-export type MessageTypes = IncomingMessage["type"] | OutgoingMessage["type"];
+export async function brainFetch(
+  path: string,
+  opts: RequestInit = {},
+): Promise<Response> {
+  return fetch(`${BRAIN_URL}${path}`, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      ...opts.headers,
+    },
+  });
+}
+
+export type Status = { connected: boolean; service: string };
+export type MessageTypes = "text" | "image" | "audio" | "document";
 export type Draft = { text: string; timestamp: string };

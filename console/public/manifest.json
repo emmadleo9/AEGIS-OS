@@ -1,7 +1,7 @@
 {
-  "short_name": "OpenBSP",
-  "name": "OpenBSP - WhatsApp Web and Instagram interface",
-  "description": "Open-source WhatsApp Web and Instagram interface. Self-hostable, multi-tenant, and AI-agent ready.",
+  "short_name": "AEGIS",
+  "name": "AEGIS - WhatsApp, Instagram, Telegram, Discord Console",
+  "description": "AEGIS-OS — local-first AI console for WhatsApp, Instagram, Telegram, Discord. Dark OLED interface, self-hosted and private.",
   "icons": [
     {
       "src": "/logo-192x192.png",
@@ -17,7 +17,7 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#faf8f1",
+  "background_color": "#000000",
   "display": "standalone",
-  "theme_color": "#cb6441"
+  "theme_color": "#000000"
 }

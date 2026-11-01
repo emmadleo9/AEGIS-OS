@@ -23,6 +23,9 @@ services:
       - OLLAMA_HOST=http://ollama:11434
       - WHATSAPP_VERIFY_TOKEN=aegis_verify_token
       - WHATSAPP_APP_SECRET=aegis_app_secret
+      - AEGIS_GATEWAY_URL=http://gateway:2785
+      - AEGIS_API_KEY=aegis_master_key
+      - AEGIS_SESSION_ID=aegis-whatsapp-session
       - OPENJARVIS_CORS_ORIGINS=http://console:3000,http://localhost:3000
       - LOG_LEVEL=info
     volumes:
@@ -55,6 +58,7 @@ services:
       - PUPPETEER_HEADLESS=true
       - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu
       - WEBHOOK_URL=http://brain:8000/webhooks/whatsapp
+      - SSRF_ALLOWED_HOSTS=brain
       - API_MASTER_KEY=aegis_master_key
       - CORS_ORIGINS=http://console:3000,http://localhost:3000
       - MEMORY_LIMIT=2g

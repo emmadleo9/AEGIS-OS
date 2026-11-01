@@ -1,67 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --background: oklch(0.98 0.01 95.1);
-  --foreground: oklch(0.34 0.03 95.72);
-  --card: oklch(0.98 0.01 95.1);
-  --card-foreground: oklch(0.19 0 106.59);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.27 0.02 98.94);
-  --primary: oklch(0.62 0.14 39.04);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.92 0.01 92.99);
-  --secondary-foreground: oklch(0.43 0.02 98.6);
-  --muted: oklch(0.93 0.02 90.24);
-  --muted-foreground: oklch(0.61 0.01 97.42);
-  --accent: oklch(0.92 0.01 92.99);
-  --accent-foreground: oklch(0.27 0.02 98.94);
-  --destructive: oklch(0.19 0 106.59);
-  --border: oklch(0.88 0.01 97.36);
-  --input: oklch(0.76 0.02 98.35);
-  --ring: oklch(0.59 0.17 253.06);
-  --sidebar: oklch(0.97 0.01 98.88);
-  --sidebar-foreground: oklch(0.36 0.01 106.65);
-  --sidebar-primary: oklch(0.62 0.14 39.04);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.92 0.01 92.99);
-  --sidebar-accent-foreground: oklch(0.33 0 0);
-  --sidebar-border: oklch(0.94 0 0);
-  --sidebar-ring: oklch(0.77 0 0);
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: rgba(255, 255, 255, 0.03);
+  --card-foreground: #ffffff;
+  --popover: rgba(0, 0, 0, 0.8);
+  --popover-foreground: #ffffff;
+  --primary: #00ff88;
+  --primary-foreground: #000000;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: #888888;
+  --accent: rgba(0, 255, 136, 0.15);
+  --accent-foreground: #00ff88;
+  --destructive: #ff4444;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #00ff88;
+  --sidebar: rgba(0, 0, 0, 0.6);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #00ff88;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: rgba(0, 255, 136, 0.15);
+  --sidebar-accent-foreground: #00ff88;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #00ff88;
 
-  --chat-out: oklch(91.619% 0.0445 38.665);
-  --chat-in: oklch(1 0 0);
-}
-
-.dark {
-  --background: oklch(0.27 0 106.64);
-  --foreground: oklch(0.81 0.01 93.01);
-  --card: oklch(0.27 0 106.64);
-  --card-foreground: oklch(0.98 0.01 95.1);
-  --popover: oklch(0.31 0 106.6);
-  --popover-foreground: oklch(0.92 0 106.48);
-  --primary: oklch(0.67 0.13 38.76);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.98 0.01 95.1);
-  --secondary-foreground: oklch(0.31 0 106.6);
-  --muted: oklch(0.22 0 106.71);
-  --muted-foreground: oklch(0.77 0.02 99.07);
-  --accent: oklch(0.21 0.01 95.42);
-  --accent-foreground: oklch(0.97 0.01 98.88);
-  --destructive: oklch(0.64 0.21 25.33);
-  --border: oklch(0.36 0.01 106.89);
-  --input: oklch(0.43 0.01 100.22);
-  --ring: oklch(0.59 0.17 253.06);
-  --sidebar: oklch(0.24 0 67.71);
-  --sidebar-foreground: oklch(0.81 0.01 93.01);
-  --sidebar-primary: oklch(0.33 0 0);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.17 0 106.62);
-  --sidebar-accent-foreground: oklch(0.81 0.01 93.01);
-  --sidebar-border: oklch(0.94 0 0);
-  --sidebar-ring: oklch(0.77 0 0);
-
-  --chat-out: oklch(43.696% 0.08141 40.805);
-  --chat-in: oklch(0.31 0 106.6);
+  --chat-out: rgba(0, 255, 136, 0.12);
+  --chat-in: rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
@@ -100,6 +68,8 @@ html,
 body {
   padding: 0;
   margin: 0;
+  background: #000000;
+  color: #ffffff;
   font-family:
     Segoe UI,
     Helvetica Neue,
@@ -110,6 +80,7 @@ body {
     Cantarell,
     Fira Sans,
     sans-serif;
+  overflow-x: hidden;
 }
 
 a {
@@ -139,7 +110,6 @@ button:disabled {
     @apply flex flex-col gap-[24px] grow pl-[10px];
   }
 
-  /* Override form styles for login page */
   .login-form {
     @apply grow-0 gap-3 pl-0;
   }
@@ -205,37 +175,30 @@ button:disabled {
     @apply animate-spin [transform-box:fill-box] [transform-origin:center] stroke-current fill-none;
   }
 
+  /* Glassmorphism card */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+  }
+
+  .glass-panel {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+  }
+
   .bg-chat {
-    background-color: var(--color-muted);
+    background-color: #000000;
     z-index: 0;
   }
 
-  .bg-chat::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("/bg-chat-tile-dark.png");
-    background-repeat: repeat;
-    opacity: 0.06; /* Subtle pattern for light mode */
-    filter: invert(
-      1
-    ); /* Invert to make dark pattern on light background if original is light-on-dark */
-    z-index: -1;
-    pointer-events: none;
-  }
-
-  .dark .bg-chat::before {
-    opacity: 0.12;
-    filter: none; /* Keep original for dark mode */
-  }
-
-  /* WhatsApp Web-like Grid Layout */
   .app-grid {
     display: grid;
-    /* Default (lg+): Menu | Left Panel | Chat */
     grid-template-columns: 48px minmax(300px, 1fr) 2fr;
     height: 100dvh;
     width: 100vw;
@@ -248,7 +211,6 @@ button:disabled {
     }
   }
 
-  /* Resize Handle for panels */
   .resize-handle {
     position: absolute;
     top: 0;
@@ -263,10 +225,9 @@ button:disabled {
 
   .resize-handle:hover,
   .resize-handle:active {
-    background-color: var(--color-primary);
+    background-color: var(--primary);
   }
 
-  /* Hide scrollbar but keep scroll functionality */
   .scrollbar-hide {
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
@@ -275,161 +236,131 @@ button:disabled {
     display: none !important;
   }
 
-  /* Responsive breakpoints */
-
-  /* 
-   Tailwind CSS v4 default breakpoints:
-
-   - sm: 640px
-   - md: 768px
-   - lg: 1024px
-   - xl: 1280px
-   - 2xl: 1536px
-
-   Responsive Strategy:
-  
-   - xl+: 3 columns. Menu (64px) | Left Panel (max 400px) | Chat (1fr).
-   - xl-lg: 3 columns. Left Panel grows (35%).
-   - lg-md: 3 columns. Left Panel (min 300px).
-   - md-: Mobile, 2 views:
-     1. Menu (64px) | Left panel (1fr).
-     2. Chat (1fr).
-     
-     Content toggles between views based on active conversation.
-     Controlled by Tailwind classes in _auth.tsx (hidden/flex).
-  */
-}
-
-/* Hide number input spinners */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-input[type="range"] {
-  -webkit-appearance: none;
-  background-color: transparent;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  box-sizing: content-box;
-  height: 12px;
-  width: 12px;
-  border: none;
-}
-
-input[type="range"]::-moz-range-thumb {
-  height: 12px;
-  width: 12px;
-  border: none;
-}
-
-input[type="range"]::-webkit-slider-runnable-track {
-  appearance: none;
-}
-
-input[type="range"]::-moz-range-track {
-  appearance: none;
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #ced0d1 transparent;
-}
-
-/* WebKit */
-*::-webkit-scrollbar {
-  width: 0.3rem;
-  height: 0.3rem;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #ced0d1;
-  border-radius: 0.6rem;
-  border: none;
-}
-
-/* Text messages */
-.markdown p + p,
-.markdown p + ul,
-.markdown p + ol,
-.markdown ul + p,
-.markdown ul + ul,
-.markdown ul + ol,
-.markdown ol + p,
-.markdown ol + ul,
-.markdown ol + ol {
-  margin-top: 1rem;
-}
-
-.markdown li,
-.markdown li ul,
-.markdown li ol {
-  margin-left: 1.4rem; /* Adjust margin for nested lists */
-}
-
-.markdown ol li {
-  list-style-type: decimal;
-}
-
-.markdown ul li {
-  list-style-type: disc;
-}
-
-.templateField {
-  text-decoration: underline;
-  text-decoration-color: #53bdeb;
-  text-decoration-thickness: 2px;
-  background-color: #53bdeb2d;
-}
-
-.template-form {
-  input,
-  select,
-  textarea,
-  button {
-    padding: 6px 12px;
-    border-radius: 7.5px;
+  /* Network core animation background */
+  .network-core {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.15;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
+      linear-gradient(90deg, rgba(0, 255, 136, 0.03) 0%, transparent 100%);
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+
+  .network-core::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    height: 200px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 50%;
+    animation: pulse-ring 4s ease-in-out infinite;
   }
-}
-/* pretty-print-json theme mapping */
-.json-key {
-  color: var(--primary);
-  font-weight: 600;
-}
 
-.json-string {
-  color: var(--ring);
-}
+  @keyframes pulse-ring {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.3);
+      opacity: 0.1;
+    }
+  }
 
-.json-number,
-.json-boolean {
-  color: var(--primary);
-}
+  /* Hide scrollbar but keep scroll functionality */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 0.3rem;
+    height: 0.3rem;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 0.6rem;
+    border: none;
+  }
 
-.json-null {
-  color: var(--muted-foreground);
-}
+  /* Text messages */
+  .markdown p + p,
+  .markdown p + ul,
+  .markdown p + ol,
+  .markdown ul + p,
+  .markdown ul + ul,
+  .markdown ul + ol,
+  .markdown ol + p,
+  .markdown ol + ul,
+  .markdown ol + ol {
+    margin-top: 1rem;
+  }
 
-/* Message video: hide Chrome's native central overlay play button. It dims on
-   hover and its internal hover state cannot be restyled, so VideoMessage hides
-   it and renders its own static central play button instead. */
-.message-video::-webkit-media-controls-overlay-play-button {
-  display: none !important;
+  .markdown li,
+  .markdown li ul,
+  .markdown li ol {
+    margin-left: 1.4rem;
+  }
+
+  .markdown ol li {
+    list-style-type: decimal;
+  }
+
+  .markdown ul li {
+    list-style-type: disc;
+  }
+
+  .templateField {
+    text-decoration: underline;
+    text-decoration-color: #00ff88;
+    text-decoration-thickness: 2px;
+    background-color: rgba(0, 255, 136, 0.1);
+  }
+
+  .template-form {
+    input,
+    select,
+    textarea,
+    button {
+      padding: 6px 12px;
+      border-radius: 7.5px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+
+  .json-key {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .json-string {
+    color: var(--ring);
+  }
+
+  .json-number,
+  .json-boolean {
+    color: var(--primary);
+  }
+
+  .json-null {
+    color: var(--muted-foreground);
+  }
+
+  .message-video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+  }
 }

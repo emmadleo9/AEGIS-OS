@@ -55,7 +55,7 @@ type EditorState =
   | { type: "new-selection" }
   | { type: "mcp"; index: number }
   | { type: "google-mcp"; index: number }
-  | { type: "openbsp-mcp"; index: number }
+  | { type: "aegis-mcp"; index: number }
   | { type: "http"; index: number }
   | { type: "sql"; index: number };
 
@@ -95,14 +95,14 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
     ["calendar", "sheets"].includes(tool.config.product ?? ""),
   );
 
-  const openbspTools = mcpClients.filter(
-    (tool) => tool.config.product === "openbsp",
+  const aegisTools = mcpClients.filter(
+    (tool) => tool.config.product === "aegis",
   );
 
   // Anything not claimed above (including an unset product) is a plain client.
   const mcpTools = mcpClients.filter(
     (tool) =>
-      !["calendar", "sheets", "openbsp"].includes(tool.config.product ?? ""),
+      !["calendar", "sheets", "aegis"].includes(tool.config.product ?? ""),
   );
 
   const httpTools = allTools.filter((tool) => tool.type === "http");
@@ -202,7 +202,7 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
       type: "mcp",
       label: "",
       config: {
-        url: "https://g.mcp.openbsp.dev/mcp",
+        url: "https://g.mcp.aegis.dev/mcp",
         product,
         allowed_tools: defaultTools,
       },
@@ -211,7 +211,7 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
     setEditor({ type: "google-mcp", index: fields.length });
   };
 
-  const handleAddOpenBSP = () => {
+  const handleAddAEGIS = () => {
     const defaultTools = [
       "list_conversations",
       "fetch_conversation",
@@ -227,12 +227,12 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
       label: "",
       config: {
         url: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mcp`,
-        product: "openbsp",
+        product: "aegis",
         allowed_tools: defaultTools,
       },
     };
     append(newTool);
-    setEditor({ type: "openbsp-mcp", index: fields.length });
+    setEditor({ type: "aegis-mcp", index: fields.length });
   };
 
   const handleDeleteTool = (index: number) => {
@@ -313,8 +313,8 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
               />
             ))}
 
-            {/* OpenBSP Tools */}
-            {openbspTools.map((tool) => (
+            {/* AEGIS Tools */}
+            {aegisTools.map((tool) => (
               <SectionItem
                 key={tool.id}
                 title={tool.label || t("Sin nombre")}
@@ -325,7 +325,7 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
                   </div>
                 }
                 onClick={() =>
-                  setEditor({ type: "openbsp-mcp", index: tool._index })
+                  setEditor({ type: "aegis-mcp", index: tool._index })
                 }
               />
             ))}
@@ -417,7 +417,7 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
           onAddHTTP={handleAddHTTP}
           onAddSQL={handleAddSQL}
           onAddGoogle={handleAddGoogle}
-          onAddOpenBSP={handleAddOpenBSP}
+          onAddAEGIS={handleAddAEGIS}
         />
       )}
 
@@ -437,9 +437,9 @@ export default function ToolsSection<T extends FieldValues & ToolsForm>(props: {
         />
       )}
 
-      {/* OpenBSP MCP Client Editor */}
-      {isOpen && editor.type === "openbsp-mcp" && (
-        <OpenBSPMCPClientEditor
+      {/* AEGIS MCP Client Editor */}
+      {isOpen && editor.type === "aegis-mcp" && (
+        <AEGISMCPClientEditor
           index={editor.index}
           register={register}
           control={control}
@@ -1097,9 +1097,9 @@ function GoogleMCPClientEditor({
 
   const handleGetToken = () => {
     // Open popup
-    // https://g.mcp.openbsp.dev/auth/google?products=calendar,sheets&callback=YOUR_CALLBACK_URL
+    // https://g.mcp.aegis.dev/auth/google?products=calendar,sheets&callback=YOUR_CALLBACK_URL
     const callbackUrl = window.location.origin + "/oauth/callback";
-    const authUrl = `https://g.mcp.openbsp.dev/auth/google?products=${product}&callback=${encodeURIComponent(callbackUrl)}`;
+    const authUrl = `https://g.mcp.aegis.dev/auth/google?products=${product}&callback=${encodeURIComponent(callbackUrl)}`;
 
     // Calculate center position
     const width = 600;
@@ -1132,7 +1132,7 @@ function GoogleMCPClientEditor({
           type: "mcp",
           label: freshLabel,
           config: {
-            url: event.data.url || "https://g.mcp.openbsp.dev/mcp",
+            url: event.data.url || "https://g.mcp.aegis.dev/mcp",
             product: freshProduct as "calendar" | "sheets",
             allowed_tools: freshAllowedTools,
             email: event.data.email || freshEmail || undefined,
@@ -1296,8 +1296,8 @@ function GoogleMCPClientEditor({
   );
 }
 
-// OpenBSP MCP Client Editor
-function OpenBSPMCPClientEditor({
+// AEGIS MCP Client Editor
+function AEGISMCPClientEditor({
   index,
   register,
   control,
@@ -1332,12 +1332,12 @@ function OpenBSPMCPClientEditor({
       name: `extra.tools.${index}.config.headers.authorization`,
     }) as string) || "";
 
-  // Auto-auth for owners: find or create an "OpenBSP MCP" API key
+  // Auto-auth for owners: find or create an "AEGIS MCP" API key
   const hasToken = token.trim() !== "";
   useEffect(() => {
     if (!isOwner || autoAuthDone || hasToken || !apiKeys) return;
 
-    const existing = apiKeys.find((k) => k.name === "OpenBSP MCP");
+    const existing = apiKeys.find((k) => k.name === "AEGIS MCP");
     if (existing) {
       setValue(
         `extra.tools.${index}.config.headers.authorization`,
@@ -1346,7 +1346,7 @@ function OpenBSPMCPClientEditor({
       );
       setAutoAuthDone(true);
     } else {
-      void createApiKey({ name: "OpenBSP MCP", role: "member" }).then(
+      void createApiKey({ name: "AEGIS MCP", role: "member" }).then(
         (newKey) => {
           if (newKey) {
             setValue(
@@ -1491,14 +1491,14 @@ function NewToolSelection({
   onAddHTTP,
   onAddSQL,
   onAddGoogle,
-  onAddOpenBSP,
+  onAddAEGIS,
 }: {
   onBack: () => void;
   onAddMCP: () => void;
   onAddHTTP: () => void;
   onAddSQL: () => void;
   onAddGoogle: (product: "calendar" | "sheets") => void;
-  onAddOpenBSP: () => void;
+  onAddAEGIS: () => void;
 }) {
   const { translate: t } = useTranslation();
 
@@ -1525,7 +1525,7 @@ function NewToolSelection({
               <MessageSquare className="w-[24px] h-[24px] text-muted-foreground" />
             </div>
           }
-          onClick={onAddOpenBSP}
+          onClick={onAddAEGIS}
         />
         <SectionItem
           title={t("Cliente MCP")}

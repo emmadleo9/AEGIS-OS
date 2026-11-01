@@ -67,7 +67,7 @@ function NewOnboardingToken() {
           <fieldset disabled={!isAdmin} className="contents">
             <p className="text-muted-foreground text-[14px]">
               {t(
-                "Generá un enlace para que un tercero conecte su número de WhatsApp a tu organización. No necesita tener cuenta en OpenBSP ni ser miembro de tu organización.",
+                "Generá un enlace para que un tercero conecte su número de WhatsApp a tu organización. No necesita tener cuenta en AEGIS ni ser miembro de tu organización.",
               )}
             </p>
 
@@ -104,7 +104,7 @@ function NewOnboardingToken() {
               />
               <div className="text-muted-foreground text-[12px] mt-[4px]">
                 {t(
-                  "Si la configurás, los webhooks de mensajes de esta cuenta se envían directo a tu app en vez de a OpenBSP.",
+                  "Si la configurás, los webhooks de mensajes de esta cuenta se envían directo a tu app en vez de a AEGIS.",
                 )}
               </div>
             </label>

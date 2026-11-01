@@ -91,7 +91,7 @@ function OAuthConsent() {
   return (
     <div className="flex flex-col gap-9 justify-center items-center bg-background text-foreground h-dvh w-screen">
       <div className="text-primary tracking-tighter font-bold text-[36px]">
-        OpenBSP
+        AEGIS
       </div>
 
       <div className="flex flex-col gap-4 w-[340px] max-w-[90vw]">
@@ -112,7 +112,7 @@ function OAuthConsent() {
             <div className="text-center">
               <span className="font-bold">{details.client.client_name}</span>{" "}
               {t(
-                "quiere conectarse a OpenBSP como tú. Podrá actuar en tu nombre, dentro de tus permisos.",
+                "quiere conectarse a AEGIS como tú. Podrá actuar en tu nombre, dentro de tus permisos.",
               )}
               {host && (
                 <>

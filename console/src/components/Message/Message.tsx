@@ -41,7 +41,7 @@ md.renderer.rules.link_open = function (tokens, idx) {
 };
 
 // Convert WhatsApp formatting to standard markdown for Remarkable rendering
-// Mirrors whatsappToMarkdown from open-bsp-api/_shared/markdown.ts
+// Mirrors whatsappToMarkdown from aegis-api/_shared/markdown.ts
 function whatsappToMarkdown(text: string): string {
   const parts = text.split(/(`{3}[\s\S]*?`{3})/);
 

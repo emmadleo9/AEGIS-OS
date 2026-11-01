@@ -1,158 +1,43 @@
-<h1 align="center">OpenBSP UI</h1>
+<h1 align="center">AEGIS Console</h1>
 <p align="center">
-  <strong>Open-source WhatsApp Web and Instagram interface</strong>
+  <strong>Dark OLED console for WhatsApp, Instagram, Telegram, Discord</strong>
 </p>
 <p align="center">
-  Self-hostable, multi-tenant, and AI-agent ready. Built for <a href="https://github.com/matiasbattocchia/open-bsp-api">OpenBSP API</a>.
-</p>
-
-<p align="center">
-  <a href="https://web.openbsp.dev"><img src="https://img.shields.io/badge/%F0%9F%9A%80_try_it-web.openbsp.dev-C26A3D" alt="Try it"></a>&nbsp;
   <a href="https://unlicense.org/"><img src="https://img.shields.io/badge/license-Unlicense-blue.svg" alt="License: Unlicense"></a>&nbsp;
-  <a href="https://github.com/matiasbattocchia/open-bsp-ui/stargazers"><img src="https://img.shields.io/github/stars/matiasbattocchia/open-bsp-ui" alt="GitHub Stars"></a>&nbsp;
-  <a href="https://github.com/matiasbattocchia/open-bsp-ui/commits/main"><img src="https://img.shields.io/github/last-commit/matiasbattocchia/open-bsp-ui" alt="Last Commit"></a>&nbsp;
-  <a href="https://chat.whatsapp.com/Ch6AwZizSDt5quzHodcYh5"><img src="https://img.shields.io/badge/Community-25D366?logo=whatsapp&logoColor=white" alt="Community"></a>
+  <img src="https://img.shields.io/badge/AEGIS-OS-black.svg" alt="AEGIS-OS"/>
+  <img src="https://img.shields.io/badge/vite-react-tailwind-blue.svg" alt="Stack"/>
 </p>
 
-https://github.com/user-attachments/assets/1ef30dde-9de1-4f5a-856a-db34ca2e3063
+## AEGIS Console (Face / Console)
 
-## Features
+The AEGIS Console is the user-facing interface of AEGIS-OS. Rebranded from open-bsp-ui to a pure black OLED (#000000) design with glassmorphism cards, an obsidian glass shield logo, and a network-core animation. No light mode.
 
-### UI
+### Design
 
-- Live updates via Supabase Realtime
-- Responsive, mobile-first design
-- Dark mode
-- Spanish, English, and Portuguese
-- Built with [Vite](https://vitejs.dev/), [React](https://react.dev/),
-  [Tailwind CSS](https://tailwindcss.com/),
-  [Zustand](https://zustand-demo.pmnd.rs/),
-  [TanStack Query](https://tanstack.com/query) +
-  [Router](https://tanstack.com/router)
+- **Background:** Pure black `#000000` (OLED)
+- **Cards:** Glassmorphism with `backdrop-filter: blur`, semi-transparent white borders
+- **Accent:** Neon green `#00ff88`
+- **Logo:** Obsidian glass shield
+- **Animation:** Network core pulse ring
 
-### App
+### Configuration
 
-- **Conversations** — Real-time WhatsApp-style chat with media support (images,
-  audio, documents), message status indicators, and inline template sending
-- **Contacts** — Address book with phone validation
-- **AI Agents** — Create and configure agents with any provider, set tools, and
-  instructions
-- **Templates** — WhatsApp message template builder with variable pills,
-  formatting preview, and category management
-- **Integrations** — WhatsApp Business account connection via Embedded Signup
-- **Settings** — Organization management, team members with roles
-  (owner/admin/member), API keys, webhooks
-- **Stats** — Usage charts and billing quota dashboards
-- **Multi-org** — Switch between organizations; invite and onboard team members
-
-<table align="center">
-  <tr>
-    <td><img src="./screenshots/conversations.png" alt="Conversations list" width="180"></td>
-    <td><img src="./screenshots/chat.png" alt="Chat view" width="180"></td>
-    <td><img src="./screenshots/agent-tools.png" alt="Agent tools" width="180"></td>
-    <td><img src="./screenshots/template-editor.png" alt="Template editor" width="180"></td>
-  </tr>
-</table>
-
-## Deployment
-
-> [!NOTE]
-> **Deploy in under 5 minutes** — no local environment required. This is an SPA
-> that can be hosted on any static site hosting service.
-
-### Cloudflare Pages
-
-1. **Fork** this repository (`main` branch)
-2. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/) > **Workers &
-   Pages** > **Create application** > **Pages** > **Connect to Git**
-3. Select your fork and use these build settings:
-   - Production branch: `main`
-   - Framework preset: `React (Vite)`
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-4. Set environment variables:
-   - **VITE_SUPABASE_URL**
-   - **VITE_SUPABASE_ANON_KEY**
-   - **VITE_META_APP_ID** — Optional. Needed for WhatsApp Embedded Signup.
-   - **VITE_FB_LOGIN_CONFIG_ID** — Optional. Needed for Tech Provider flow.
-5. **Save and deploy**
-
-You are live! 🚀
-
-## Development
-
-### Local setup
-
-You need a running
-[OpenBSP API](https://github.com/matiasbattocchia/open-bsp-api) — either locally
-via `npx supabase start` or a hosted Supabase project.
-
-```bash
-npm install
-```
-
-Create a `.env` file:
+The console connects to the AEGIS gateway and brain via environment variables:
 
 ```env
-VITE_SUPABASE_URL=http://localhost:54321     # or your Supabase project URL
-VITE_SUPABASE_ANON_KEY=your-anon-key
-# VITE_META_APP_ID=                          # optional, for WhatsApp Embedded Signup
-# VITE_FB_LOGIN_CONFIG_ID=                   # optional, for Tech Provider flow
+VITE_GATEWAY_URL=http://gateway:2785
+VITE_BRAIN_URL=http://brain:8000
+VITE_APP_NAME=AEGIS
+VITE_API_MASTER_KEY=aegis_master_key
 ```
 
-Start the dev server:
+### Run
 
 ```bash
-npm run dev
+cd console
+npm install
+npm run dev   # http://localhost:5173
+npm run build # Vite build to dist/
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
-
-### Checks
-
-CI (`.github/workflows/check.yml`) runs Prettier, ESLint and `tsc`. The same
-gate is one command:
-
-```bash
-npm run check    # prettier --check . && eslint . && tsc -b
-npm run format   # fix formatting
-```
-
-Enable the pre-push hook once per clone so a red build never reaches CI:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-### i18n (Internationalization)
-
-The UI is written in Spanish (the default language) and supports English,
-Portuguese, French, and Swahili translations. All user-facing strings use the
-`t()` function from `src/hooks/useTranslation.tsx`, which returns the Spanish
-key as-is or looks up a translation from `public/locales/{lang}.json`.
-
-**Adding new strings**: wrap any user-facing text with `t("Texto en español")`.
-The Spanish key is the source of truth — no entry in `en.json`/`pt.json` means
-the Spanish text is shown.
-
-**Adding translations**: add the corresponding entries to each
-`public/locales/{lang}.json` file.
-
-**Checking for drift**: run the sync script to detect missing or stale keys:
-
-```bash
-./scripts/sync-translations.sh
-```
-
-## Acknowledgments
-
-- [@diegoparma](https://github.com/diegoparma) — for years of feedback, design
-  input, and being one of the project's earliest power users.
-- [@rolox05](https://github.com/rolox05) — first UI, PoC and kickstart partner.
-
-## Community
-
-Questions, ideas, or feedback? Join our
-[WhatsApp Community](https://chat.whatsapp.com/Ch6AwZizSDt5quzHodcYh5) or open
-an [issue](https://github.com/matiasbattocchia/open-bsp-ui/issues). We'd love to
-hear from you.
+The console is also served by nginx in Docker on port 3000, proxying `/api/` to the gateway and `/brain/` to the brain.
