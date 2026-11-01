@@ -21,6 +21,7 @@
     "@types/he": "^1.2.3",
     "@types/turndown": "^5.0.6",
     "antd": "^6.0.0",
+    "axios": "^1.21.0",
     "core-js-pure": "^3.46.0",
     "dayjs": "^1.11.19",
     "fuse.js": "^7.1.0",

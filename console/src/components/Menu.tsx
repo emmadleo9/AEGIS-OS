@@ -12,6 +12,10 @@ import {
   Languages,
   Plus,
   NotebookTabs,
+  LayoutDashboard,
+  Users,
+  Smartphone,
+  Activity,
 } from "lucide-react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { LinkButton } from "./LinkButton";
@@ -53,54 +57,54 @@ export default function Menu() {
     >
       {/* Upper section */}
       <div className="flex flex-col items-center">
-        {/* Conversations button */}
+        {/* Dashboard button */}
         <LinkButton
-          to="/conversations"
-          title={t("Mensajes")}
-          isActive={pathname.startsWith("/conversations")}
+          to="/"
+          title="Dashboard"
+          isActive={pathname === "/"}
+          className="mt-[10px]"
+        >
+          <LayoutDashboard className="w-[24px] h-[24px] stroke-[2]" />
+        </LinkButton>
+
+        {/* Social Hub button */}
+        <LinkButton
+          to="/social"
+          title="Social Hub"
+          isActive={pathname.startsWith("/social")}
+          className="mt-[10px]"
+        >
+          <Users className="w-[24px] h-[24px] stroke-[2]" />
+        </LinkButton>
+
+        {/* Devices button */}
+        <LinkButton
+          to="/devices"
+          title="Devices"
+          isActive={pathname.startsWith("/devices")}
+          className="mt-[10px]"
+        >
+          <Smartphone className="w-[24px] h-[24px] stroke-[2]" />
+        </LinkButton>
+
+        {/* WhatsApp Center button */}
+        <LinkButton
+          to="/whatsapp"
+          title="WhatsApp Center"
+          isActive={pathname.startsWith("/whatsapp")}
           className="mt-[10px]"
         >
           <MessageSquareText className="w-[24px] h-[24px] stroke-[2]" />
         </LinkButton>
 
-        {/* Agents button */}
+        {/* Diagnostics button */}
         <LinkButton
-          to="/agents"
-          title={t("Agentes")}
-          isActive={pathname.startsWith("/agents")}
+          to="/diagnostics"
+          title="Diagnostics"
+          isActive={pathname.startsWith("/diagnostics")}
           className="mt-[10px]"
         >
-          <Bot className="w-[24px] h-[24px] stroke-[2]" />
-        </LinkButton>
-
-        {/* Contacts button */}
-        <LinkButton
-          to="/contacts"
-          title={t("Contactos")}
-          isActive={pathname.startsWith("/contacts")}
-          className="mt-[10px]"
-        >
-          <NotebookTabs className="w-[24px] h-[24px] stroke-[2]" />
-        </LinkButton>
-
-        {/* Integrations button */}
-        <LinkButton
-          to="/integrations"
-          title={t("Integraciones")}
-          isActive={pathname.startsWith("/integrations")}
-          className="mt-[10px]"
-        >
-          <Unplug className="w-[24px] h-[24px] stroke-[2]" />
-        </LinkButton>
-
-        {/* Stats button */}
-        <LinkButton
-          to="/stats"
-          title={t("Estadísticas")}
-          isActive={pathname.startsWith("/stats")}
-          className="mt-[10px]"
-        >
-          <BarChart3 className="w-[24px] h-[24px] stroke-[2]" />
+          <Activity className="w-[24px] h-[24px] stroke-[2]" />
         </LinkButton>
       </div>
 
