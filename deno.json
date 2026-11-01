@@ -1,0 +1,37 @@
+{
+  "lint": {
+    "files": {
+      "include": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.mjs",
+        "**/*.cjs"
+      ],
+      "exclude": [
+        "**/*"
+      ]
+    },
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  },
+  "test": {
+    "files": {
+      "include": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.mjs",
+        "**/*.cjs"
+      ],
+      "exclude": [
+        "**/*"
+      ]
+    }
+  }
+}
