@@ -1,0 +1,153 @@
+# AEGIS-OS — Monorepo Docker Compose
+# WhatsApp -> OpenWA (gateway:2785) -> Webhook -> OpenJarvis (brain:8000) -> LLM -> OpenWA SDK reply -> Console
+#
+# Hardware target: i7-7500U, 16GB RAM, 2GB GPU -> tiny models (qwen2.5:3b), SQLite for OpenWA
+#
+# Run: docker compose up -d
+
+services:
+  # ===== BRAIN: OpenJarvis =====
+  brain:
+    build:
+      context: ./brain
+      dockerfile: Dockerfile
+    container_name: aegis-brain
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    expose:
+      - "8000"
+    environment:
+      - MODEL=qwen2.5:3b
+      - OPENJARVIS_MODEL=qwen2.5:3b
+      - OLLAMA_HOST=http://ollama:11434
+      - WHATSAPP_VERIFY_TOKEN=aegis_verify_token
+      - WHATSAPP_APP_SECRET=aegis_app_secret
+      - OPENJARVIS_CORS_ORIGINS=http://console:3000,http://localhost:3000
+      - LOG_LEVEL=info
+    volumes:
+      - ./data/brain:/app/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - aegis
+
+  # ===== GATEWAY: OpenWA =====
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: aegis-gateway
+    restart: unless-stopped
+    stop_grace_period: 75s
+    ports:
+      - "127.0.0.1:2785:2785"
+    expose:
+      - "2785"
+    environment:
+      - NODE_ENV=production
+      - PORT=2785
+      - LOG_LEVEL=info
+      - DATABASE_TYPE=sqlite
+      - DATABASE_SYNCHRONIZE=false
+      - ENGINE_TYPE=whatsapp-web.js
+      - PUPPETEER_HEADLESS=true
+      - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu
+      - WEBHOOK_URL=http://brain:8000/webhooks/whatsapp
+      - API_MASTER_KEY=aegis_master_key
+      - CORS_ORIGINS=http://console:3000,http://localhost:3000
+      - MEMORY_LIMIT=2g
+      - OPENWA_MEM_LIMIT=2g
+      - OPENWA_PIDS_LIMIT=2048
+    volumes:
+      - ./data/gateway:/app/data
+    mem_limit: 2g
+    pids_limit: 2048
+    depends_on:
+      - brain
+    networks:
+      - aegis
+
+  # ===== CONSOLE: AEGIS (rebranded open-bsp-ui) =====
+  console:
+    build:
+      context: ./console
+      dockerfile: Dockerfile
+    container_name: aegis-console
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    expose:
+      - "3000"
+    environment:
+      - VITE_GATEWAY_URL=http://gateway:2785
+      - VITE_BRAIN_URL=http://brain:8000
+      - VITE_APP_NAME=AEGIS
+      - NODE_ENV=production
+    depends_on:
+      - gateway
+      - brain
+    networks:
+      - aegis
+
+  # ===== OLLAMA: Local LLM (qwen2.5:3b) =====
+  ollama:
+    image: ollama/ollama:latest
+    container_name: aegis-ollama
+    restart: unless-stopped
+    expose:
+      - "11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    networks:
+      - aegis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ===== DB: Postgres 15 for OpenBSP triggers =====
+  db:
+    image: postgres:15-alpine
+    container_name: aegis-db
+    restart: unless-stopped
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_USER=aegis
+      - POSTGRES_PASSWORD=aegis_password
+      - POSTGRES_DB=aegis_console
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    networks:
+      - aegis
+
+  # ===== Redis (if needed by OpenWA / rate limits) =====
+  redis:
+    image: redis:7-alpine
+    container_name: aegis-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - aegis
+
+volumes:
+  brain-data:
+  gateway-data:
+  console-data:
+  db-data:
+  redis-data:
+
+networks:
+  aegis:
+    name: aegis-network
+    driver: bridge
