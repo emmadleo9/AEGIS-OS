@@ -1,0 +1,23 @@
+{
+  "short_name": "OpenBSP",
+  "name": "OpenBSP - WhatsApp Web and Instagram interface",
+  "description": "Open-source WhatsApp Web and Instagram interface. Self-hostable, multi-tenant, and AI-agent ready.",
+  "icons": [
+    {
+      "src": "/logo-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#faf8f1",
+  "display": "standalone",
+  "theme_color": "#cb6441"
+}

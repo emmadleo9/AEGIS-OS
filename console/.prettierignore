@@ -1,0 +1,7 @@
+# Auto-generated files
+src/supabase/db_types.ts
+src/routeTree.gen.ts
+
+# Build output and excluded/legacy code (also excluded from tsconfig + ESLint)
+dist
+src/deprecated

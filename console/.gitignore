@@ -1,0 +1,24 @@
+# Env
+.env*
+env
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Node
+node_modules
+
+# Editors
+.vscode
+.zed
+
+# Claude — share project hooks/settings; keep personal local overrides out.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/settings.local.json
+
+mise.toml
+
+.tanstack
+dist/
