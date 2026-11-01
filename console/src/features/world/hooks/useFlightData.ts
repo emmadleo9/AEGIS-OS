@@ -1,46 +1,5 @@
-import { useEffect, useState } from 'react';
-
-export interface Flight {
-  icao24: string;
-  lat: number;
-  lon: number;
-  alt: number;
-  heading: number;
-  speed: number;
-  callsign: string;
-}
-
+﻿import { useEffect, useState } from 'react';
+export interface Flight { icao24: string; lat: number; lon: number; alt: number; heading: number; speed: number; callsign: string; }
 export function useFlightData(intervalMs = 15000) {
-  const [flights, setFlights] = useState<Flight[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-    const fetch = async () => {
-      try {
-        const res = await fetch('/api/world/flights').catch(() => fetch('https://api.adsb.lol/v2/all'));
-        const data = await res.json();
-        const ac = data.ac || data.states || [];
-        const parsed: Flight[] = ac.slice(0, 300).map((a: any) => ({
-          icao24: a.hex || a[0] || '',
-          lat: a.lat ?? a[6],
-          lon: a.lon ?? a[5],
-          alt: a.alt_baro ?? a[7] ?? 0,
-          heading: a.track ?? a[10] ?? 0,
-          speed: a.gs ?? a[9] ?? 0,
-          callsign: a.flight?.trim() || a.callsign || a[1] || '',
-        })).filter((f: Flight) => f.lat && f.lon);
-        if (active) setFlights(parsed);
-      } catch {
-        // ignore
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-    fetch();
-    const id = setInterval(fetch, intervalMs);
-    return () => { active = false; clearInterval(id); };
-  }, [intervalMs]);
-
-  return { flights, loading };
-}
+  const [flights, setFlights] = useState<Flight[]>([]); const [loading, setLoading] = useState(true);
+  useEffect(() => { let active = true; const load = async () => { try { const res = await globalThis.fetch('https://api.adsb.lol/v2/all'); const data = await res.json() as { ac?: Array<Record<string, unknown>> }; const parsed = (data.ac ?? []).slice(0, 300).map((a) => ({ icao24: String(a.hex ?? ''), lat: Number(a.lat ?? 0), lon: Number(a.lon ?? 0), alt: Number(a.alt_baro ?? 0), heading: Number(a.track ?? 0), speed: Number(a.gs ?? 0), callsign: String(a.flight ?? '').trim() })).filter((f) => Number.isFinite(f.lat) && Number.isFinite(f.lon) && f.lat !== 0 && f.lon !== 0); if (active) setFlights(parsed); } catch { if (active) setFlights([]); } finally { if (active) setLoading(false); } }; void load(); const id = window.setInterval(() => void load(), intervalMs); return () => { active = false; window.clearInterval(id); }; }, [intervalMs]); return { flights, loading }; }

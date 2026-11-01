@@ -1,16 +1,25 @@
 <div align="center">
-  <img alt="OpenJarvis" src="assets/OpenJarvis_Horizontal_Logo.png" width="400">
+  <img alt="AEGIS shield — local-first AI" src="assets/aegis-shield.png" width="190">
 
-  <p><i>Personal AI, On Personal Devices.</i></p>
+  <h1>AEGIS BRAIN</h1>
+  <p><b>The local-first intelligence core of <a href="../README.md">AEGIS-OS</a>.</b></p>
+  <p><i>Private by design. Powerful on your own hardware.</i></p>
+
+  <img
+    src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=500&size=16&pause=1100&color=9FE8FF&center=true&vCenter=true&width=560&lines=Local-first+AI%2C+running+on+your+terms;OpenJarvis-powered+agent+runtime;One+brain.+Your+devices.+Your+rules."
+    alt="Local-first AI, running on your terms — OpenJarvis-powered agent runtime — One brain. Your devices. Your rules."
+  >
 
   <p>
-    <a href="https://arxiv.org/abs/2605.17172"><img src="https://img.shields.io/badge/arXiv-2605.17172-b31b1b.svg" alt="arXiv"></a>
-    <a href="https://openjarvis.stanford.edu/"><img src="https://img.shields.io/badge/project-OpenJarvis-blue" alt="Project"></a>
-    <a href="https://open-jarvis.github.io/OpenJarvis/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Docs"></a>
-    <img src="https://img.shields.io/badge/python-%3E%3D3.10-blue" alt="Python">
-    <img src="https://img.shields.io/badge/license-Apache%202.0-green" alt="License">
-    <a href="https://discord.gg/CMVBmDQ5Fj"><img src="https://img.shields.io/badge/discord-join-7289da?logo=discord&logoColor=white" alt="Discord"></a>
-    <a href="https://x.com/OpenJarvisAI"><img src="https://img.shields.io/badge/X-@OpenJarvisAI-black?logo=x&logoColor=white" alt="X / Twitter"></a>
+    <a href="../README.md"><img src="https://img.shields.io/badge/AEGIS--OS-local--first-9FE8FF?style=for-the-badge&logo=github&logoColor=white" alt="AEGIS-OS"></a>
+    <img src="https://img.shields.io/badge/AI-OpenJarvis-7897FF?style=for-the-badge" alt="OpenJarvis AI">
+    <img src="https://img.shields.io/badge/Python-%3E%3D3.10-7BC8A4?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-C9A7FF?style=for-the-badge" alt="License: Apache 2.0">
+  </p>
+  <p>
+    <a href="https://open-jarvis.github.io/OpenJarvis/"><img src="https://img.shields.io/badge/documentation-explore-263247?style=flat-square" alt="Documentation"></a>
+    <a href="https://discord.gg/CMVBmDQ5Fj"><img src="https://img.shields.io/badge/community-Discord-263247?style=flat-square&logo=discord" alt="Discord community"></a>
+    <a href="https://x.com/OpenJarvisAI"><img src="https://img.shields.io/badge/updates-follow-263247?style=flat-square&logo=x" alt="OpenJarvis on X"></a>
   </p>
 </div>
 

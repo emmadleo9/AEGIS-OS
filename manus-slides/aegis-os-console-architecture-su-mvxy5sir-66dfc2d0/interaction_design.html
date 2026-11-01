@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    .slide-container { 
+      width: 1280px; min-height: 720px; 
+      background: #050A0E; color: #E2F1F8;
+      font-family: 'Roboto Mono', monospace;
+      display: flex; flex-direction: column;
+      padding: 40px;
+    }
+    .motif { 
+      position: absolute; top: 40px; right: 40px;
+      color: #8AF8FF; font-family: 'Share Tech Mono', monospace;
+      font-size: 14px; letter-spacing: 2px;
+    }
+    header { margin-bottom: 40px; border-bottom: 1px solid #1E3A5F; padding-bottom: 20px; }
+    h2 { font-family: 'Share Tech Mono', monospace; font-size: 32px; color: #8AF8FF; text-transform: uppercase; }
+    
+    .grid-ui { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; flex: 1; }
+    .ui-section { display: flex; flex-direction: column; gap: 20px; }
+    .ui-card { border: 1px solid #1E3A5F; padding: 25px; position: relative; }
+    .ui-card::before {
+      content: ''; position: absolute; top: -1px; left: -1px; width: 12px; height: 12px;
+      border-top: 2px solid #8AF8FF; border-left: 2px solid #8AF8FF;
+    }
+    .ui-card-title { font-family: 'Share Tech Mono', monospace; font-size: 18px; color: #8AF8FF; margin-bottom: 10px; }
+    .ui-list { list-style: none; }
+    .ui-list li { color: #6B8A9C; font-size: 15px; margin-bottom: 8px; position: relative; padding-left: 20px; }
+    .ui-list li::before { content: '>'; position: absolute; left: 0; color: #8AF8FF; }
+    
+    .page-num { position: absolute; bottom: 40px; right: 40px; font-family: 'Share Tech Mono', monospace; color: #6B8A9C; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <div class="motif">[ AEGIS v3.2 // SYS.OP.ACTIVE ]</div>
+    <header>
+      <h2>Interaction & HUD System</h2>
+    </header>
+    <div class="grid-ui">
+      <div class="ui-section">
+        <div class="ui-card">
+          <div class="ui-card-title">HUD PRIMITIVES</div>
+          <ul class="ui-list">
+            <li>HudFrame: Animated corner brackets & scanlines</li>
+            <li>GaugeCircle: SVG-based hardware acceleration</li>
+            <li>StatusCard: Color-coded health telemetry</li>
+            <li>Radar: HTML5 Canvas 60fps sweep logic</li>
+          </ul>
+        </div>
+        <div class="ui-card">
+          <div class="ui-card-title">MOTION SYSTEM</div>
+          <ul class="ui-list">
+            <li>Entry: translateY staggered route transitions</li>
+            <li>Hover: Border glow and bracket expansion</li>
+            <li>Feedback: Pulsing dots for system live-state</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ui-section">
+        <div class="ui-card" style="flex: 1;">
+          <div class="ui-card-title">LIVE CONTROLS</div>
+          <div style="color: #6B8A9C; font-size: 15px; line-height: 1.6;">
+            The WorldView interface provides immediate filtering of global public feeds:
+            <br><br>
+            - Toggle visibility of 300+ aircraft
+            <br>
+            - Real-time magnitude thresholding for quakes
+            <br>
+            - Interactive temp layers via Open-Meteo
+            <br><br>
+            Responsive layout ensures HUD overlays stack logically on constrained viewports while preserving map interactive surface.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-num">[ 06 / 07 ]</div>
+  </div>
+</body>
+</html>

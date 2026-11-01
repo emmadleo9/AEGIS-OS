@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    .slide-container { 
+      width: 1280px; min-height: 720px; 
+      background: #050A0E; color: #E2F1F8;
+      font-family: 'Roboto Mono', monospace;
+      display: flex; flex-direction: column;
+      padding: 40px;
+    }
+    .motif { 
+      position: absolute; top: 40px; right: 40px;
+      color: #8AF8FF; font-family: 'Share Tech Mono', monospace;
+      font-size: 14px; letter-spacing: 2px;
+    }
+    header { margin-bottom: 40px; border-bottom: 1px solid #1E3A5F; padding-bottom: 20px; }
+    h2 { font-family: 'Share Tech Mono', monospace; font-size: 32px; color: #8AF8FF; text-transform: uppercase; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-bottom: 60px; }
+    .stat-card { border: 1px solid #1E3A5F; padding: 30px; background: #0F171E; position: relative; }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #6B8A9C; letter-spacing: 1px; margin-bottom: 15px; }
+    .stat-value { font-family: 'Share Tech Mono', monospace; font-size: 48px; color: #8AF8FF; text-shadow: 0 0 10px rgba(138,248,255,0.5); }
+    
+    .telemetry-logic { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; }
+    .logic-box { border-top: 1px solid #8AF8FF; padding-top: 20px; }
+    .logic-title { font-family: 'Share Tech Mono', monospace; font-size: 20px; color: #8AF8FF; margin-bottom: 15px; }
+    .logic-text { color: #6B8A9C; font-size: 16px; line-height: 1.6; }
+    
+    .page-num { position: absolute; bottom: 40px; right: 40px; font-family: 'Share Tech Mono', monospace; color: #6B8A9C; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <div class="motif">[ AEGIS v3.2 // SYS.OP.ACTIVE ]</div>
+    <header>
+      <h2>Live Diagnostics Telemetry</h2>
+    </header>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">STREAM STATUS</div>
+        <div class="stat-value">CONNECTED</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">CPU NODE LOAD</div>
+        <div class="stat-value">43.2%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">JS HEAP UTIL</div>
+        <div class="stat-value">28.4%</div>
+      </div>
+    </div>
+    <div class="telemetry-logic">
+      <div class="logic-box">
+        <div class="logic-title">EVENTSOURCE STREAMING</div>
+        <div class="logic-text">Real-time system health data is streamed via EventSource from /api/system/telemetry, delivering sub-second updates to the console.</div>
+      </div>
+      <div class="logic-box">
+        <div class="logic-title">ROBUST FALLBACK</div>
+        <div class="logic-text">If the server stream is unavailable, the console utilizes the Browser Performance API to sample local heap and event-loop latency.</div>
+      </div>
+    </div>
+    <div class="page-num">[ 05 / 07 ]</div>
+  </div>
+</body>
+</html>

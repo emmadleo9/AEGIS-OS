@@ -1,89 +1,64 @@
-import React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-interface GaugeCircleProps {
-  label: string;
-  value: string;
-  sub: string;
-  percent: number;
-  size?: number;
-  className?: string;
+type GaugeCircleProps = { label: string; value: string; sub: string; percent: number; size?: number };
+
+function numericValue(value: string) {
+  const match = /^(-?\d+(?:\.\d+)?)(.*)$/.exec(value);
+  return match ? { number: Number(match[1]), suffix: match[2] } : null;
 }
 
-export function GaugeCircle({ 
-  label, 
-  value, 
-  sub, 
-  percent, 
-  size = 220,
-  className = '' 
-}: GaugeCircleProps) {
-  const radius = 90;
+export function GaugeCircle({ label, value, sub, percent, size = 180 }: GaugeCircleProps) {
+  const radius = 42;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - percent / 100);
-  
-  const gaugeStyle = {
-    width: size,
-    height: size,
-    filter: 'drop-shadow(0 0 15px rgba(138,248,255,0.8)) drop-shadow(0 0 30px rgba(138,248,255,0.25))',
-  };
+  const safe = Math.max(0, Math.min(100, percent));
+  const [displayValue, setDisplayValue] = useState(value);
+  const currentValue = useRef(value);
+
+  useEffect(() => {
+    const from = numericValue(currentValue.current);
+    const to = numericValue(value);
+    currentValue.current = value;
+    if (!from || !to || from.suffix !== to.suffix) {
+      setDisplayValue(value);
+      return;
+    }
+
+    let frame = 0;
+    const started = performance.now();
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - started) / 1200);
+      const eased = 1 - (1 - progress) ** 3;
+      const next = from.number + (to.number - from.number) * eased;
+      const digits = Number.isInteger(to.number) ? 0 : 1;
+      setDisplayValue(`${next.toFixed(digits)}${to.suffix}`);
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
 
   return (
-    <div className={`gauge-wrap ${className}`} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 200 200" style={gaugeStyle}>
-        {/* Background circle */}
+    <div className="gauge-circle" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 100 100" aria-label={`${label}: ${displayValue}`}>
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(138,248,255,.12)" strokeWidth="2" />
         <circle
-          cx="100"
-          cy="100"
+          cx="50"
+          cy="50"
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
-          strokeWidth="2"
-        />
-        {/* Progress circle */}
-        <circle
-          cx="100"
-          cy="100"
-          r={radius}
-          fill="none"
-          stroke="#8AF8FF"
-          strokeWidth="3.5"
+          stroke="var(--aegis-cyan)"
+          strokeWidth="2.8"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{
-            filter: 'drop-shadow(0 0 15px rgba(138,248,255,0.8)) drop-shadow(0 0 30px rgba(138,248,255,0.25))',
-            transform: 'rotate(-90deg)',
-            transformOrigin: '100px 100px',
-            transition: 'stroke-dashoffset 0.5s ease-out',
-          }}
+          strokeDashoffset={circumference * (1 - safe / 100)}
+          style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1)' }}
         />
-        {/* Inner tick ring */}
-        <circle
-          cx="100"
-          cy="100"
-          r="82"
-          fill="none"
-          stroke="rgba(138,248,255,0.18)"
-          strokeWidth="1"
-          strokeDasharray="2 6"
-        />
+        <circle cx="50" cy="50" r="35" fill="none" stroke="rgba(138,248,255,.2)" strokeWidth=".7" strokeDasharray="1.5 4" />
       </svg>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        padding: '20px',
-      }}>
+      <div className="gauge-circle__content">
         <div className="hud-label">{label}</div>
-        <div className="hud-value" style={{ fontSize: '48px', lineHeight: 1 }}>{value}</div>
-        <div className="hud-label" style={{ marginTop: '4px' }}>{sub}</div>
+        <div className="hud-value gauge-value">{displayValue}</div>
+        <div className="hud-label">{sub}</div>
       </div>
     </div>
   );

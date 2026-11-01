@@ -1,97 +1,40 @@
-import React, { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import * as maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Flight } from '../hooks/useFlightData';
 import type { Quake } from '../hooks/useQuakeData';
 
-interface GlobeMapProps {
-  flights: Flight[];
-  quakes: Quake[];
-}
+type GlobeMapProps = { flights: Flight[]; quakes: Quake[] };
+type PointFeatureCollection = { type: 'FeatureCollection'; features: Array<{ type: 'Feature'; geometry: { type: 'Point'; coordinates: number[] }; properties: Record<string, string | number> }> };
+const empty: PointFeatureCollection = { type: 'FeatureCollection', features: [] };
 
 export function GlobeMap({ flights, quakes }: GlobeMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-
+  const updateRef = useRef(() => undefined);
+  updateRef.current = () => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    const aircraft = map.getSource('aegis-flights') as maplibregl.GeoJSONSource | undefined;
+    const events = map.getSource('aegis-quakes') as maplibregl.GeoJSONSource | undefined;
+    aircraft?.setData({ type: 'FeatureCollection', features: flights.map((f) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] }, properties: { callsign: f.callsign } })) });
+    events?.setData({ type: 'FeatureCollection', features: quakes.map((q) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [q.lon, q.lat] }, properties: { magnitude: q.magnitude, place: q.place } })) });
+  };
   useEffect(() => {
     if (!containerRef.current) return;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-      center: [0, 0],
-      zoom: 1.5,
-      pitch: 0,
-      projection: 'globe' as any,
-    });
+    const map = new maplibregl.Map({ container: containerRef.current, style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json', center: [10, 12], zoom: 1.25, minZoom: 1 });
     mapRef.current = map;
-    map.on('load', () => {
-      map.setProjection({ type: 'globe' } as any);
+    map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-right');
+    map.once('load', () => {
+      map.setProjection({ type: 'globe' } as never);
+      map.addSource('aegis-flights', { type: 'geojson', data: empty as never });
+      map.addLayer({ id: 'aegis-flights-layer', type: 'circle', source: 'aegis-flights', paint: { 'circle-radius': 3.5, 'circle-color': '#8AF8FF', 'circle-opacity': .9, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
+      map.addSource('aegis-quakes', { type: 'geojson', data: empty as never });
+      map.addLayer({ id: 'aegis-quakes-layer', type: 'circle', source: 'aegis-quakes', paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 0, 3, 6, 15], 'circle-color': '#FFC857', 'circle-opacity': .72, 'circle-stroke-color': '#8AF8FF', 'circle-stroke-width': 1 } });
+      updateRef.current();
     });
     return () => { map.remove(); mapRef.current = null; };
   }, []);
-
-  // Flights layer
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-    const srcId = 'flights';
-    if (map.getSource(srcId)) {
-      (map.getSource(srcId) as maplibregl.GeoJSONSource).setData({
-        type: 'FeatureCollection',
-        features: flights.map(f => ({
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [f.lon, f.lat] },
-          properties: { icao24: f.icao24, alt: f.alt, heading: f.heading, callsign: f.callsign },
-        })),
-      });
-      return;
-    }
-    map.addSource(srcId, {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-    });
-    map.addLayer({
-      id: 'flights-layer',
-      type: 'symbol',
-      source: srcId,
-      layout: {
-        'icon-image': 'airport-15',
-        'icon-allow-overlap': true,
-      },
-    });
-  }, [flights]);
-
-  // Quakes layer
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-    const srcId = 'quakes';
-    const data = {
-      type: 'FeatureCollection' as const,
-      features: quakes.map(q => ({
-        type: 'Feature' as const,
-        geometry: { type: 'Point' as const, coordinates: [q.lon, q.lat] },
-        properties: { mag: q.magnitude, place: q.place },
-      })),
-    };
-    if (map.getSource(srcId)) {
-      (map.getSource(srcId) as maplibregl.GeoJSONSource).setData(data as any);
-      return;
-    }
-    map.addSource(srcId, { type: 'geojson', data: data as any });
-    map.addLayer({
-      id: 'quakes-layer',
-      type: 'circle',
-      source: srcId,
-      paint: {
-        'circle-radius': ['interpolate', ['linear'], ['get', 'mag'], 0, 4, 8, 24],
-        'circle-color': ['interpolate', ['linear'], ['get', 'mag'], 0, '#FFD700', 5, '#FF4500', 8, '#FF0000'],
-        'circle-opacity': 0.7,
-        'circle-stroke-width': 1,
-        'circle-stroke-color': '#8AF8FF',
-      },
-    });
-  }, [quakes]);
-
-  return <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />;
+  useEffect(() => { updateRef.current(); }, [flights, quakes]);
+  return <div id="globe" ref={containerRef} style={{ position: 'absolute', inset: 0 }} />;
 }
+

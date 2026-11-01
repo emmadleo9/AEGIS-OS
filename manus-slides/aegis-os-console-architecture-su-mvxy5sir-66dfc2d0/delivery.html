@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    .slide-container { 
+      width: 1280px; min-height: 720px; 
+      background: #050A0E; color: #E2F1F8;
+      font-family: 'Roboto Mono', monospace;
+      display: flex; flex-direction: column;
+      padding: 40px;
+    }
+    .motif { 
+      position: absolute; top: 40px; right: 40px;
+      color: #8AF8FF; font-family: 'Share Tech Mono', monospace;
+      font-size: 14px; letter-spacing: 2px;
+    }
+    header { margin-bottom: 40px; border-bottom: 1px solid #1E3A5F; padding-bottom: 20px; }
+    h2 { font-family: 'Share Tech Mono', monospace; font-size: 32px; color: #8AF8FF; text-transform: uppercase; }
+    
+    .delivery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; }
+    .delivery-quad { border: 1px solid #1E3A5F; padding: 30px; position: relative; display: flex; flex-direction: column; gap: 15px; }
+    .quad-title { font-family: 'Share Tech Mono', monospace; font-size: 18px; color: #8AF8FF; border-bottom: 1px solid #1E3A5F; padding-bottom: 10px; margin-bottom: 10px; }
+    .quad-point { display: flex; gap: 12px; color: #6B8A9C; font-size: 15px; }
+    .check { color: #8AF8FF; }
+    
+    .footer-msg { 
+      margin-top: 40px; font-family: 'Share Tech Mono', monospace; 
+      font-size: 24px; color: #8AF8FF; text-align: center;
+      padding: 20px; border: 1px solid #1E3A5F;
+    }
+    .page-num { position: absolute; bottom: 40px; right: 40px; font-family: 'Share Tech Mono', monospace; color: #6B8A9C; }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <div class="motif">[ AEGIS v3.2 // SYS.OP.ACTIVE ]</div>
+    <header>
+      <h2>Operational Delivery</h2>
+    </header>
+    <div class="delivery-grid">
+      <div class="delivery-quad">
+        <div class="quad-title">VALIDATION METRICS</div>
+        <div class="quad-point"><span class="check">✓</span> Production build passing:rolldown-vite</div>
+        <div class="quad-point"><span class="check">✓</span> Zero "Not Found" route leakage</div>
+        <div class="quad-point"><span class="check">✓</span> 60fps HUD rendering baseline</div>
+      </div>
+      <div class="delivery-quad">
+        <div class="quad-title">PUBLIC SCOPE ENFORCEMENT</div>
+        <div class="quad-point"><span class="check">✓</span> Zero CCTV/IP-cam scraper modules</div>
+        <div class="quad-point"><span class="check">✓</span> Strictly lawful OSINT feed polling</div>
+        <div class="quad-point"><span class="check">✓</span> No restricted RTSP scanning built</div>
+      </div>
+    </div>
+    <div class="footer-msg">[ END OF TRANSMISSION ]</div>
+    <div class="page-num">[ 07 / 07 ]</div>
+  </div>
+</body>
+</html>
