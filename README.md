@@ -41,32 +41,32 @@
 
 ```mermaid
 flowchart LR
-    subgraph User["📱 User Devices"]
-        WA[WhatsApp<br>Redmi 10A]
+    subgraph User["User Devices"]
+        WA[WhatsApp Redmi 10A]
         IG[Instagram]
         TG[Telegram]
         DC[Discord]
     end
 
-    subgraph Console["🖥️ AEGIS Console (Face)<br>localhost:3000 · Dark OLED"]
-        UI[Chat UI<br>Glassmorphism Cards]
+    subgraph Console["AEGIS Console Face localhost:3000 Dark OLED"]
+        UI[Chat UI Glassmorphism Cards]
     end
 
-    subgraph Gateway["🚪 OpenWA Gateway<br>localhost:2785 · SQLite"]
+    subgraph Gateway["OpenWA Gateway localhost:2785 SQLite"]
         SES[WhatsApp Session]
         WH[Webhook Dispatch]
     end
 
-    subgraph Brain["🧠 OpenJarvis Brain<br>127.0.0.1:8000"]
-        WEB[/webhooks/whatsapp]
+    subgraph Brain["OpenJarvis Brain 127.0.0.1:8000"]
+        WEB[webhooks whatsapp]
         LLM[qwen2.5:3b via Ollama]
         T[AegisWhatsApp Tool]
     end
 
-    subgraph Infra["🐳 Docker Infrastructure"]
-        OLL[Ollama<br>qwen2.5:3b]
-        DB[(Postgres 15<br>OpenBSP triggers)]
-        REDIS[(Redis<br>rate limits)]
+    subgraph Infra["Docker Infrastructure"]
+        OLL[Ollama qwen2.5:3b]
+        DB[(Postgres 15 OpenBSP triggers)]
+        REDIS[(Redis rate limits)]
     end
 
     WA -->|1. Incoming message| Gateway
@@ -90,6 +90,9 @@ flowchart LR
 
     class Console console
     class Gateway gateway
+    class Brain brain
+    class OLL,DB,REDIS infra
+```
     class Brain brain
     class OLL,DB,REDIS infra
 ```
