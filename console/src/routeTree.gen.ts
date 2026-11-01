@@ -9,7 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorldRouteImport } from './routes/world'
+import { Route as WhatsappRouteImport } from './routes/whatsapp'
+import { Route as SocialRouteImport } from './routes/social'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as DiagnosticsRouteImport } from './routes/diagnostics'
+import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthIndexRouteImport } from './routes/_auth/index'
 import { Route as OauthTiktokRouteImport } from './routes/oauth/tiktok'
@@ -71,9 +76,34 @@ import { Route as AuthIntegrationsWhatsappOrgAddressIdTemplatesIndexRouteImport 
 import { Route as AuthIntegrationsWhatsappOrgAddressIdTemplatesNewRouteImport } from './routes/_auth/integrations/whatsapp/$orgAddressId/templates/new'
 import { Route as AuthIntegrationsWhatsappOrgAddressIdTemplatesTemplateIdRouteImport } from './routes/_auth/integrations/whatsapp/$orgAddressId/templates/$templateId'
 
+const WorldRoute = WorldRouteImport.update({
+  id: '/world',
+  path: '/world',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhatsappRoute = WhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialRoute = SocialRouteImport.update({
+  id: '/social',
+  path: '/social',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticsRoute = DiagnosticsRouteImport.update({
+  id: '/diagnostics',
+  path: '/diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevicesRoute = DevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -411,7 +441,12 @@ const AuthIntegrationsWhatsappOrgAddressIdTemplatesTemplateIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/devices': typeof DevicesRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/login': typeof LoginRoute
+  '/social': typeof SocialRoute
+  '/whatsapp': typeof WhatsappRoute
+  '/world': typeof WorldRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/instagram': typeof OauthInstagramRoute
@@ -473,7 +508,12 @@ export interface FileRoutesByFullPath {
   '/integrations/whatsapp/$orgAddressId/templates': typeof AuthIntegrationsWhatsappOrgAddressIdTemplatesIndexRoute
 }
 export interface FileRoutesByTo {
+  '/devices': typeof DevicesRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/login': typeof LoginRoute
+  '/social': typeof SocialRoute
+  '/whatsapp': typeof WhatsappRoute
+  '/world': typeof WorldRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/instagram': typeof OauthInstagramRoute
@@ -537,7 +577,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_auth': typeof AuthRouteWithChildren
+  '/devices': typeof DevicesRoute
+  '/diagnostics': typeof DiagnosticsRoute
   '/login': typeof LoginRoute
+  '/social': typeof SocialRoute
+  '/whatsapp': typeof WhatsappRoute
+  '/world': typeof WorldRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/consent': typeof OauthConsentRoute
   '/oauth/instagram': typeof OauthInstagramRoute
@@ -601,7 +646,12 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/devices'
+    | '/diagnostics'
     | '/login'
+    | '/social'
+    | '/whatsapp'
+    | '/world'
     | '/oauth/callback'
     | '/oauth/consent'
     | '/oauth/instagram'
@@ -663,7 +713,12 @@ export interface FileRouteTypes {
     | '/integrations/whatsapp/$orgAddressId/templates'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/devices'
+    | '/diagnostics'
     | '/login'
+    | '/social'
+    | '/whatsapp'
+    | '/world'
     | '/oauth/callback'
     | '/oauth/consent'
     | '/oauth/instagram'
@@ -726,7 +781,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_auth'
+    | '/devices'
+    | '/diagnostics'
     | '/login'
+    | '/social'
+    | '/whatsapp'
+    | '/world'
     | '/oauth/callback'
     | '/oauth/consent'
     | '/oauth/instagram'
@@ -790,7 +850,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
+  DevicesRoute: typeof DevicesRoute
+  DiagnosticsRoute: typeof DiagnosticsRoute
   LoginRoute: typeof LoginRoute
+  SocialRoute: typeof SocialRoute
+  WhatsappRoute: typeof WhatsappRoute
+  WorldRoute: typeof WorldRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
   OauthConsentRoute: typeof OauthConsentRoute
   OauthInstagramRoute: typeof OauthInstagramRoute
@@ -803,11 +868,46 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/world': {
+      id: '/world'
+      path: '/world'
+      fullPath: '/world'
+      preLoaderRoute: typeof WorldRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whatsapp': {
+      id: '/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/whatsapp'
+      preLoaderRoute: typeof WhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social': {
+      id: '/social'
+      path: '/social'
+      fullPath: '/social'
+      preLoaderRoute: typeof SocialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostics': {
+      id: '/diagnostics'
+      path: '/diagnostics'
+      fullPath: '/diagnostics'
+      preLoaderRoute: typeof DiagnosticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devices': {
+      id: '/devices'
+      path: '/devices'
+      fullPath: '/devices'
+      preLoaderRoute: typeof DevicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -1362,7 +1462,12 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
+  DevicesRoute: DevicesRoute,
+  DiagnosticsRoute: DiagnosticsRoute,
   LoginRoute: LoginRoute,
+  SocialRoute: SocialRoute,
+  WhatsappRoute: WhatsappRoute,
+  WorldRoute: WorldRoute,
   OauthCallbackRoute: OauthCallbackRoute,
   OauthConsentRoute: OauthConsentRoute,
   OauthInstagramRoute: OauthInstagramRoute,
