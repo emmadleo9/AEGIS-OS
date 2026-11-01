@@ -3,9 +3,8 @@
 <div align="center">
 
   <picture>
-    <source media="(prefers-color-scheme: dark)" src="https://cdn.jsdelivr.net/gh/aegis-os/assets@main/shield-dark.svg" />
-    <source media="(prefers-color-scheme: light)" src="https://cdn.jsdelivr.net/gh/aegis-os/assets@main/shield-dark.svg" />
-    <img alt="AEGIS obsidian glass shield logo" src="https://cdn.jsdelivr.net/gh/aegis-os/assets@main/shield-dark.svg" width="220" />
+    <source media="(prefers-color-scheme: dark)" src="./console/public/logo.svg" />
+    <img alt="AEGIS obsidian glass shield logo" src="./console/public/logo.svg" width="220" />
   </picture>
 
   <h1>AEGIS-OS</h1>
