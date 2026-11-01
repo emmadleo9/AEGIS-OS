@@ -1,0 +1,12 @@
+AEGIS-OS OpenWA WhatsApp API Gateway - API Key
+================================================
+
+API KEY:
+owa_k1_cb7efd802ecc4f0f269020a351f0120ddcc9784b3a44e6bf0e2f1c6fa2162
+
+URLS:
+Gateway:      http://localhost:2785
+API Docs:     http://localhost:2785/api/docs
+
+Use this API key in the Authorization header, e.g.:
+Authorization: Bearer owa_k1_cb7efd802ecc4f0f269020a351f0120ddcc9784b3a44e6bf0e2f1c6fa2162
