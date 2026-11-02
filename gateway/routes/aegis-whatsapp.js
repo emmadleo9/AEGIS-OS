@@ -17,7 +17,7 @@ const AUTH_DIR = path.join(__dirname, '..', 'data', 'baileys_auth');
 
 let sock = null;
 let startingPromise = null;
-let connectionState = { status: 'offline', qr: null, user: null, lastError: null, updatedAt: new Date().toISOString() };
+let connectionState = { status: 'offline', qr: null, user: null, lastError: null, pairingCode: null, updatedAt: new Date().toISOString() };
 let messageLog = [];
 const wsClients = new Set();
 let wsBroadcaster = null;
@@ -154,6 +154,22 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
     try {
       const result = await sock.sendMessage(jid, { text: String(text).slice(0, 4096) });
       res.json({ sent: true, id: result?.key?.id ?? null });
+    } catch (error) {
+      res.status(502).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post('/api/whatsapp/pairing-code', async (req, res) => {
+    if (!sock) return res.status(409).json({ error: 'Start a session first.' });
+    const { phoneNumber } = req.body ?? {};
+    const digits = String(phoneNumber ?? '').replace(/\D/g, '');
+    if (digits.length < 8) return res.status(400).json({ error: 'Provide the full phone number in international format digits only, e.g. 923001234567.' });
+    try {
+      const code = await sock.requestPairingCode(digits);
+      const formatted = `${code.slice(0, 4)}-${code.slice(4)}`;
+      setState({ pairingCode: formatted });
+      broadcast('pairingCode', { code: formatted });
+      res.json({ code: formatted });
     } catch (error) {
       res.status(502).json({ error: error instanceof Error ? error.message : String(error) });
     }
