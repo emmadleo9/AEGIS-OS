@@ -103,6 +103,9 @@ AEGIS-OS/
 MIT — see [LICENSE](LICENSE).
 
 ---
+Built with open-source. See CREDITS.md for licenses.
+
+---
 
 <div align="center">
 <i>AEGIS-OS · obsidian glass shield core · status: ONLINE</i><br/>
