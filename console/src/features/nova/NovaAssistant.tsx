@@ -34,6 +34,15 @@ function pickBritishVoice(): SpeechSynthesisVoice | null {
 export function NovaAssistant() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<NovaMode>('NEXUS');
+  const [pos, setPos] = useState<{ x: number; y: number }>(() => {
+    try {
+      const stored = localStorage.getItem('nova_widget_pos');
+      if (stored) return JSON.parse(stored) as { x: number; y: number };
+    } catch { /* default below */ }
+    return { x: window.innerWidth - 92, y: window.innerHeight - 92 };
+  });
+  const dragRef = useRef<{ dragging: boolean; dx: number; dy: number }>({ dragging: false, dx: 0, dy: 0 });
+  const dragMoved = useRef(false);
   const [messages, setMessages] = useState<NovaMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [listening, setListening] = useState(false);
@@ -46,6 +55,26 @@ export function NovaAssistant() {
 
   useEffect(() => { void loadMemory<NovaMessage[]>('chats', []).then((stored) => setMessages(stored.slice(-30))); }, []);
   useEffect(() => { if (messages.length) void saveMemory('chats', messages.slice(-50)); }, [messages]);
+
+  useEffect(() => {
+    const onMove = (event: MouseEvent) => {
+      if (!dragRef.current.dragging) return;
+      dragMoved.current = true;
+      const x = Math.max(8, Math.min(window.innerWidth - 70, event.clientX - dragRef.current.dx));
+      const y = Math.max(8, Math.min(window.innerHeight - 70, event.clientY - dragRef.current.dy));
+      setPos({ x, y });
+    };
+    const onUp = () => {
+      if (dragRef.current.dragging) {
+        dragRef.current.dragging = false;
+        window.setTimeout(() => { dragMoved.current = false; }, 50);
+        setPos((current) => { localStorage.setItem('nova_widget_pos', JSON.stringify(current)); return current; });
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, []);
 
   useEffect(() => {
     const warm = () => { setVoiceReady(Boolean(pickBritishVoice())); };
@@ -130,13 +159,40 @@ export function NovaAssistant() {
     setListening(true);
   }, [handle, listening]);
 
+  const startDrag = (event: React.MouseEvent) => {
+    dragMoved.current = false;
+    dragRef.current = { dragging: true, dx: event.clientX - pos.x, dy: event.clientY - pos.y };
+  };
+
+  useEffect(() => {
+    const onMove = (event: MouseEvent) => {
+      if (!dragRef.current.dragging) return;
+      dragMoved.current = true;
+      const x = Math.max(8, Math.min(window.innerWidth - 70, event.clientX - dragRef.current.dx));
+      const y = Math.max(8, Math.min(window.innerHeight - 70, event.clientY - dragRef.current.dy));
+      setPos({ x, y });
+    };
+    const onUp = () => {
+      if (dragRef.current.dragging) {
+        dragRef.current.dragging = false;
+        setPos((current) => { localStorage.setItem('nova_widget_pos', JSON.stringify(current)); return current; });
+        window.setTimeout(() => { dragMoved.current = false; }, 60);
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, []);
+
   return (
     <>
       <button
         type="button"
         className="nova-orb"
         aria-label={open ? 'Close NOVA' : 'Open NOVA assistant'}
-        onClick={() => setOpen((value) => !value)}
+        style={{ left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }}
+        onMouseDown={startDrag}
+        onClick={() => { if (!dragMoved.current) setOpen((value) => !value); }}
         data-speaking={speaking || undefined}
       >
         {open ? '×' : '◈'}

@@ -163,6 +163,7 @@ body{overflow-x:hidden}
 .wa-pairing input{width:100%;min-height:44px;padding:10px;border:1px solid var(--aegis-border);background:#050a0e;color:var(--aegis-text);font:inherit;font-size:12px;text-align:center;letter-spacing:1px}
 .wa-pairing-code{font-size:34px;color:var(--aegis-cyan);letter-spacing:6px;text-shadow:var(--aegis-glow)}
 .wa-session-actions{display:flex;gap:10px;align-items:center}
+.offline-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--aegis-amber);color:var(--aegis-amber);background:rgba(255,200,87,.08);font-size:10px;letter-spacing:1px}
 
 /* ===== v17 settings + tasks ===== */
 .settings-stack{display:grid;gap:16px}
