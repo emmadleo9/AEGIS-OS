@@ -1,6 +1,4 @@
 @echo off
-echo Stopping AEGIS-OS...
-taskkill /F /IM node.exe 2>nul
-cd /d D:\AEGIS-OS
-docker compose down
-echo AEGIS-OS stopped.
+setlocal
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0STOP-AEGIS.ps1"
+exit /b %ERRORLEVEL%

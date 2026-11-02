@@ -1,13 +1,16 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { HudFrame } from './components/hud';
-import { Dashboard } from './features/dashboard/Dashboard';
-import { DevicesView } from './features/devices/DevicesView';
-import { DiagnosticsView } from './features/diagnostics/DiagnosticsView';
-import { SocialHub } from './features/social/SocialHub';
-import { TimeView } from './features/time/TimeView';
-import { WeatherView } from './features/weather/WeatherView';
-import { WorldView } from './features/world/WorldView';
+import { HudFrame } from '@/components/hud';
+import { Dashboard } from '@/features/dashboard/Dashboard';
+import { DevicesView } from '@/features/devices/DevicesView';
+import { DiagnosticsView } from '@/features/diagnostics/DiagnosticsView';
+import { NewsConflictView } from '@/features/feeds/NewsConflictView';
+import { AegisWhatsApp } from '@/features/social/AegisWhatsApp';
+import { SocialHub } from '@/features/social/SocialHub';
+import { TimeView } from '@/features/time/TimeView';
+import { WeatherView } from '@/features/weather/WeatherView';
+import { WorldView } from '@/features/world/WorldView';
+import { initDB } from '@/lib/aegis-memory';
 
 const links = [
   ['/', '◈', 'DASHBOARD'],
@@ -24,6 +27,7 @@ const links = [
 function Shell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const [now, setNow] = useState(() => new Date());
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const titles: Record<string, string> = {
     '/': 'COMMAND DASHBOARD',
     '/world': 'WORLD VIEW',
@@ -41,16 +45,26 @@ function Shell({ children }: { children: ReactNode }) {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => { void initDB(); }, []);
+
   return (
     <div className="aegis-app">
-      <aside className="aegis-sidebar">
+      {mobileNavOpen && <button type="button" className="mobile-nav-backdrop" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
+      <button type="button" className="mobile-nav-toggle" aria-label={mobileNavOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen((open) => !open)}>
+        {mobileNavOpen ? '×' : '☰'}
+      </button>
+      <aside className={`aegis-sidebar${mobileNavOpen ? ' mobile-open' : ''}`}>
         <div className="aegis-brand">
           AEGIS
           <small>PUBLIC DATA CONSOLE // 03.2</small>
         </div>
         <nav className="aegis-nav" aria-label="Main navigation">
           {links.map(([to, icon, label]) => (
-            <NavLink key={to} to={to} end={to === '/'}>
+            <NavLink key={to} to={to} end={to === '/'} onClick={() => setMobileNavOpen(false)}>
               <span className="aegis-nav-icon" aria-hidden="true">{icon}</span>
               <span>{label}</span>
             </NavLink>
@@ -79,48 +93,6 @@ function Shell({ children }: { children: ReactNode }) {
   );
 }
 
-function FeedsView() {
-  const [events, setEvents] = useState<Array<{ title: string; date: string; url?: string }>>([]);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        const response = await fetch('https://api.gdeltproject.org/api/v2/geo/geo?query=conflict&mode=pointdata&format=geojson&timespan=24h&maxpoints=100');
-        if (!response.ok) throw new Error(`GDELT returned HTTP ${response.status}`);
-        const result = await response.json() as { features?: Array<{ properties?: { name?: string; date?: string; url?: string } }> };
-        if (active) {
-          setEvents((result.features ?? []).slice(0, 30).map(({ properties }) => ({
-            title: properties?.name ?? 'Unlabeled public event',
-            date: properties?.date ?? '',
-            url: properties?.url,
-          })));
-          setError('');
-        }
-      } catch (reason) {
-        if (active) setError(reason instanceof Error ? reason.message : String(reason));
-      }
-    };
-    void load();
-    const timer = window.setInterval(() => void load(), 5 * 60_000);
-    return () => { active = false; window.clearInterval(timer); };
-  }, []);
-
-  return (
-    <HudFrame title="GDELT // PUBLIC EVENTS">
-      <div className="feed-list">
-        {events.map((event, index) => (
-          <a className="aegis-row feed-row" href={event.url || 'https://www.gdeltproject.org/'} target="_blank" rel="noreferrer" key={`${event.title}-${index}`}>
-            <strong>{event.title}</strong><span>{event.date}</span>
-          </a>
-        ))}
-        {events.length === 0 && <p className="inline-status">{error ? `Feed unavailable: ${error}` : 'Loading public event feed…'}</p>}
-      </div>
-    </HudFrame>
-  );
-}
-
 function ScopesView() {
   return (
     <div className="aegis-grid aegis-grid-3">
@@ -143,7 +115,7 @@ export default function AegisApp() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/world" element={<WorldView />} />
           <Route path="/weather" element={<WeatherView />} />
-          <Route path="/feeds" element={<FeedsView />} />
+          <Route path="/feeds" element={<NewsConflictView />} />
           <Route path="/social" element={<SocialHub />} />
           <Route path="/scopes" element={<ScopesView />} />
           <Route path="/devices" element={<DevicesView />} />

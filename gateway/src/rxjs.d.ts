@@ -1,7 +1,13 @@
 // Type declarations for rxjs to suppress TS2709 namespace-as-type errors
 // when using Observable as a type without @ts-nocheck
 declare module 'rxjs' {
-  export interface Observable<T> {}
+  export interface Observable<T> {
+    subscribe(
+      observerOrNext?: Partial<Observer<T>> | ((value: T) => void),
+      error?: (err: unknown) => void,
+      complete?: () => void,
+    ): Subscription;
+  }
   export interface Observer<T> {}
   export interface Subscriber<T> {}
   export interface Subscription {}

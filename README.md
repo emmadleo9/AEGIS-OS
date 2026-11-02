@@ -1,255 +1,110 @@
-# AEGIS-OS
-
 <div align="center">
 
-  <picture>
-    <source media="(prefers-color-scheme: dark)" src="./console/public/logo.svg" />
-    <img alt="AEGIS obsidian glass shield logo" src="./console/public/logo.svg" width="220" />
-  </picture>
+<img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1000&color=8AF8FF&center=true&width=600&lines=AEGIS-OS+%2F%2F+TACTICAL+COMMAND;Local-first+AI+OS;One+OS+to+control+all+devices" alt="AEGIS-OS // TACTICAL COMMAND — Local-first AI OS — One OS to control all devices" />
 
-  <h1>AEGIS-OS</h1>
-  <p><b>One OS to control WhatsApp, Instagram, Telegram, Discord — all devices.</b></p>
-  <p>
-    <i>Local-first AI operating system with an obsidian glass shield core.</i>
-  </p>
+<h1>AEGIS-OS</h1>
 
-  <p>
-    <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT"/>
-    <img src="https://img.shields.io/badge/brain-OpenJarvis-blue.svg" alt="Brain: OpenJarvis"/>
-    <img src="https://img.shields.io/badge/gateway-OpenWA-blue.svg" alt="Gateway: OpenWA"/>
-    <img src="https://img.shields.io/badge/console-AEGIS-black.svg" alt="Console: AEGIS"/>
-    <img src="https://img.shields.io/badge/model-qwen2.5:3b-purple.svg" alt="Model: qwen2.5:3b"/>
-    <img src="https://img.shields.io/badge/hardware-i7--7500U%20%2B%2016GB%20RAM%20%2B%202GB%20GPU-gray.svg" alt="Hardware optimized"/>
-  </p>
+<p><b>One OS to control WhatsApp, Instagram, Telegram, Discord — all devices.</b></p>
+<p><i>Local-first AI operating system with an obsidian glass shield core.</i></p>
 
-  <p>
-    <b>BRAIN</b> OpenJarvis · Local-first AI · 5 primitives · <i>jarvis serve</i> on 127.0.0.1:8000 · WhatsApp, Telegram, Discord channels
-  </p>
-  <p>
-    <b>GATEWAY</b> OpenWA · WhatsApp API Gateway · REST + Dashboard on localhost:2785 · Multi-session · SQLite mode
-  </p>
-  <p>
-    <b>CONSOLE</b> AEGIS · Dark OLED face · Glassmasonry UI · Points to gateway:2785 + brain:8000
-  </p>
+<p>
+  <img src="https://img.shields.io/badge/license-MIT-00C853?style=for-the-badge" alt="License: MIT" />
+  <img src="https://img.shields.io/badge/brain-OpenJarvis-2962FF?style=for-the-badge" alt="Brain: OpenJarvis" />
+  <img src="https://img.shields.io/badge/gateway-OpenWA-546E7A?style=for-the-badge" alt="Gateway: OpenWA" />
+  <img src="https://img.shields.io/badge/console-AEGIS-212121?style=for-the-badge" alt="Console: AEGIS" />
+  <img src="https://img.shields.io/badge/model-qwen2.5:3b-AA00FF?style=for-the-badge" alt="Model: qwen2.5:3b" />
+  <img src="https://img.shields.io/badge/hud-v3.2-8AF8FF?style=for-the-badge" alt="HUD: v3.2" />
+  <img src="https://img.shields.io/badge/offline--first-212121?style=for-the-badge" alt="Offline-first" />
+  <img src="https://img.shields.io/badge/status-ONLINE-00C853?style=for-the-badge" alt="Status: ONLINE" />
+</p>
 
 </div>
 
 ---
 
-## Architecture
+## ⚡ What is AEGIS-OS?
+
+AEGIS-OS is a **local-first AI operating system** that turns a modest machine into a tactical command console: messaging across WhatsApp, Telegram, Instagram and Discord, a live OSINT world map, and a self-hosted AI brain — all running on your own hardware, no cloud required.
+
+| ⚡ Feature | 🛡️ Capability |
+|-----------|---------------|
+| 🧠 **Brain (OpenJarvis)** | Local AI framework with 5 primitives — Intelligence, Engine, Agents, Tools, Memory. Serves a local LLM (`qwen2.5:3b` via Ollama). |
+| 📡 **Gateway (OpenWA)** | WhatsApp API gateway — REST API + dashboard, multi-session, SQLite mode, QR pairing. |
+| 🖥️ **Console (AEGIS)** | Dark OLED HUD (`#050A0E` / cyan `#8AF8FF`), glassmasonry panels, animated tactical UI. |
+| 🌍 **World View** | Live globe: ADS-B aircraft ▲, earthquakes, satellites, marine lanes, GDELT conflict markers — 2D / 3D globe / satellite modes. |
+| 💬 **Social Hub** | **AEGIS WhatsApp** embedded — scan a QR, chat in the HUD. Plus Telegram / Instagram / Discord connectors. |
+| 🗞️ **News & Conflict** | GDELT global events with country search, recommendations and a live mini-map. |
+| 🔋 **Memory** | Persistent everywhere — IndexedDB in the console, SQLite in the gateway. Sessions survive restarts. |
+| ✈️ **Offline-first** | Feeds degrade gracefully; the console keeps running without internet. |
+
+---
+
+## 🏗️ Architecture
 
 ```mermaid
 flowchart LR
-    subgraph User["User Devices"]
-        WA[WhatsApp Redmi 10A]
-        IG[Instagram]
-        TG[Telegram]
-        DC[Discord]
-    end
-
-    subgraph Console["AEGIS Console Face localhost:3000 Dark OLED"]
-        UI[Chat UI Glassmorphism Cards]
-    end
-
-    subgraph Gateway["OpenWA Gateway localhost:2785 SQLite"]
-        SES[WhatsApp Session]
-        WH[Webhook Dispatch]
-    end
-
-    subgraph Brain["OpenJarvis Brain 127.0.0.1:8000"]
-        WEB[webhooks whatsapp]
-        LLM[qwen2.5:3b via Ollama]
-        T[AegisWhatsApp Tool]
-    end
-
-    subgraph Infra["Docker Infrastructure"]
-        OLL[Ollama qwen2.5:3b]
-        DB[(Postgres 15 OpenBSP triggers)]
-        REDIS[(Redis rate limits)]
-    end
-
-    WA -->|1. Incoming message| Gateway
-    Gateway -->|2. Webhook POST| Brain
-    Brain -->|3. LLM processing| LLM
-    LLM -->|4. Generate reply| T
-    T -->|5. Send via OpenWA SDK| Gateway
-    Gateway -->|6. Deliver to WhatsApp| WA
-
-    Console -.->|Gateway API| Gateway
-    Console -.->|Brain API| Brain
-
-    Brain --> OLL
-    Gateway --> DB
-    Gateway -.-> REDIS
-
-    classDef console fill:#000000,stroke:#00ff88,stroke-width:2px,color:#fff
-    classDef gateway fill:#0a0a0a,stroke:#00ff88,stroke-width:1px,color:#fff
-    classDef brain fill:#000000,stroke:#00ff88,stroke-width:2px,color:#fff
-    classDef infra fill:#111111,stroke:#333333,stroke-width:1px,color:#aaa
-
-    class Console console
-    class Gateway gateway
-    class Brain brain
-    class OLL,DB,REDIS infra
-```
-    class Brain brain
-    class OLL,DB,REDIS infra
-```
-
-### Message flow
-
-```
-WhatsApp Message (Redmi 10A)
-        │
-        ▼
-OpenWA Gateway (gateway:2785)
-        │  Webhook POST
-        ▼
-OpenJarvis Brain (brain:8000/webhooks/whatsapp)
-        │  Agent processes with local LLM (qwen2.5:3b)
-        ▼
-aegis_whatsapp_send tool (rmyndharis-openwa SDK)
-        │  Reply via OpenWA SDK
-        ▼
-OpenWA Gateway → WhatsApp → Redmi 10A
-        │
-        ▼
-AEGIS Console (console:3000) displays conversation
+    U[User Devices] --> C[Console / AEGIS HUD]
+    C --> G[Gateway / OpenWA]
+    C --> B[Brain / OpenJarvis]
+    G --> WA[WhatsApp]
+    G --> TG[Telegram]
+    G --> DC[Discord]
+    G --> IG[Instagram]
+    C --> O[OSINT Feeds / ADS-B · USGS · GDELT · Satellites]
+    B --> LLM[qwen2.5:3b · Ollama]
+    G --> DB[(SQLite Persistence)]
 ```
 
 ---
 
-## Features
+## 🧰 Tech Stack
 
-| Layer | Capability |
-|-------|-----------|
-| **Brain** (OpenJarvis) | Local-first AI framework with 5 primitives (Intelligence, Engine, Agents, Tools/Memory). Runs `jarvis serve` on `127.0.0.1:8000`. Supports WhatsApp, Telegram, Discord channels. |
-| **Gateway** (OpenWA) | WhatsApp API Gateway with REST API + Dashboard on `localhost:2785`. Multi-session, ~300MB per session. SDKs: `@rmyndharis/openwa` (JS) and `rmyndharis-openwa` (Python). SQLite mode for low-resource hardware. |
-| **Console** (AEGIS) | Dark OLED (#000000) face with glassmorphism cards, obsidian glass shield logo, network-core animation. No light mode. Points to gateway:2785 + brain:8000. |
-| **Orchestration** | Docker Compose glue: brain, gateway, console, ollama, postgres, redis on a shared `aegis` network. |
-| **Messaging** | WhatsApp → OpenWA → Webhook → Brain → LLM → OpenWA SDK reply → Gateway → WhatsApp → Console display. |
-
----
-
-## Hardware target
-
-AEGIS-OS is optimized for modest hardware:
-
-- **CPU:** Intel i7-7500U (2 cores / 4 threads)
-- **RAM:** 16 GB
-- **GPU:** 2 GB
-- **Test device:** Redmi 10A
-
-To stay within these limits:
-
-- **Model:** `qwen2.5:3b` (tiny, runs on 2GB GPU via Ollama)
-- **Database:** SQLite for OpenWA (not Postgres-heavy)
-- **Memory cap:** 2 GB per container
-- **PID cap:** 2048 per container
+<p>
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/MapLibre-29B6F6?style=flat-square" alt="MapLibre GL" />
+  <img src="https://img.shields.io/badge/Baileys-25D366?style=flat-square" alt="Baileys" />
+  <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/Ollama-6D28D9?style=flat-square" alt="Ollama" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+</p>
 
 ---
 
-## Quick start
+## 🚀 Quick Start
 
 ```bash
-# 1. Clone the monorepo
-git clone https://github.com/YOUR_USERNAME/AEGIS-OS.git
+git clone https://github.com/emmadleo9/AEGIS-OS.git
 cd AEGIS-OS
-
-# 2. Configure environment
-cp .env.example .env
-# Edit .env if needed (AEGIS_SESSION_ID, API keys, etc.)
-
-# 3. Launch
-docker compose up -d
+./start.bat          # boots gateway (2785) + console (5173)
 ```
 
-Services come up on:
-
-| Service | URL |
-|---------|-----|
-| AEGIS Console | http://localhost:3000 |
-| OpenWA Gateway (API + Dashboard) | http://localhost:2785 |
-| OpenJarvis Brain | http://127.0.0.1:8000 |
-| Ollama (LLM) | http://localhost:11434 |
-
-### First-time setup
-
-1. Open the Gateway dashboard at **http://localhost:2785**
-2. Create a WhatsApp session and scan the QR code with your phone
-3. Copy the admin API key from the container logs:
-   ```bash
-   docker exec aegis-gateway cat /app/data/.api-key
-   ```
-4. Set `AEGIS_API_KEY` and `AEGIS_SESSION_ID` in `.env` to match your session
-5. Restart: `docker compose restart brain`
-6. Open the Console at **http://localhost:3000** and start messaging
+Then open **http://localhost:5173** — the AEGIS HUD. Pair AEGIS WhatsApp from the Social Hub by scanning the QR with your phone.
 
 ---
 
-## Wiring
-
-| Connection | Direction | Purpose |
-|------------|-----------|---------|
-| Gateway → Brain | `WEBHOOK_URL=http://brain:8000/webhooks/whatsapp` | Inbound WhatsApp messages forwarded to the brain |
-| Brain → Gateway | `aegis_whatsapp_send` tool via `rmyndharis-openwa` SDK | Outbound WhatsApp replies sent through the gateway |
-| Console → Gateway | `VITE_GATEWAY_URL=http://gateway:2785` | Console talks to gateway REST API |
-| Console → Brain | `VITE_BRAIN_URL=http://brain:8000` | Console talks to brain API |
-| Brain → Ollama | `OLLAMA_HOST=http://ollama:11434` | Local LLM inference |
-
-### Brain: `src/openjarvis/tools/aegis_whatsapp.py`
-
-Uses the `rmyndharis-openwa` Python SDK (`OpenWAClient`) to send WhatsApp replies back through the OpenWA gateway after the brain processes an inbound webhook.
-
-```python
-from openwa import OpenWAClient
-client = OpenWAClient(base_url="http://gateway:2785", api_key="aegis_master_key")
-client.messages.send_text(session_id, {"chatId": "1234567890@c.us", "text": "Hello from AEGIS"})
-```
-
-### Gateway: `.env`
-
-```
-WEBHOOK_URL=http://brain:8000/webhooks/whatsapp
-SSRF_ALLOWED_HOSTS=brain
-DATABASE_TYPE=sqlite
-```
-
-### Console: `.env`
-
-```
-VITE_GATEWAY_URL=http://gateway:2785
-VITE_BRAIN_URL=http://brain:8000
-VITE_APP_NAME=AEGIS
-```
-
----
-
-## Repo layout
+## 📁 Repo Layout
 
 ```
 AEGIS-OS/
-├── /brain       OpenJarvis — local-first AI (port 8000)
-├── /gateway     OpenWA — WhatsApp API Gateway (port 2785)
-├── /console     AEGIS — dark OLED console (port 3000)
-├── docker-compose.yml
-├── .env.example
+├── /brain       OpenJarvis — local-first AI brain
+├── /gateway     OpenWA + AEGIS feeds — local API gateway
+├── /console     AEGIS — dark OLED HUD console
 └── README.md
 ```
 
 ---
 
-## Licenses
+## 📜 License
 
-| Component | License | Origin |
-|-----------|---------|--------|
-| Brain (OpenJarvis) | Apache 2.0 | open-jarvis/OpenJarvis |
-| Gateway (OpenWA) | MIT | rmyndharis/OpenWA |
-| Console (AEGIS) | The Unlicense | matiasbattocchia/open-bsp-ui (rebranded) |
-| AEGIS-OS glue | MIT | This repo |
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-## Disclaimer
-
-OpenWA connects to WhatsApp through reverse-engineered clients (whatsapp-web.js / Baileys), **not** Meta's official Cloud API. There is a non-zero risk of account restriction or ban. Use a dedicated number you can afford to lose. AEGIS-OS is for personal, self-hosted use — not regulated or commercial WhatsApp automation.
+<div align="center">
+<i>AEGIS-OS · obsidian glass shield core · status: ONLINE</i><br/>
+<img src="https://img.shields.io/badge/AEGIS-TACTICAL%20COMMAND-8AF8FF?style=for-the-badge" alt="AEGIS Tactical Command" />
+</div>

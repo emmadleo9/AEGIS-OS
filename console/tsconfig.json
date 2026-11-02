@@ -18,7 +18,10 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["src/App.tsx", "src/main.tsx", "src/components/hud/**/*.tsx", "src/features/world/components/GlobeMap.tsx", "src/features/world/hooks/*.ts"]
+  "include": ["src/main.tsx", "src/AegisApp.tsx"]
 }

@@ -55,12 +55,15 @@ export function Dashboard() {
   const [latency, setLatency] = useState<number | null>(null);
   const [apiError, setApiError] = useState('');
   const battery = useBattery();
-  const { flights } = useFlightData();
-  const { quakes } = useQuakeData();
+  const { flights, error: flightError } = useFlightData();
+  const { quakes, error: quakeError } = useQuakeData();
 
   useEffect(() => {
     let active = true;
+    let pending = false;
     const load = async () => {
+      if (pending) return;
+      pending = true;
       const started = performance.now();
       try {
         const response = await fetch('/api/system-stats', { cache: 'no-store' });
@@ -75,6 +78,8 @@ export function Dashboard() {
           setLatency(Math.round(performance.now() - started));
           setApiError(reason instanceof Error ? reason.message : String(reason));
         }
+      } finally {
+        pending = false;
       }
     };
     void load();
@@ -90,7 +95,7 @@ export function Dashboard() {
     <div className="dashboard-page">
       <div className="aegis-grid aegis-grid-4">
         <StatusCard label="SYSTEM" value={stats ? 'ONLINE' : 'CONNECTING'} sub={apiError || (stats ? 'GATEWAY TELEMETRY LIVE' : 'WAITING FOR GATEWAY')} status={stats ? 'online' : apiError ? 'offline' : 'warning'} />
-        <StatusCard label="ENTITIES TRACKED" value={String(entityCount)} sub={`${flights.length} AIRCRAFT / ${quakes.length} QUAKES`} />
+        <StatusCard label="ENTITIES TRACKED" value={String(entityCount)} sub={flightError || quakeError || `${flights.length} AIRCRAFT / ${quakes.length} QUAKES`} status={flightError || quakeError ? 'warning' : 'online'} />
         <StatusCard label="API LATENCY" value={latency === null ? '--' : `${latency}ms`} sub={apiError ? 'GATEWAY UNAVAILABLE' : 'MEASURED ROUND TRIP'} status={apiError ? 'offline' : 'online'} />
         <StatusCard label="BATTERY" value={batteryValue} sub={batterySub} status={battery && battery.percent < 15 && !battery.charging ? 'warning' : 'online'} />
       </div>

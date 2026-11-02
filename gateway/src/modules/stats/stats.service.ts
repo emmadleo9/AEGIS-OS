@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
+import * as si from 'systeminformation';
 import { Session, SessionStatus } from '../session/entities/session.entity';
 import { Message, MessageDirection, MessageStatus } from '../message/entities/message.entity';
 
@@ -65,6 +66,20 @@ export interface OverviewStats {
     failed: number;
     today: { sent: number; received: number };
   };
+}
+
+export interface SystemStats {
+  cpuLoad: number;
+  memoryLoad: number;
+  memoryUsedGb: number;
+  memoryTotalGb: number;
+  diskLoad: number;
+  diskUsedGb: number;
+  diskTotalGb: number;
+  batteryPercent: number | null;
+  batteryCharging: boolean | null;
+  uptimeSeconds: number;
+  timestamp: string;
 }
 
 export interface TimeSeriesPoint {
@@ -156,6 +171,30 @@ export class StatsService {
 
   async getOverview(): Promise<OverviewStats> {
     return this.memoized('overview', () => this.loadOverview());
+  }
+
+  async getSystemStats(): Promise<SystemStats> {
+    const [load, memory, battery, filesystems] = await Promise.all([
+      si.currentLoad(),
+      si.mem(),
+      si.battery(),
+      si.fsSize(),
+    ]);
+    const diskTotal = filesystems.reduce((sum, filesystem) => sum + (filesystem.size || 0), 0);
+    const diskUsed = filesystems.reduce((sum, filesystem) => sum + (filesystem.used || 0), 0);
+    return {
+      cpuLoad: Math.round(load.currentLoad * 10) / 10,
+      memoryLoad: memory.total ? Math.round((memory.used / memory.total) * 1000) / 10 : 0,
+      memoryUsedGb: Math.round((memory.used / 1024 ** 3) * 10) / 10,
+      memoryTotalGb: Math.round((memory.total / 1024 ** 3) * 10) / 10,
+      diskLoad: diskTotal ? Math.round((diskUsed / diskTotal) * 1000) / 10 : 0,
+      diskUsedGb: Math.round((diskUsed / 1024 ** 3) * 10) / 10,
+      diskTotalGb: Math.round((diskTotal / 1024 ** 3) * 10) / 10,
+      batteryPercent: battery.hasBattery ? battery.percent : null,
+      batteryCharging: battery.hasBattery ? battery.isCharging : null,
+      uptimeSeconds: si.time().uptime,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   private async loadOverview(): Promise<OverviewStats> {

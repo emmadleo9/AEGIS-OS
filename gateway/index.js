@@ -1,0 +1,329 @@
+const { spawn } = require('node:child_process');
+const os = require('node:os');
+const express = require('express');
+const si = require('systeminformation');
+const AdmZip = require('adm-zip');
+
+const { createServer } = require('node:http');
+const memoryDb = require('./routes/memory');
+const whatsapp = require('./routes/aegis-whatsapp');
+const satellitesRoute = require('./routes/satellites');
+const gdeltSearch = require('./routes/gdelt-search');
+
+const app = express();
+const server = createServer(app);
+const port = Number(process.env.AEGIS_PORT || 2785);
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]);
+const logs = [];
+
+function log(message) {
+  const entry = `[${new Date().toISOString()}] ${message}`;
+  logs.push(entry);
+  if (logs.length > 200) logs.shift();
+  console.log(entry);
+}
+
+app.disable('x-powered-by');
+app.use(express.json({ limit: '16kb' }));
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+app.get('/api/health', (_req, res) => res.json({ status: 'online', service: 'aegis-local-gateway', timestamp: new Date().toISOString() }));
+
+memoryDb.registerMemoryRoutes(app);
+satellitesRoute.register(app);
+gdeltSearch.register(app);
+whatsapp.registerAegisWhatsApp(app);
+
+app.get('/api/weather', async (req, res) => {
+  const latitude = Number(req.query.latitude);
+  const longitude = Number(req.query.longitude);
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return res.status(400).json({ error: 'Valid latitude and longitude are required.' });
+  }
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    current: 'temperature_2m,wind_speed_10m,relative_humidity_2m,surface_pressure',
+    hourly: 'temperature_2m',
+    daily: 'temperature_2m_max,temperature_2m_min',
+    forecast_days: '3',
+    timezone: 'auto',
+  });
+  try {
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: AbortSignal.timeout(10000) });
+    if (!response.ok) throw new Error(`Open-Meteo returned HTTP ${response.status}`);
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.json(await response.json());
+  } catch (error) {
+    log(`weather forecast failed: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(502).json({ error: 'Weather forecast is unavailable.' });
+  }
+});
+
+app.get('/api/geocode', async (req, res) => {
+  const query = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : '';
+  if (query.length < 2) return res.status(400).json({ error: 'Enter at least two characters to search for a place.' });
+  const params = new URLSearchParams({ name: query, count: '5', language: 'en', format: 'json' });
+  try {
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`, { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`Geocoding returned HTTP ${response.status}`);
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.json(await response.json());
+  } catch (error) {
+    log(`city search failed: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(502).json({ error: 'City search is unavailable.' });
+  }
+});
+
+const publicFeeds = {
+  iss: 'https://api.wheretheiss.at/v1/satellites/25544',
+  usgs: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',
+};
+
+const flightRegions = [
+  [40, -74], [50, 15], [25, 55], [33, 73], [35, 136], [-23, -46], [-33, 151],
+];
+let flightCache;
+let flightCacheTime = 0;
+let flightRequest;
+let gdeltCache;
+let gdeltCacheTime = 0;
+let gdeltRequest;
+
+async function loadAircraft() {
+  const primary = await fetch('https://api.adsb.lol/v2/all', { signal: AbortSignal.timeout(8000) });
+  if (primary.ok) {
+    const data = await primary.json();
+    if (Array.isArray(data.ac) && data.ac.length) return { ac: data.ac.slice(0, 400), total: data.ac.length, source: 'adsb.lol' };
+  }
+  log(`ADS-B global endpoint unavailable (HTTP ${primary.status}); using regional public feeds`);
+
+  const aircraft = new Map();
+  for (const [index, [latitude, longitude]] of flightRegions.entries()) {
+    if (index > 0) await new Promise((resolve) => setTimeout(resolve, 1100));
+    const url = `https://api.adsb.lol/v2/lat/${latitude}/lon/${longitude}/dist/250`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!response.ok) {
+      log(`ADS-B regional source returned HTTP ${response.status}`);
+      continue;
+    }
+    const data = await response.json();
+    for (const item of data.ac || []) {
+      if (item.hex) aircraft.set(item.hex, item);
+      if (aircraft.size >= 400) break;
+    }
+    if (aircraft.size >= 400) break;
+  }
+  if (!aircraft.size) throw new Error('Primary and regional ADS-B sources returned no aircraft.');
+  log(`ADS-B regional fallback supplied ${aircraft.size} aircraft`);
+  return { ac: [...aircraft.values()].slice(0, 400), total: aircraft.size, source: 'adsb.lol regional sweep' };
+}
+
+async function loadGdeltEvents() {
+  const updatesResponse = await fetch('https://data.gdeltproject.org/gdeltv2/lastupdate.txt', { signal: AbortSignal.timeout(12000) });
+  if (!updatesResponse.ok) throw new Error(`GDELT index returned HTTP ${updatesResponse.status}`);
+  const updates = await updatesResponse.text();
+  const archiveUrl = updates.split(/\r?\n/).map((line) => line.trim().split(/\s+/).pop()).find((url) => url && url.endsWith('.export.CSV.zip'));
+  if (!archiveUrl) throw new Error('GDELT index did not list an events archive.');
+  const archiveResponse = await fetch(archiveUrl.replace(/^http:/, 'https:'), { signal: AbortSignal.timeout(20000) });
+  if (!archiveResponse.ok) throw new Error(`GDELT archive returned HTTP ${archiveResponse.status}`);
+  const archive = new AdmZip(Buffer.from(await archiveResponse.arrayBuffer()));
+  const entry = archive.getEntries()[0];
+  if (!entry) throw new Error('GDELT archive was empty.');
+
+  const features = [];
+  for (const row of entry.getData().toString('utf8').split(/\r?\n/)) {
+    const columns = row.split('\t');
+    const quad = Number(columns[29]);
+    const latitude = Number(columns[56]);
+    const longitude = Number(columns[57]);
+    if ((quad !== 3 && quad !== 4) || !Number.isFinite(latitude) || !Number.isFinite(longitude) || !latitude || !longitude) continue;
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [longitude, latitude] },
+      properties: {
+        name: columns[52] || columns[53] || 'GDELT event',
+        articles: Number(columns[33]) || 0,
+        tone: Number(columns[34]) || 0,
+        url: columns[60] || '',
+      },
+    });
+    if (features.length >= 150) break;
+  }
+  return { type: 'FeatureCollection', features, source: 'GDELT 2.0 Events', updatedAt: new Date().toISOString() };
+}
+
+app.get('/api/feeds/gdelt', async (_req, res) => {
+  try {
+    if (gdeltCache && Date.now() - gdeltCacheTime < 5 * 60_000) return res.json(gdeltCache);
+    if (!gdeltRequest) gdeltRequest = loadGdeltEvents();
+    gdeltCache = await gdeltRequest;
+    gdeltCacheTime = Date.now();
+    log(`GDELT conflict events fetched: ${gdeltCache.features.length}`);
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.json(gdeltCache);
+  } catch (error) {
+    log(`public feed gdelt failed: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(502).json({ error: 'GDELT conflict events are unavailable.' });
+  } finally {
+    gdeltRequest = undefined;
+  }
+});
+
+app.get('/api/feeds/adsb', async (_req, res) => {
+  try {
+    if (flightCache && Date.now() - flightCacheTime < 15000) {
+      res.setHeader('Cache-Control', 'public, max-age=10');
+      return res.json(flightCache);
+    }
+    if (!flightRequest) flightRequest = loadAircraft();
+    const result = await flightRequest;
+    flightCache = result;
+    flightCacheTime = Date.now();
+    res.setHeader('Cache-Control', 'public, max-age=10');
+    res.json(result);
+  } catch (error) {
+    log(`public feed adsb failed: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(502).json({ error: 'Public ADS-B feeds are unavailable.' });
+  } finally {
+    flightRequest = undefined;
+  }
+});
+
+app.get('/api/feeds/:name', async (req, res) => {
+  const url = publicFeeds[req.params.name];
+  if (!url) return res.status(404).json({ error: 'Unknown public feed.' });
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!response.ok) throw new Error(`Upstream returned HTTP ${response.status}`);
+    const data = await response.json();
+    log(`public feed fetched: ${req.params.name}`);
+    res.setHeader('Cache-Control', 'public, max-age=10');
+    res.json(data);
+  } catch (error) {
+    log(`public feed ${req.params.name} failed: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(502).json({ error: `Public feed ${req.params.name} is unavailable.` });
+  }
+});
+
+let statsCache;
+let statsCacheTime = 0;
+let statsRequest;
+
+app.get('/api/system-stats', async (_req, res) => {
+  try {
+    let stats = statsCache;
+    if (!stats || Date.now() - statsCacheTime >= 1000) {
+      if (!statsRequest) {
+        statsRequest = Promise.all([si.currentLoad(), si.mem(), si.battery(), si.fsSize()]).then(([load, memory, battery, filesystems]) => {
+          const diskTotal = filesystems.reduce((sum, filesystem) => sum + (filesystem.size || 0), 0);
+          const diskUsed = filesystems.reduce((sum, filesystem) => sum + (filesystem.used || 0), 0);
+          return {
+            cpuLoad: Math.round(load.currentLoad * 10) / 10,
+            memoryLoad: memory.total ? Math.round((memory.used / memory.total) * 1000) / 10 : 0,
+            memoryUsedGb: Math.round((memory.used / 1024 ** 3) * 10) / 10,
+            memoryTotalGb: Math.round((memory.total / 1024 ** 3) * 10) / 10,
+            diskLoad: diskTotal ? Math.round((diskUsed / diskTotal) * 1000) / 10 : 0,
+            diskUsedGb: Math.round((diskUsed / 1024 ** 3) * 10) / 10,
+            diskTotalGb: Math.round((diskTotal / 1024 ** 3) * 10) / 10,
+            batteryPercent: battery.hasBattery ? battery.percent : null,
+            batteryCharging: battery.hasBattery ? battery.isCharging : null,
+            timestamp: new Date().toISOString(),
+          };
+        });
+      }
+      try {
+        stats = await statsRequest;
+        statsCache = stats;
+        statsCacheTime = Date.now();
+        log('system metrics sampled');
+      } finally {
+        statsRequest = undefined;
+      }
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(stats);
+  } catch (error) {
+    log(`system metrics failed: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(503).json({ error: 'System telemetry unavailable.' });
+  }
+});
+
+app.get('/api/network-scan', async (_req, res) => {
+  try {
+    const rows = Object.entries(os.networkInterfaces()).flatMap(([iface, addresses]) => {
+      const ipv4 = addresses?.find((address) => address.family === 'IPv4' && !address.internal);
+      if (!ipv4) return [];
+      return [{
+        iface,
+        type: /wi-?fi|wireless|wlan|802[.]11/i.test(iface) ? 'wireless' : 'wired',
+        ip4: ipv4.address,
+        operstate: 'UP',
+        speed: 0,
+      }];
+    });
+    log(`local network interfaces enumerated: ${rows.length}`);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ interfaces: rows });
+  } catch (error) {
+    log(`network interface scan failed: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(503).json({ error: 'Local network interfaces unavailable.' });
+  }
+});
+
+app.get('/api/logs', (_req, res) => res.json({ logs: [...logs] }));
+
+app.post('/api/restart', (req, res) => {
+  const origin = req.get('origin');
+  const address = req.socket.remoteAddress || '';
+  const isLoopback = address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
+  if (!isLoopback || (origin && !allowedOrigins.has(origin))) {
+    return res.status(403).json({ error: 'Restart is available only to the local AEGIS console.' });
+  }
+  log('local gateway restart requested');
+  res.status(202).json({ message: 'Gateway restarting; it will be available again shortly.' });
+  setTimeout(() => {
+    const child = spawn(process.execPath, [__filename], {
+      cwd: process.cwd(),
+      env: { ...process.env, AEGIS_RESTART_DELAY_MS: '1000' },
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    child.once('error', (error) => log(`restart failed: ${error.message}`));
+    child.unref();
+    serverRef.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 4000).unref();
+  }, 250);
+});
+
+app.use((error, _req, res, _next) => {
+  log(`request failed: ${error instanceof Error ? error.message : String(error)}`);
+  res.status(500).json({ error: 'Gateway request failed.' });
+});
+
+let serverRef;
+const restartDelay = Number(process.env.AEGIS_RESTART_DELAY_MS || 0);
+const startGateway = () => {
+  serverRef = server.listen(port, '127.0.0.1', () => log(`AEGIS local gateway listening on http://127.0.0.1:${port}`));
+  whatsapp.attachAegisWhatsAppWs(serverRef);
+  serverRef.on('error', (error) => {
+    log(`gateway startup failed: ${error.message}`);
+    process.exitCode = 1;
+  });
+};
+if (restartDelay > 0) setTimeout(startGateway, restartDelay);
+else startGateway();
