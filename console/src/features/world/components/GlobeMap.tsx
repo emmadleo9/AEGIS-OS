@@ -118,9 +118,6 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
     map.once('load', () => {
       if (mode === '3d') {
         map.setProjection({ type: 'globe' });
-        try {
-          map.setFog?.(undefined as never);
-        } catch { /* fog optional */ }
       } else {
         map.setProjection({ type: 'mercator' });
       }
@@ -153,7 +150,7 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
       }
       // popups: aircraft + quakes + satellites
       const popup = new maplibregl.Popup({ closeButton: false, className: 'aegis-popup' });
-      const clickHandler = (event: maplibregl.MapMouseEvent) => {
+      const clickHandler = (event: maplibregl.MapLayerMouseEvent) => {
         const feature = event.features?.[0] as (GeoJSON.Feature & { properties?: Record<string, unknown> }) | undefined;
         if (!feature?.properties) return;
         const p = feature.properties;

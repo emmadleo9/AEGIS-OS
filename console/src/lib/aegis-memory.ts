@@ -2,21 +2,21 @@
  * AEGIS persistent memory — IndexedDB (idb-keyval stores) with localStorage fallback.
  * Restores chats, devices, logs, stats, world filters, search history on load.
  */
-import { createStore, get, set, getStore, setStore } from 'idb-keyval';
+import { createStore, get, set } from 'idb-keyval';
 
 const DB_NAME = 'aegis-os-db';
-const VERSION = 2;
+const STORE_NAME = 'keyval-store';
 export type MemoryKey =
   | 'chats' | 'messages' | 'devices' | 'logs' | 'stats'
   | 'worldFilters' | 'whatsappAuth' | 'searchHistory' | 'aiGenerations';
 
-const store = createStore(DB_NAME, VERSION);
+const store = createStore(DB_NAME, STORE_NAME);
 
 const lsKey = (key: MemoryKey) => `aegis-mem:${key}`;
 
 function memoryAvailable(): boolean {
   try {
-    return typeof indexedDB !== 'undefined' && indexedDB.open(DB_NAME, VERSION) !== null;
+    return typeof indexedDB !== 'undefined';
   } catch {
     return false;
   }
@@ -84,5 +84,3 @@ export async function memoryStats(): Promise<Record<MemoryKey, number>> {
   }));
   return Object.fromEntries(keys.map((key, index) => [key, counts[index]])) as Record<MemoryKey, number>;
 }
-
-export { getStore as getAegisStore, setStore as setAegisStore };

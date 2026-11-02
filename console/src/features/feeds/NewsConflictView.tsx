@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { HudFrame } from '@/components/hud';
 import { loadMemory, saveMemory, pushSearchHistory } from '@/lib/aegis-memory';
 

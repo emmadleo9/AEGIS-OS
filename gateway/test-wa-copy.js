@@ -48,7 +48,8 @@ async function startAegisWhatsApp() {
         if (connection === 'open') setState({ status: 'online', qr: null, user: sock?.user ?? null });
       });
       setState({ status: 'connecting', qr: null, lastError: null });
- colleg    } catch (error) {
+      colleg
+    } catch (error) {
       setState({ status: 'error', lastError: error instanceof Error ? error.message : String(error) });
     } finally {
       startingPromise = null;

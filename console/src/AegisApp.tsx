@@ -5,7 +5,6 @@ import { Dashboard } from '@/features/dashboard/Dashboard';
 import { DevicesView } from '@/features/devices/DevicesView';
 import { DiagnosticsView } from '@/features/diagnostics/DiagnosticsView';
 import { NewsConflictView } from '@/features/feeds/NewsConflictView';
-import { AegisWhatsApp } from '@/features/social/AegisWhatsApp';
 import { SocialHub } from '@/features/social/SocialHub';
 import { TimeView } from '@/features/time/TimeView';
 import { WeatherView } from '@/features/weather/WeatherView';
