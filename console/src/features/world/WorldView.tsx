@@ -13,7 +13,7 @@ export function WorldView() {
   const [feedErrors, setFeedErrors] = useState<string[]>([]);
   const [counts, setCounts] = useState<Counts>({ aircraft: 0, quakes: 0, satellites: 0 });
   const [mode, setMode] = useState<MapMode>('3d');
-  const [layers, setLayers] = useState({ flights: true, satellites: true, earthquakes: true, weather: false, conflict: true, marine: true });
+  const [layers, setLayers] = useState({ flights: true, satellites: true, earthquakes: true, weather: false, conflict: true, marine: true, fires: true });
 
   useEffect(() => {
     const handler = (event: Event) => setMode((event as CustomEvent<MapMode>).detail);
@@ -37,6 +37,7 @@ export function WorldView() {
           ['satellites', 'SATELLITES'],
           ['earthquakes', 'QUAKES'],
           ['marine', 'MARINE'],
+          ['fires', 'FIRES'],
           ['conflict', 'CONFLICT'],
           ['weather', 'WEATHER'],
         ] as const).map(([key, label]) => (

@@ -5,7 +5,7 @@ import type { Flight } from '../hooks/useFlightData';
 import type { Quake } from '../hooks/useQuakeData';
 
 type MapMode = '2d' | '3d' | 'satellite';
-type LayerVisibility = { flights: boolean; satellites: boolean; earthquakes: boolean; weather: boolean; conflict: boolean; marine: boolean };
+type LayerVisibility = { flights: boolean; satellites: boolean; earthquakes: boolean; weather: boolean; conflict: boolean; marine: boolean; fires: boolean };
 type Satellite = { id: number; name: string; lat: number; lon: number };
 type GlobeMapProps = {
   flights: Flight[];
@@ -46,7 +46,7 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [ready, setReady] = useState(false);
-  const feedsRef = useRef({ flights, quakes, satellites: empty as PointFeatureCollection, weather: empty, conflict: empty });
+  const feedsRef = useRef({ flights, quakes, satellites: empty as PointFeatureCollection, weather: empty, conflict: empty, fires: empty });
   feedsRef.current.flights = flights;
   feedsRef.current.quakes = quakes;
   const visibilityRef = useRef(layers);
@@ -87,6 +87,7 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
     setSource('aegis-satellites', current.satellites);
     setSource('aegis-weather', current.weather);
     setSource('aegis-conflict', current.conflict);
+    setSource('aegis-fires', current.fires);
     onCountsRef.current({ aircraft: current.flights.length, quakes: current.quakes.length, satellites: (current.satellites.features as unknown as []).length });
     const visibility: Record<string, boolean> = {
       'aegis-flights-layer': visibilityRef.current.flights,
@@ -97,6 +98,7 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
       'aegis-satellite-trails': visibilityRef.current.satellites,
       'aegis-weather-layer': visibilityRef.current.weather,
       'aegis-conflict-layer': visibilityRef.current.conflict,
+      'aegis-fires-layer': visibilityRef.current.fires,
       'aegis-marine-layer': visibilityRef.current.marine,
       'aegis-marine-labels': visibilityRef.current.marine,
     };
@@ -144,7 +146,7 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
       map.addSource('aegis-satellites', { type: 'geojson', data: empty as never });
       map.addLayer({ id: 'aegis-satellite-trails', type: 'circle', source: 'aegis-satellites', paint: { 'circle-radius': 11, 'circle-color': '#FFFFFF', 'circle-opacity': .1, 'circle-blur': .8 } });
       map.addLayer({ id: 'aegis-satellites-layer', type: 'circle', source: 'aegis-satellites', paint: { 'circle-radius': 5, 'circle-color': '#FFFFFF', 'circle-opacity': .95, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
-      for (const [id, color, radius] of [['weather', '#65D6A8', 5], ['conflict', '#FF9F45', 6]] as const) {
+      for (const [id, color, radius] of [['weather', '#65D6A8', 5], ['conflict', '#FF9F45', 6], ['fires', '#FF3D00', 5]] as const) {
         map.addSource(`aegis-${id}`, { type: 'geojson', data: empty as never });
         map.addLayer({ id: `aegis-${id}-layer`, type: 'circle', source: `aegis-${id}`, paint: { 'circle-radius': radius, 'circle-color': color, 'circle-opacity': .85, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
       }
@@ -192,13 +194,14 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
         }
       };
 
-      const [satelliteFeed, weatherResults, conflictResult] = await Promise.all([
+      const [satelliteFeed, weatherResults, conflictResult, firesResult] = await Promise.all([
         request<{ satellites?: Satellite[] }>('/api/satellites'),
         Promise.all(cities.map(async (city) => ({
           city,
           data: await request<{ current?: { temperature_2m?: number } }>(`/api/weather?latitude=${city.lat}&longitude=${city.lon}`),
         }))),
         request<{ features?: Array<{ geometry?: { coordinates?: number[] }; properties?: { name?: string; url?: string } }> }>('/api/feeds/gdelt'),
+        request<{ events?: Array<{ id: string; title: string; lon: number; lat: number; date: string }> }>('/api/feeds/fires'),
       ]);
       if (!active) return;
       onFeedStatusRef.current(failures);
@@ -219,6 +222,7 @@ export function GlobeMap({ flights, quakes, layers, mode, onFeedStatus, onCounts
             : [];
         })
       };
+      feedsRef.current.fires = { type: 'FeatureCollection', features: (firesResult?.events ?? []).map((fire) => ({ type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: [fire.lon, fire.lat] as [number, number] }, properties: { name: fire.title, date: fire.date } })) };
       updateRef.current();
     };
     void updateFeeds();
