@@ -12,3 +12,30 @@ config/keys.json
 **/pg_wal/
 *.dll
 *.node
+
+# vendored refs - no node_modules, lock files, or binaries
+_refs/_ref_osiris-full/intel/node_modules/
+_refs/**/package-lock.json
+**/package-lock.json
+!console/package-lock.json
+
+# database runtime data
+data/db/
+**/PG_VERSION
+**/postmaster.opts
+**/postmaster.pid
+
+# media & demo assets
+*.mp4
+*.mp3
+*.mov
+screenshot.png
+
+# env files (keep .env.example only)
+.env
+!*.env.example
+
+# build artifacts
+.next/
+dist/
+build/
