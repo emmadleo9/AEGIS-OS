@@ -1,7 +1,9 @@
 const key = JSON.parse((await import('node:fs')).readFileSync('D:/AEGIS-OS-STORAGE/config/harvested-keys.json', 'utf8')).nvidiaApiKey;
-const r = await fetch('http://127.0.0.1:2785/api/nova/chat', {
-  method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ model: 'meta/llama-3.1-405b-instruct', messages: [{ role: 'user', content: 'Say NOVA ONLINE in two words.' }] }),
+const chatId = 'nvidia/llama-3.1-nemotron-ultra-253b-v1';
+const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+  body: JSON.stringify({ model: chatId, messages: [{ role: 'user', content: 'Say NOVA ONLINE.' }], max_tokens: 30, stream: false }),
 });
-const d = await r.json();
-console.log('status:', r.status, '| reply:', d.reply ?? JSON.stringify(d).slice(0, 150));
+const text = await r.text();
+console.log(r.status, '|', text.slice(0, 300));
