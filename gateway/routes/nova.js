@@ -9,11 +9,12 @@ const keys = require('./keys');
 const NIM_BASE = 'https://integrate.api.nvidia.com/v1';
 
 const CHAT_MODELS = [
-  { id: 'meta/llama-3.1-405b-instruct', name: 'Llama 3.1 405B' },
-  { id: 'mistralai/mixtral-8x22b-instruct-v0.1', name: 'Mixtral 8x22B' },
-  { id: 'qwen/qwen2-72b-instruct', name: 'Qwen 2 72B' },
-  { id: 'meta/llama-3.2-90b-vision-instruct', name: 'Llama 3.2 Vision 90B', vision: true },
-  { id: 'mistralai/pixtral-large-124b-instruct', name: 'Pixtral Large', vision: true },
+  { id: 'meta/llama-3.2-90b-vision-instruct', name: 'Llama 3.2 90B Vision', vision: true },
+  { id: 'nvidia/llama-3.1-nemotron-ultra-253b-v1', name: 'Nemotron Ultra 253B' },
+  { id: 'nvidia/llama-3.1-nemotron-70b-instruct', name: 'Nemotron 70B' },
+  { id: 'mistralai/mistral-large-2-instruct', name: 'Mistral Large 2' },
+  { id: 'mistralai/mixtral-8x22b-v0.1', name: 'Mixtral 8x22B' },
+  { id: 'nv-mistralai/mistral-nemo-12b-instruct', name: 'Mistral Nemo 12B' },
 ];
 
 const IMAGE_MODELS = [
