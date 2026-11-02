@@ -163,3 +163,25 @@ body{overflow-x:hidden}
 .wa-pairing input{width:100%;min-height:44px;padding:10px;border:1px solid var(--aegis-border);background:#050a0e;color:var(--aegis-text);font:inherit;font-size:12px;text-align:center;letter-spacing:1px}
 .wa-pairing-code{font-size:34px;color:var(--aegis-cyan);letter-spacing:6px;text-shadow:var(--aegis-glow)}
 .wa-session-actions{display:flex;gap:10px;align-items:center}
+
+/* ===== v17 settings + tasks ===== */
+.settings-stack{display:grid;gap:16px}
+.settings-key-grid{display:grid;gap:14px;margin-top:14px}
+.settings-key{display:grid;gap:8px;padding:14px;border:1px solid rgba(138,248,255,.15);background:rgba(5,10,14,.55)}
+.settings-key-head{display:flex;align-items:center;gap:10px}
+.settings-key-head strong{color:var(--aegis-cyan);font-weight:400;letter-spacing:1px}
+.settings-key-head small{margin-left:auto;color:var(--aegis-muted);font-size:9px;letter-spacing:1px}
+.settings-key-scope{color:var(--aegis-muted);font-size:10px}
+.settings-key-row{display:flex;gap:8px;flex-wrap:wrap}
+.settings-key-row input{flex:1;min-width:220px;min-height:44px;padding:10px;border:1px solid var(--aegis-border);background:#050a0e;color:var(--aegis-text);font:inherit;font-size:11px}
+.settings-required{display:grid;gap:10px;color:var(--aegis-muted);font-size:11px;line-height:1.6}
+.settings-required strong{color:var(--aegis-cyan);font-weight:400}
+.task-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.task-filter{min-height:38px;padding:8px 12px;border:1px solid var(--aegis-border);background:#050a0e;color:var(--aegis-text);font:inherit;font-size:11px;min-width:200px}
+.task-stat{margin-left:auto;color:var(--aegis-cyan);font-size:10px;letter-spacing:1px}
+.task-table-wrap{max-height:420px;overflow:auto;border:1px solid rgba(138,248,255,.12)}
+.task-table{width:100%;border-collapse:collapse;font-size:11px}
+.task-table th{position:sticky;top:0;background:#07151b;color:var(--aegis-muted);text-align:left;padding:9px 10px;letter-spacing:1px;font-size:9px}
+.task-table td{padding:8px 10px;border-bottom:1px solid rgba(138,248,255,.08);color:var(--aegis-text)}
+.task-name{color:var(--aegis-cyan)!important;overflow-wrap:anywhere}
+.task-kill{border-color:#ff5f6d;color:#ff8792}

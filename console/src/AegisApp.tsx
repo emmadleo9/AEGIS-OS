@@ -10,6 +10,10 @@ import { TimeView } from '@/features/time/TimeView';
 import { WeatherView } from '@/features/weather/WeatherView';
 import { WorldView } from '@/features/world/WorldView';
 import { initDB } from '@/lib/aegis-memory';
+import { NovaAssistant } from '@/features/nova/NovaAssistant';
+import { AiStudio } from '@/features/studio/AiStudio';
+import { TaskControlCenter } from '@/features/tasks/TaskControlCenter';
+import { SettingsView } from '@/features/settings/SettingsView';
 
 const links = [
   ['/', '◈', 'DASHBOARD'],
@@ -20,6 +24,8 @@ const links = [
   ['/scopes', '⌁', 'SCOPES & RADARS'],
   ['/devices', '▣', 'MY DEVICES'],
   ['/time', '◷', 'WORLD CLOCK'],
+  ['/ai-studio', '✦', 'AI STUDIO'],
+  ['/settings', '⚙', 'SETTINGS'],
   ['/diagnostics', '⌘', 'DIAGNOSTICS'],
 ];
 
@@ -36,6 +42,8 @@ function Shell({ children }: { children: ReactNode }) {
     '/scopes': 'SCOPES & RADARS',
     '/devices': 'MY DEVICES',
     '/time': 'WORLD CLOCK & TIME INTEL',
+    '/ai-studio': 'AI STUDIO — NOVA',
+    '/settings': 'SETTINGS — MY ACCOUNTS',
     '/diagnostics': 'SYSTEM DIAGNOSTICS',
   };
 
@@ -87,6 +95,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <div key={pathname} className="aegis-page">{children}</div>
+        <NovaAssistant />
       </main>
     </div>
   );
@@ -119,6 +128,8 @@ export default function AegisApp() {
           <Route path="/scopes" element={<ScopesView />} />
           <Route path="/devices" element={<DevicesView />} />
           <Route path="/time" element={<TimeView />} />
+          <Route path="/ai-studio" element={<AiStudio />} />
+          <Route path="/settings" element={<SettingsView />} />
           <Route path="/diagnostics" element={<DiagnosticsView />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

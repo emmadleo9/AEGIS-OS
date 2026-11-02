@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { GaugeCircle, HudFrame, StatusCard } from '@/components/hud';
 import { useFlightData } from '@/features/world/hooks/useFlightData';
 import { useQuakeData } from '@/features/world/hooks/useQuakeData';
+import { TaskControlCenter } from '@/features/tasks/TaskControlCenter';
 
 type SystemStats = {
   cpuLoad: number;
@@ -114,6 +115,10 @@ export function Dashboard() {
 
       <div className="dashboard-note hud-label">
         HOST METRICS REFRESH EVERY 3 SECONDS // PUBLIC FEED COUNTS REFRESH INDEPENDENTLY
+      </div>
+
+      <div className="aegis-section">
+        <TaskControlCenter />
       </div>
     </div>
   );
