@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#
+# Run the exact CI gate (.github/workflows/check.yml) before anything reaches
+# GitHub: prettier --check, eslint, tsc -b. Catches edits that bypassed the
+# editor/agent formatter (sed, scripts, heredocs).
+#
+# Enabled via `git config core.hooksPath .githooks` (run once per clone; see
+# README). Skip a push with `git push --no-verify`.
+
+set -u
+
+repo=$(git rev-parse --show-toplevel) || exit 0
+cd "$repo" || exit 0
+
+[ -d node_modules ] || {
+  echo "pre-push: node_modules missing, skipping checks (run 'npm ci')." >&2
+  exit 0
+}
+
+fail=0
+
+if ! npx prettier --check . ; then
+  echo >&2
+  echo "pre-push: formatting issues — run 'npm run format' and amend/commit." >&2
+  fail=1
+fi
+
+if ! npm run --silent lint ; then
+  echo >&2
+  echo "pre-push: eslint errors." >&2
+  fail=1
+fi
+
+if ! npx tsc -b ; then
+  echo >&2
+  echo "pre-push: type errors." >&2
+  fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo >&2
+  echo "pre-push aborted. Fix the above (or push with --no-verify)." >&2
+  exit 1
+fi
+
+exit 0
