@@ -185,3 +185,7 @@ body{overflow-x:hidden}
 .task-table td{padding:8px 10px;border-bottom:1px solid rgba(138,248,255,.08);color:var(--aegis-text)}
 .task-name{color:var(--aegis-cyan)!important;overflow-wrap:anywhere}
 .task-kill{border-color:#ff5f6d;color:#ff8792}
+
+/* ===== v17 weather layers ===== */
+.weather-layer-picker{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;gap:6px;flex-wrap:wrap;padding:6px;border:1px solid var(--aegis-border);background:rgba(5,10,14,.92)}
+.weather-city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}

@@ -102,6 +102,15 @@ module.exports = {
       }
     });
 
+    // OpenWeatherMap tile proxy — injects YOUR key server-side so it never reaches the browser
+    app.get('/api/weather-tiles/:layer', (req, res) => {
+      const layer = String(req.params.layer);
+      if (!['temp_new', 'wind_new', 'precipitation_new', 'clouds_new', 'pressure_new'].includes(layer)) return res.status(400).json({ error: 'unknown layer' });
+      const apiKey = app.locals.getApiKey('VITE_OPENWEATHER_API_KEY');
+      if (!apiKey) return res.status(401).json({ error: 'Connect YOUR OpenWeatherMap account in Settings.' });
+      res.json({ tileUrl: `https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${apiKey}` });
+    });
+
     // Serve generation galleries statically so <img src="/generations/images/..."> works from the console dev proxy
     app.get('/generations/:kind/:file', (req, res) => {
       const { kind, file } = req.params;

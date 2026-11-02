@@ -12,10 +12,28 @@ type WeatherData = {
 };
 const defaultPlace: WeatherPlace = { name: 'Islamabad', country: 'Pakistan', latitude: 33.68, longitude: 73.04 };
 
+// OpenWeatherMap LIVE overlay layers — proxied via gateway so YOUR key stays server-side
+const OWM_LAYERS = {
+  temp_new: 'TEMP',
+  wind_new: 'WIND',
+  precipitation_new: 'PRECIP',
+  clouds_new: 'CLOUDS',
+  pressure_new: 'PRESSURE',
+} as const;
+const pakistanCities = [
+  { name: 'Islamabad', latitude: 33.68, longitude: 73.04 },
+  { name: 'Rawalpindi', latitude: 33.56, longitude: 73.07 },
+  { name: 'Lahore', latitude: 31.55, longitude: 74.34 },
+  { name: 'Karachi', latitude: 24.86, longitude: 67.01 },
+  { name: 'Peshawar', latitude: 34.01, longitude: 71.58 },
+  { name: 'Quetta', latitude: 30.18, longitude: 66.98 },
+];
+
 function WeatherMiniMap({ place }: { place: WeatherPlace }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [layer, setLayer] = useState<keyof typeof OWM_LAYERS | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -33,17 +51,30 @@ function WeatherMiniMap({ place }: { place: WeatherPlace }) {
     map.once('load', () => {
       window.clearTimeout(loadTimeout);
       new maplibregl.Marker({ color: '#8AF8FF' }).setLngLat([place.longitude, place.latitude]).addTo(map);
+      if (layer) {
+          void fetch(`/api/weather-tiles/${layer}`).then((response) => response.json()).then((data: { tileUrl?: string }) => {
+            if (!data.tileUrl) return;
+            map.addSource('owm-layer', { type: 'raster', tiles: [data.tileUrl], tileSize: 256 });
+            map.addLayer({ id: 'owm-layer-view', type: 'raster', source: 'owm-layer', paint: { 'raster-opacity': .65 } });
+          }).catch(() => undefined);
+      }
       map.resize();
     });
     map.once('error', () => setMapUnavailable(true));
     return () => { window.clearTimeout(loadTimeout); map.remove(); mapRef.current = null; };
-  }, [place.latitude, place.longitude]);
+  }, [place.latitude, place.longitude, layer]);
 
   const delta = 0.12;
   const bounds = `${place.longitude - delta},${place.latitude - delta},${place.longitude + delta},${place.latitude + delta}`;
   return (
     <div className="weather-map-container" aria-label={`Map of ${place.name}`}>
       <div ref={containerRef} className="weather-mini-map" />
+      <div className="weather-layer-picker">
+        <button type="button" className={layer === null ? 'device-tab active' : 'device-tab'} onClick={() => setLayer(null)}>BASE</button>
+        {Object.entries(OWM_LAYERS).map(([id, label]) => (
+          <button type="button" key={id} className={layer === id ? 'device-tab active' : 'device-tab'} onClick={() => setLayer(id as keyof typeof OWM_LAYERS)}>{label}</button>
+        ))}
+      </div>
       {mapUnavailable && <iframe className="weather-map-fallback" title={`OpenStreetMap view of ${place.name}`} src={`https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bounds)}&layer=mapnik&marker=${place.latitude}%2C${place.longitude}`} />}
     </div>
   );
@@ -150,6 +181,8 @@ export function WeatherView() {
   const daily = weather?.daily;
   const temperature = current?.temperature_2m;
 
+  const cityTemps = useMemo(() => pakistanCities, []);
+
   return (
     <div className="weather-layout">
       <HudFrame title="CURRENT CONDITIONS" className="weather-current">
@@ -216,6 +249,14 @@ export function WeatherView() {
           <div className="weather-coordinate">{Math.abs(place.latitude).toFixed(3)}°{place.latitude < 0 ? 'S' : 'N'} / {Math.abs(place.longitude).toFixed(3)}°{place.longitude < 0 ? 'W' : 'E'} · LIVE</div>
           <WeatherMiniMap place={place} />
           <div className="weather-map-caption"><span className="status-dot" /> ACTIVE FORECAST LOCATION</div>
+          <div className="weather-city-grid">
+            {cityTemps.map((city) => (
+              <button type="button" key={city.name} className="wa-chat-item" onClick={() => setPlace({ name: city.name, country: 'Pakistan', latitude: city.latitude, longitude: city.longitude })}>
+                <span className="wa-chat-name">{city.name.toUpperCase()}</span>
+                <span className="wa-chat-preview">PK</span>
+              </button>
+            ))}
+          </div>
         </HudFrame>
       </div>
     </div>
