@@ -101,12 +101,14 @@ async function startAegisWhatsApp() {
         broadcast('messages', { jid: messages[0]?.key?.remoteJid, count: messages.length });
       });
       setState({ status: 'connecting', qr: null, lastError: null });
+      console.log('[aegis-whatsapp] socket wired, auth dir:', AUTH_DIR);
     } catch (error) {
       setState({ status: 'error', lastError: error instanceof Error ? error.message : String(error) });
+      console.error('[aegis-whatsapp] start failed:', error);
     } finally {
       startingPromise = null;
     }
-  });
+  })();
   return startingPromise;
 }
 
