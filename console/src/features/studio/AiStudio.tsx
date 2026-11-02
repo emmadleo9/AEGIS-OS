@@ -5,7 +5,6 @@ type ChatModel = { id: string; name: string; vision?: boolean };
 type ImageModel = { id: string; name: string };
 type Mode = 'CHAT' | 'IMAGE' | 'CODE';
 type Quality = 'draft' | 'hd' | '4k';
-type GalleryFile = { url: string; at: string; prompt: string };
 
 const QUALITY_LABEL: Record<Quality, string> = { draft: 'DRAFT', hd: 'HD', '4k': '4K' };
 

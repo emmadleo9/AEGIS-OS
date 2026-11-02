@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { GaugeCircle, HudFrame, StatusCard } from '@/components/hud';
+import { TaskControlCenter } from '@/features/tasks/TaskControlCenter';
 import { useFlightData } from '@/features/world/hooks/useFlightData';
 import { useQuakeData } from '@/features/world/hooks/useQuakeData';
-import { TaskControlCenter } from '@/features/tasks/TaskControlCenter';
 
 type SystemStats = {
   cpuLoad: number;

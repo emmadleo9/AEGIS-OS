@@ -12,7 +12,6 @@ import { WorldView } from '@/features/world/WorldView';
 import { initDB } from '@/lib/aegis-memory';
 import { NovaAssistant } from '@/features/nova/NovaAssistant';
 import { AiStudio } from '@/features/studio/AiStudio';
-import { TaskControlCenter } from '@/features/tasks/TaskControlCenter';
 import { SettingsView } from '@/features/settings/SettingsView';
 
 const links = [
