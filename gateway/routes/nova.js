@@ -2,6 +2,8 @@
  * NOVA NEXUS relay — proxies the user's NVIDIA NIM account for chat/image/vision.
  * Image + chat requests stream back JSON; key stays server-side.
  */
+const fs = require('node:fs');
+const path = require('node:path');
 const keys = require('./keys');
 
 const NIM_BASE = 'https://integrate.api.nvidia.com/v1';
@@ -98,6 +100,13 @@ module.exports = {
       } catch {
         res.json({ kind, files: [] });
       }
+    });
+
+    // Serve generation galleries statically so <img src="/generations/images/..."> works from the console dev proxy
+    app.get('/generations/:kind/:file', (req, res) => {
+      const { kind, file } = req.params;
+      if (!['images', 'videos', 'audio', 'files'].includes(kind) || file.includes('..')) return res.status(400).end();
+      res.sendFile(path.join('D:', 'AEGIS-OS-STORAGE', 'generations', kind, file));
     });
   },
 };

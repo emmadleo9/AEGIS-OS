@@ -124,3 +124,42 @@ body{overflow-x:hidden}
 .feed-search-recs button:hover{background:rgba(138,248,255,.1)}
 .feed-search-recs button.rec-header{color:var(--aegis-muted);font-size:9px;letter-spacing:1px;cursor:default}
 .feeds-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start}
+
+/* ===== v17 NOVA + Studio + WhatsApp fixes ===== */
+.nova-orb{position:fixed;right:26px;bottom:26px;z-index:90;width:62px;height:62px;border-radius:50%;border:1px solid var(--aegis-cyan);background:radial-gradient(circle at 32% 30%,rgba(138,248,255,.35),rgba(5,10,14,.95));color:var(--aegis-cyan);font-size:24px;cursor:pointer;box-shadow:0 0 25px rgba(138,248,255,.55),0 0 60px rgba(138,248,255,.2);animation:novaFloat 4s ease-in-out infinite}
+.nova-orb[data-speaking]{box-shadow:0 0 35px rgba(138,248,255,.95),0 0 90px rgba(138,248,255,.45)}
+@keyframes novaFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.nova-panel{position:fixed;right:26px;bottom:100px;z-index:90;width:min(380px,calc(100vw - 40px));height:min(520px,calc(100vh - 140px));display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--aegis-cyan);border-radius:22px;background:rgba(5,10,14,.92);backdrop-filter:blur(16px);box-shadow:0 0 25px rgba(138,248,255,.35);animation:hudEnter .5s cubic-bezier(.16,1,.3,1) both}
+.nova-head{display:flex;align-items:center;justify-content:space-between;color:var(--aegis-cyan);letter-spacing:2px}
+.nova-mode-switch{display:flex;gap:6px}
+.nova-mode-switch button{padding:6px 12px;border:1px solid var(--aegis-border);background:transparent;color:var(--aegis-muted);font-size:10px;cursor:pointer}
+.nova-mode-switch button.active{border-color:var(--aegis-cyan);color:var(--aegis-cyan);text-shadow:var(--aegis-glow)}
+.nova-messages{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:10px;overflow:auto;min-height:0}
+.nova-input-row{display:flex;gap:8px;align-items:center}
+.nova-input-row form{flex:1;display:flex}
+.nova-input-row input{flex:1;min-width:0;min-height:44px;padding:10px;border:1px solid var(--aegis-border);background:#050a0e;color:var(--aegis-text);font:inherit;font-size:11px}
+.nova-mic{width:44px;height:44px;border:1px solid var(--aegis-border);border-radius:50%;background:rgba(138,248,255,.08);color:var(--aegis-cyan);cursor:pointer}
+.nova-mic.live{border-color:var(--aegis-cyan);animation:pulseDot 1.2s infinite}
+.nova-foot{color:var(--aegis-muted);font-size:8px;letter-spacing:1px;margin:0}
+.studio-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.studio-quality{display:flex;gap:6px;margin-left:auto}
+.studio-model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.studio-model{display:grid;gap:5px;padding:12px;border:1px solid var(--aegis-border);background:rgba(5,10,14,.6);color:var(--aegis-text);text-align:left;cursor:pointer}
+.studio-model.selected{border-color:var(--aegis-cyan);background:rgba(138,248,255,.1)}
+.studio-model strong{color:var(--aegis-cyan);font-weight:400;font-size:12px}
+.studio-model small{color:var(--aegis-muted);font-size:9px;letter-spacing:1px}
+.studio-canvas{display:grid;gap:14px}
+.studio-image{width:100%;max-width:520px;border:1px solid var(--aegis-cyan);box-shadow:var(--aegis-glow)}
+.studio-placeholder{display:grid;place-items:center;min-height:320px;border:1px dashed var(--aegis-border);color:var(--aegis-muted);font-size:11px;letter-spacing:2px}
+.studio-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:240px;overflow:auto}
+.studio-thumb{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--aegis-border)}
+.wa-center{align-items:stretch}
+.wa-link-tabs{display:flex;gap:8px;justify-content:center}
+.wa-qr-box{display:grid;place-items:center;width:min(400px,100%);aspect-ratio:1;margin:0 auto;background:#E6FBFF;padding:18px;box-shadow:var(--aegis-glow)}
+.wa-qr-box img{width:100%;height:100%;object-fit:contain}
+.wa-qr-waiting{display:grid;gap:10px;justify-items:center;color:#050A0E;font-size:11px;letter-spacing:1px;text-align:center;padding:24px}
+.wa-qr-waiting .status-dot{background:#050A0E;color:#050A0E}
+.wa-pairing{display:grid;gap:12px;justify-items:center;width:min(400px,100%);margin:0 auto}
+.wa-pairing input{width:100%;min-height:44px;padding:10px;border:1px solid var(--aegis-border);background:#050a0e;color:var(--aegis-text);font:inherit;font-size:12px;text-align:center;letter-spacing:1px}
+.wa-pairing-code{font-size:34px;color:var(--aegis-cyan);letter-spacing:6px;text-shadow:var(--aegis-glow)}
+.wa-session-actions{display:flex;gap:10px;align-items:center}
