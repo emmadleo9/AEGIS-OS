@@ -1,0 +1,14 @@
+.env
+.env.local
+node_modules/
+console/.env.local
+__pycache__/
+.venv/
+*.tsbuildinfo
+config/keys.json
+
+# large binaries & local data
+**/ollama-*-darwin
+**/pg_wal/
+*.dll
+*.node
