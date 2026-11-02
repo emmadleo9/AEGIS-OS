@@ -3,11 +3,8 @@ import path from 'node:path';
 
 const candidates = [
   'meta/llama-3.3-70b-instruct',
-  'meta-llama/llama-4-maverick',
   'google/gemini-2.0-flash-001',
-  'anthropic/claude-3.5-sonnet',
-  'openai/gpt-4o-mini',
-  'qwen/qwen-2.5-72b-instruct',
+  'nvidia/llama-3.1-nemotron-70b-instruct',
 ];
 
 // shorter sweep, only Likely-subscribed -> Preserve this logic
@@ -65,8 +62,12 @@ function findKey(names) {
 
 const openRouterKey = findKey(openRouterNames);
 const nvidiaKey = findKey(nvidiaNames);
-const provider = openRouterKey ? 'openrouter' : nvidiaKey ? 'nvidia' : '';
-const key = openRouterKey || nvidiaKey;
+
+const light = process.argv.includes('--light');
+
+// light mode: test only NVIDIA key, skip OpenRouter entirely
+const provider = light ? (nvidiaKey ? 'nvidia' : '') : openRouterKey ? 'openrouter' : nvidiaKey ? 'nvidia' : '';
+const key = provider === 'nvidia' ? nvidiaKey : openRouterKey;
 
 if (!key) {
   console.error('No OpenRouter or NVIDIA API key found in process environment or local key files.');
@@ -129,4 +130,21 @@ if (!key) {
   }
   if (results.some(({ status }) => status === 'FAILED')) process.exitCode = 1;
   if (!results.some(({ status }) => status === 'ALIVE')) console.log('No candidates passed the probe.');
+
+  // write keys-status.json for Copilot
+  const aliveModels = results.filter(({ status }) => status === 'ALIVE').map(({ model }) => model);
+  const dead = results.filter(({ status }) => status !== 'ALIVE').map(({ model, status, detail }) => ({ model, status, detail }));
+  const statusJson = {
+    aliveModels,
+    dead,
+    nvidiaKeyWorks: !!nvidiaKey && aliveModels.length > 0,
+    testedAt: new Date().toISOString(),
+  };
+  try {
+    await import('node:fs/promises').then(({ writeFile }) =>
+      writeFile('console/src/lib/keys-status.json', JSON.stringify(statusJson, null, 2)),
+    );
+  } catch (e) {
+    console.warn(`Could not write keys-status.json: ${e}`);
+  }
 }

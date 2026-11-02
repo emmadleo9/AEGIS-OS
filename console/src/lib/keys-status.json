@@ -1,0 +1,22 @@
+{
+  "aliveModels": [],
+  "dead": [
+    {
+      "model": "meta/llama-3.3-70b-instruct",
+      "status": "EOL SKIPPED",
+      "detail": "410"
+    },
+    {
+      "model": "google/gemini-2.0-flash-001",
+      "status": "EOL SKIPPED",
+      "detail": "404"
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+      "status": "EOL SKIPPED",
+      "detail": "404"
+    }
+  ],
+  "nvidiaKeyWorks": false,
+  "testedAt": "2026-11-02T16:24:12.720Z"
+}
