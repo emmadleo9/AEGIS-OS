@@ -9,6 +9,10 @@ const memoryDb = require('./routes/memory');
 const whatsapp = require('./routes/aegis-whatsapp');
 const satellitesRoute = require('./routes/satellites');
 const gdeltSearch = require('./routes/gdelt-search');
+const firesRoute = require('./routes/fires');
+const tasksRoute = require('./routes/system-tasks');
+const keysRoute = require('./routes/keys');
+const novaRoute = require('./routes/nova');
 
 const app = express();
 const server = createServer(app);
@@ -45,6 +49,10 @@ app.get('/api/health', (_req, res) => res.json({ status: 'online', service: 'aeg
 memoryDb.registerMemoryRoutes(app);
 satellitesRoute.register(app);
 gdeltSearch.register(app);
+firesRoute.register(app);
+tasksRoute.register(app);
+keysRoute.register(app);
+novaRoute.register(app);
 whatsapp.registerAegisWhatsApp(app);
 
 app.get('/api/weather', async (req, res) => {
