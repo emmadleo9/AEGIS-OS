@@ -6,7 +6,6 @@ import {
   appendChatCompletion,
   compactChatHistory,
   expandChatHistory,
-  getAegisStorageStatus,
   loadChatHistory,
   type AegisChatMessage,
 } from '@/services/persistentStorage';
@@ -70,8 +69,6 @@ export function AiStudio() {
   const [memorySaver, setMemorySaver] = useState(() => localStorage.getItem('aegis_memory_saver') !== 'false');
   const [archivedCount, setArchivedCount] = useState(0);
   const [quotaText, setQuotaText] = useState('Checking storage usage…');
-  const [taskMeta, setTaskMeta] = useState({ taskType: 'CHAT', model: '—', handledBy: '—', responseTime: '—' });
-  const [directoryName, setDirectoryName] = useState(() => getAegisStorageStatus().directoryName);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -94,10 +91,6 @@ export function AiStudio() {
   const [toast, setToast] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<AegisChatMessage[]>([]);
-  const missingApiKeys = API_KEY_SETTINGS
-    .filter(({ id }) => !keyStatus[id])
-    .map(({ id }) => id.toUpperCase());
-
   useEffect(() => {
     if (!error) return;
     recordStudioError({ at: new Date().toISOString(), message: error });
@@ -186,11 +179,6 @@ export function AiStudio() {
     if (memorySaver && container) container.scrollTop = container.scrollHeight;
   }, [chat, memorySaver]);
 
-  useEffect(() => {
-    const status = getAegisStorageStatus();
-    setDirectoryName(status.directoryName);
-  }, [quotaText]);
-
   const persistCompletion = useCallback(async (
     userText: string,
     assistantText: string | null,
@@ -219,12 +207,6 @@ export function AiStudio() {
     chatRef.current = result.recent;
     setChat(result.recent);
     setArchivedCount(result.archivedCount);
-    setTaskMeta({
-      taskType,
-      model: modelName,
-      handledBy,
-      responseTime,
-    });
     setQuotaText((await checkLimit()).text);
     if (result.warning) setNotice(result.warning);
   }, [chatId, memorySaver, mode]);
