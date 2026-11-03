@@ -13,6 +13,7 @@ import {
 import { checkLimit } from '@/services/quotaManager';
 import { getRealTimeContext } from '@/services/realtimeTools';
 import { StudioRequestError, studioRequest } from '@/services/studioRequest';
+import { recordStudioError, recordStudioTask } from './studioActivity';
 
 type ChatModel = { id: string; name: string };
 type ImageModel = { id: string; name: string };
@@ -20,16 +21,6 @@ type StudioModels = { chat: ChatModel[]; image: ImageModel[]; available: boolean
 type Mode = 'CHAT' | 'IMAGE' | 'CODE';
 type Quality = 'draft' | 'hd' | '4k';
 type OnlineModel = { provider: ModelProvider | 'free-search'; id: string; name: string };
-type StudioTask = {
-  at: string;
-  taskType: string;
-  model: string;
-  handledBy: string;
-  responseTime: string;
-  status: 'complete' | 'failed';
-};
-type StudioError = { at: string; message: string };
-
 const QUALITY_LABEL: Record<Quality, string> = { draft: 'DRAFT', hd: 'HD', '4k': 'MAX' };
 const KEY_PROVIDERS: Array<{ id: ModelProvider; label: string }> = [
   { id: 'nvidia', label: 'NVIDIA' },
@@ -80,9 +71,6 @@ export function AiStudio() {
   const [archivedCount, setArchivedCount] = useState(0);
   const [quotaText, setQuotaText] = useState('Checking storage usage…');
   const [taskMeta, setTaskMeta] = useState({ taskType: 'CHAT', model: '—', handledBy: '—', responseTime: '—' });
-  const [taskHistory, setTaskHistory] = useState<StudioTask[]>([]);
-  const [errorHistory, setErrorHistory] = useState<StudioError[]>([]);
-  const [consoleTab, setConsoleTab] = useState<'tasks' | 'errors'>('tasks');
   const [directoryName, setDirectoryName] = useState(() => getAegisStorageStatus().directoryName);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -112,7 +100,7 @@ export function AiStudio() {
 
   useEffect(() => {
     if (!error) return;
-    setErrorHistory((current) => [{ at: new Date().toISOString(), message: error }, ...current].slice(0, 50));
+    recordStudioError({ at: new Date().toISOString(), message: error });
   }, [error]);
 
   const changeMode = useCallback((nextMode: Mode) => {
@@ -218,8 +206,7 @@ export function AiStudio() {
     ];
     const responseTime = `${((Date.now() - startedAt) / 1000).toFixed(1)}s`;
     const taskType = mode === 'IMAGE' ? 'IMAGE GENERATION' : mode === 'CODE' ? 'CODE' : 'CHAT';
-    const task: StudioTask = { at, taskType, model: modelName, handledBy, responseTime, status };
-    setTaskHistory((current) => [task, ...current].slice(0, 50));
+    recordStudioTask({ at, taskType, model: modelName, handledBy, responseTime, status });
     const result = await appendChatCompletion(chatId, entries, {
       at,
       chatId,
@@ -443,28 +430,6 @@ export function AiStudio() {
       </HudFrame>
 
       <div className="studio-workspace">
-        <HudFrame title={mode === 'IMAGE' ? 'IMAGE MODELS // NVIDIA NIM' : 'LOCAL MODELS // FREE'} className="studio-model-sidebar">
-          <div className="studio-model-grid">
-            {(mode === 'IMAGE' ? models.image : models.chat).map((model) => (
-              <button type="button" key={model.id} className={`studio-model${selected === model.id && !selectedOnline ? ' selected' : ''}`} onClick={() => {
-                setSelectedOnline(null);
-                setSelected(model.id);
-                if (mode === 'IMAGE') {
-                  setMode('IMAGE');
-                  localStorage.setItem('aegis_mode', 'image');
-                } else {
-                  setMode('CHAT');
-                  localStorage.setItem('aegis_mode', 'chat');
-                }
-              }}>
-                <strong>{model.name}</strong>
-                <small>{mode === 'IMAGE' ? 'IMAGE · NIM' : 'CHAT · LOCAL FREE'}</small>
-              </button>
-            ))}
-            {(mode === 'IMAGE' ? models.image : models.chat).length === 0 && <p className="inline-status">{mode === 'IMAGE' ? 'No image models available.' : 'Loading local models…'}</p>}
-          </div>
-        </HudFrame>
-
         <HudFrame title={mode === 'IMAGE' ? 'GENERATION CANVAS' : 'NOVA CHAT'} className="studio-chat-panel">
           <div className="studio-chat-heading">
             <strong>AI STUDIO - NOVA</strong>
@@ -476,7 +441,7 @@ export function AiStudio() {
                 ? <img src={imageData} alt="Generated" className="studio-image" />
                 : <div className="studio-placeholder">SELECT AN IMAGE MODEL BELOW · QUALITY {QUALITY_LABEL[quality]}</div>}
               <form className="chat-compose" onSubmit={(event) => { event.preventDefault(); void runImage(); }}>
-                <input aria-label="Image prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Describe the image… (saved to D:/AEGIS-OS-STORAGE/generations/images)" />
+                <input aria-label="Image prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Describe the image…" />
                 <button className="hud-button" type="submit" disabled={busy}>{busy ? 'GENERATING…' : 'GENERATE'}</button>
               </form>
             </div>
@@ -505,7 +470,34 @@ export function AiStudio() {
           </div>
         </HudFrame>
 
-        <div className="studio-right-panel">
+        <details className="studio-options">
+          <summary>LOCAL MODELS ({(mode === 'IMAGE' ? models.image : models.chat).length})</summary>
+        <HudFrame title={mode === 'IMAGE' ? 'IMAGE MODELS // NVIDIA NIM' : 'LOCAL MODELS // FREE'} className="studio-model-sidebar">
+          <div className="studio-model-grid">
+            {(mode === 'IMAGE' ? models.image : models.chat).map((model) => (
+              <button type="button" key={model.id} className={`studio-model${selected === model.id && !selectedOnline ? ' selected' : ''}`} onClick={() => {
+                setSelectedOnline(null);
+                setSelected(model.id);
+                if (mode === 'IMAGE') {
+                  setMode('IMAGE');
+                  localStorage.setItem('aegis_mode', 'image');
+                } else {
+                  setMode('CHAT');
+                  localStorage.setItem('aegis_mode', 'chat');
+                }
+              }}>
+                <strong>{model.name}</strong>
+                <small>{mode === 'IMAGE' ? 'IMAGE · NIM' : 'CHAT · LOCAL FREE'}</small>
+              </button>
+            ))}
+            {(mode === 'IMAGE' ? models.image : models.chat).length === 0 && <p className="inline-status">{mode === 'IMAGE' ? 'No image models available.' : 'Loading local models…'}</p>}
+          </div>
+        </HudFrame>
+        </details>
+
+        <details className="studio-options">
+          <summary>ONLINE MODELS, API KEYS &amp; STORAGE</summary>
+          <div className="studio-right-panel">
         {mode !== 'IMAGE' && (
           <HudFrame title="ONLINE MODELS // CLOUD" className="studio-provider-panel">
             <div className="studio-provider-key-list">
@@ -570,65 +562,10 @@ export function AiStudio() {
           <strong>20 GB Allocated - For Complete AGUS System (Not only AI)</strong>
           <span id="quota-bar" className="quota-bar" title="20 GB Allocated - For Complete AGUS System (Not only AI)" role="progressbar" aria-valuemin={0} aria-valuemax={100}>{quotaText}</span>
         </HudFrame>
-        </div>
+          </div>
+        </details>
       </div>
 
-      <section className="studio-console-panel hud-frame" aria-label="Tasks and error console">
-        <div className="studio-console-header">
-          <div className="studio-console-title">
-            <strong>SYSTEM CONSOLE</strong>
-            <span>Tasks &amp; Errors</span>
-          </div>
-          <div className="studio-console-tabs" role="tablist" aria-label="Console tabs">
-            <button type="button" role="tab" aria-selected={consoleTab === 'tasks'} className={consoleTab === 'tasks' ? 'device-tab active' : 'device-tab'} onClick={() => setConsoleTab('tasks')}>TASKS ({taskHistory.length})</button>
-            <button type="button" role="tab" aria-selected={consoleTab === 'errors'} className={consoleTab === 'errors' ? 'device-tab active' : 'device-tab'} onClick={() => setConsoleTab('errors')}>ERRORS ({errorHistory.length + (missingApiKeys.length ? 1 : 0)})</button>
-          </div>
-        </div>
-        <div className="studio-console-body" role="tabpanel">
-          {consoleTab === 'tasks' ? (
-            <>
-              <div className="studio-task-summary">
-                <span>Task: <strong>{taskMeta.taskType}</strong></span>
-                <span>Model: <strong>{taskMeta.model}</strong></span>
-                <span>Handled by: <strong>{taskMeta.handledBy}</strong></span>
-                <span>Response: <strong>{taskMeta.responseTime}</strong></span>
-                <span>Saved path: <strong>{directoryName ? `D:\\AEGIS-OS-DATA\\${chatId}` : `IndexedDB fallback · ${chatId}`}</strong></span>
-              </div>
-              <div className="studio-task-list">
-              {taskHistory.length === 0 ? (
-                <p className="inline-status">No tasks yet. Completed and failed NOVA requests will appear here.</p>
-              ) : taskHistory.map((task, index) => (
-                <div className="studio-task-row" key={`${task.at}-${index}`}>
-                  <time>{new Date(task.at).toLocaleTimeString()}</time>
-                  <strong>{task.taskType}</strong>
-                  <span>{task.model}</span>
-                  <span>{task.handledBy}</span>
-                  <span>{task.responseTime}</span>
-                  <span className={`studio-task-status${task.status === 'failed' ? ' is-error' : ''}`}>{task.status.toUpperCase()}</span>
-                </div>
-              ))}
-              </div>
-            </>
-          ) : (
-            <div className="studio-error-list" aria-live="polite">
-              {missingApiKeys.length > 0 && (
-                <p className="studio-error-row" role="alert">
-                  <time>CONFIG</time>
-                  <span>API key missing: {missingApiKeys.join(', ')} — configure keys in API KEYS or the repository .env.local file.</span>
-                  <button type="button" className="device-tab" onClick={() => setSettingsOpen(true)}>API KEYS</button>
-                </p>
-              )}
-              {errorHistory.map((entry, index) => (
-                <p className="studio-error-row" key={`${entry.at}-${index}`}>
-                  <time>{new Date(entry.at).toLocaleTimeString()}</time>
-                  <span>{entry.message}</span>
-                </p>
-              ))}
-              {missingApiKeys.length === 0 && errorHistory.length === 0 && <p className="inline-status">No active errors or missing API keys.</p>}
-            </div>
-          )}
-        </div>
-      </section>
       {settingsOpen && (
         <div className="studio-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSettingsOpen(false); }}>
           <section className="studio-key-modal" role="dialog" aria-modal="true" aria-labelledby="studio-key-modal-title">

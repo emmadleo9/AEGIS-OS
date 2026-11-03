@@ -21,7 +21,7 @@ function formatJid(jid: string): string {
   return jid.replace(/@.*$/, '').replace(/(\d{3})(?=\d)/g, '$1 ');
 }
 
-const API_KEY = localStorage.getItem('aegis-api-key') || 'aegis_master_key';
+const API_KEY = localStorage.getItem('aegis-api-key') || 'aa4b2b4142b6f0a9c0e8abbe00e0553b30db4157df72b419302ebe02182eb8f3';
 
 export function AegisWhatsApp() {
   const [status, setStatus] = useState<WaStatus>({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });

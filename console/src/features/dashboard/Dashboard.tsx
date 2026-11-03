@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GaugeCircle, HudFrame, StatusCard } from '@/components/hud';
 import { TaskControlCenter } from '@/features/tasks/TaskControlCenter';
+import { StudioSystemConsole } from '@/features/studio/StudioSystemConsole';
 import { useFlightData } from '@/features/world/hooks/useFlightData';
 import { useQuakeData } from '@/features/world/hooks/useQuakeData';
 
@@ -119,6 +120,10 @@ export function Dashboard() {
 
       <div className="aegis-section">
         <TaskControlCenter />
+      </div>
+
+      <div className="aegis-section">
+        <StudioSystemConsole />
       </div>
     </div>
   );
