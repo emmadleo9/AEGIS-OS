@@ -64,7 +64,7 @@ async function getHealth(url) {
     const response = await fetch(url, { signal: AbortSignal.timeout(1000) });
     if (!response.ok) return false;
     const data = await response.json();
-    return data.status === 'online' && data.service === 'aegis-local-gateway';
+    return data.status === 'ok' || data.status === 'online';
   } catch {
     return false;
   }
@@ -144,12 +144,20 @@ async function main() {
 
   let gateway;
   if (!(await getHealth(gatewayHealthUrl))) {
+    // Build OpenWA if the compiled NestJS entry is missing.
+    if (!fs.existsSync(openwaMain)) {
+      console.log('[AGUS] Building OpenWA gateway...');
+      await new Promise((resolve, reject) => {
+        const build = spawn('npm.cmd', ['run', 'build'], { cwd: gatewayDir, stdio: 'inherit' });
+        build.once('exit', (code) => (code === 0 ? resolve() : reject(new Error(`OpenWA build exited ${code}`))));
+      });
+    }
     gateway = startChild(
       'Gateway',
       process.execPath,
-      [path.join(gatewayDir, 'index.js')],
+      [openwaMain],
       gatewayDir,
-      { ...process.env, GATEWAY_PORT: String(gatewayPort), AEGIS_PORT: String(gatewayPort) },
+      { ...process.env, GATEWAY_PORT: String(gatewayPort), AEGIS_PORT: String(gatewayPort), PORT: String(gatewayPort) },
     );
     await waitForHealth(gatewayHealthUrl, 'Gateway', gateway);
   }
@@ -184,4 +192,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`[AGUS] Startup failed: ${error instanceof Error ? error.message : String
+  console.error(`[AGUS] Startup failed: ${error instanceof Error ? error.message : String(error)}`);
+  process.exitCode = 1;
+  stopChildren();
+});
