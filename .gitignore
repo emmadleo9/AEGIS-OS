@@ -1,5 +1,6 @@
 .env
 .env.local
+!.env.local.example
 node_modules/
 console/.env.local
 __pycache__/

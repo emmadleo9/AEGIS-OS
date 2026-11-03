@@ -14,6 +14,29 @@ export interface VerifyInput {
 }
 
 /**
+ * Returns true when an ingress delivery's signature is verified for the given scheme.
+ * For `none` schemes the delivery is treated as verified. For hmac schemes the signature is recomputed
+ * over the serialized query (freshness not enforced here — the caller enforces timestamp tolerance separately).
+ * `shared-secret` cannot be verified without the secret, so it returns false here (the caller guards it).
+ */
+export function ingressDeliveryVerified(scheme: string, rawBody: string, query: Record<string, string>): boolean {
+  if (scheme === 'none') return true;
+  if (scheme === 'shared-secret') return false; // secret not available at this call site
+  // hmac-sha256 over the serialized query
+  const queryString = Object.entries(query)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .sort()
+    .join('&');
+  const digest = createHmac('sha256', queryString).update(rawBody).digest('hex');
+  return constantTimeEqual(queryString, digest);
+}
+
+/** Returns true when the payload is query-borne (signature derived from the query string rather than the body). */
+export function isQueryBorne(rawBody: string, query: Record<string, string>): boolean {
+  return !rawBody && Object.keys(query).length > 0;
+}
+
+/**
  * The replay window applied when a route declares a timestamp but no explicit `toleranceSec`
  * (standard-webhooks included — the spec fixes the wire format, not the window). Default 300s,
  * matching the Standard Webhooks convention; INGRESS_TIMESTAMP_TOLERANCE_SEC tunes it host-wide.

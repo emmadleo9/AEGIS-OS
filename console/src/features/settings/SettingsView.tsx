@@ -1,5 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { HudFrame } from '@/components/hud';
+import {
+  exportAllAegisMemory,
+  getAegisStorageStatus,
+  importAegisMemory,
+  initAegisStorage,
+  selectAegisDataDirectory,
+  testAegisPersistence,
+} from '@/services/persistentStorage';
+import { checkLimit } from '@/services/quotaManager';
 
 type KeyEntry = { id: string; label: string; url: string; scope: string; connected: boolean; masked: string };
 
@@ -8,6 +17,10 @@ export function SettingsView() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState('');
   const [message, setMessage] = useState('');
+  const [storageStatus, setStorageStatus] = useState(() => getAegisStorageStatus());
+  const [quotaText, setQuotaText] = useState('Checking storage usage…');
+  const [storageBusy, setStorageBusy] = useState(false);
+  const importInput = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -20,6 +33,15 @@ export function SettingsView() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void initAegisStorage()
+      .then((status) => {
+        setStorageStatus(status);
+        return checkLimit();
+      })
+      .then((quota) => setQuotaText(quota.text))
+      .catch((reason: unknown) => setMessage(reason instanceof Error ? reason.message : String(reason)));
+  }, []);
 
   const connect = async (id: string) => {
     const value = drafts[id]?.trim();
@@ -49,6 +71,68 @@ export function SettingsView() {
     await fetch(`/api/keys/${id}`, { method: 'DELETE' }).catch(() => undefined);
     await load();
     setMessage(`${id} removed.`);
+  };
+
+  const selectDataFolder = async () => {
+    setStorageBusy(true);
+    try {
+      const status = await selectAegisDataDirectory();
+      setStorageStatus(status);
+      setQuotaText((await checkLimit()).text);
+      setMessage(status.directoryStatus);
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setStorageBusy(false);
+    }
+  };
+
+  const exportMemory = async () => {
+    setStorageBusy(true);
+    try {
+      const data = await exportAllAegisMemory();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `aegis-memory-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setMessage('All AEGIS memory exported as JSON.');
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setStorageBusy(false);
+    }
+  };
+
+  const importMemory = async (file?: File) => {
+    if (!file) return;
+    setStorageBusy(true);
+    try {
+      const data: unknown = JSON.parse(await file.text());
+      await importAegisMemory(data);
+      setQuotaText((await checkLimit()).text);
+      setMessage(`Imported ${file.name}.`);
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setStorageBusy(false);
+      if (importInput.current) importInput.current.value = '';
+    }
+  };
+
+  const testPersistence = async () => {
+    setStorageBusy(true);
+    try {
+      const result = await testAegisPersistence();
+      setQuotaText((await checkLimit()).text);
+      setMessage(`Persistence test passed at ${result.at}.`);
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setStorageBusy(false);
+    }
   };
 
   return (
@@ -94,6 +178,46 @@ export function SettingsView() {
           <div><strong>OpenWeatherMap</strong> — thermal, wind, precipitation overlay layers in Weather Intel.</div>
           <div><strong>ElevenLabs</strong> — premium British TTS voice for NOVA.</div>
           <div><strong>OpenSky</strong> — authenticated live plane telemetry (higher rate limits).</div>
+        </div>
+      </HudFrame>
+
+      <HudFrame title="20 GB ALLOCATED - FOR COMPLETE AGUS SYSTEM (NOT ONLY AI)">
+        <p className="credential-notice">
+          20 GB Allocated - For Complete AGUS System (Not only AI). Chats, logs, and memory use quota-checked IndexedDB and are mirrored to the selected folder when browser folder access is available. Choose the folder named <strong>AEGIS-OS-DATA</strong> on D:. The browser cannot confirm a drive letter or expose the full path.
+        </p>
+        <div className="storage-status-grid">
+          <div className="settings-key-head">
+            <span className={`status-dot${storageStatus.directorySelected ? '' : ' status-dot-offline'}`} />
+            <strong>{storageStatus.directoryStatus}</strong>
+          </div>
+          <div id="quota-bar" className="quota-bar" role="progressbar" aria-label="20 GB Allocated - For Complete AGUS System (Not only AI)" aria-valuemin={0} aria-valuemax={100}>{quotaText}</div>
+          <small className="settings-key-scope">
+            {storageStatus.persistentStorageGranted ? 'Browser durable storage granted' : 'Browser durable storage not granted'}
+          </small>
+          {storageStatus.warnings.map((warning) => <p className="inline-status" role="status" key={warning}>{warning}</p>)}
+          <div className="storage-actions">
+            <button type="button" className="hud-button" disabled={storageBusy} onClick={() => void selectDataFolder()}>
+              SELECT D DRIVE FOLDER (20 GB FOR COMPLETE AGUS SYSTEM)
+            </button>
+            <button type="button" className="hud-button" disabled={storageBusy} onClick={() => void exportMemory()}>
+              EXPORT ALL MEMORY JSON
+            </button>
+            <input
+              ref={importInput}
+              type="file"
+              accept="application/json,.json"
+              aria-label="Import AEGIS memory JSON"
+              hidden
+              onChange={(event) => void importMemory(event.target.files?.[0])}
+            />
+            <button type="button" className="hud-button" disabled={storageBusy} onClick={() => importInput.current?.click()}>
+              IMPORT MEMORY
+            </button>
+            <button type="button" className="hud-button" disabled={storageBusy} onClick={() => void testPersistence()}>
+              TEST PERSISTENCE
+            </button>
+          </div>
+          {message && <p className="inline-status" role="status">{message}</p>}
         </div>
       </HudFrame>
     </div>

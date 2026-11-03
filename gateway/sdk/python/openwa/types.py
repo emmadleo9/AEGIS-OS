@@ -603,7 +603,7 @@ class MessageContact(TypedDict, total=False):
     verifiedName: str
     verifiedLevel: int
     isBlocked: bool
-    labels: list
+    labels: list[str]
 
 
 class ChatHistoryPoll(TypedDict):
@@ -630,7 +630,7 @@ ChatHistoryMessage = TypedDict(
         "isStatusBroadcast": NotRequired[bool],
         "ephemeralDuration": NotRequired[int],
         "author": NotRequired[Jid],
-        "mentionedIds": NotRequired[list],
+        "mentionedIds": NotRequired[list[str]],
         "call": NotRequired[MessageCall],
         "isLidSender": NotRequired[bool],
         "senderPhone": NotRequired[Optional[str]],
@@ -798,6 +798,12 @@ class ProfilePicturesResponse(TypedDict):
 class ContactPhoneResponse(TypedDict):
     contactId: Jid
     phone: str | None
+
+
+class ContactLidResponse(TypedDict):
+    number: str
+    # The <lid>@lid WhatsApp holds for the number, or None when it holds none (an unregistered number answers the same).
+    lid: str | None
 
 
 # ── Group ─────────────────────────────────────────────────────────
@@ -1481,8 +1487,11 @@ class _SearchQueryRequired(TypedDict):
 
 
 # `match` is "word" (the server default: whole words) or "contains" (any part
-# of a word, ignoring case and accents; needs a term of 3+ characters, and a
-# server with SEARCH_CONTAINS_ENABLED=true, else 501).
+# of a word, ignoring case and accents). "contains" needs
+# SEARCH_CONTAINS_ENABLED=true and a finished index build on the server (501
+# otherwise) and at least one term of 3+ characters with at most 64 characters
+# across its terms (400 otherwise); it ranks the 1000 most recently stored
+# matches, so `total` is at most 1000.
 _SearchQueryOptional = TypedDict(
     "_SearchQueryOptional",
     {

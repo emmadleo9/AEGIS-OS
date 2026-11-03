@@ -815,6 +815,16 @@ export interface ContactPhoneResponse {
   phone: string | null;
 }
 
+export interface ContactLidResponse {
+  /** The number exactly as supplied in the path. */
+  number: string;
+  /**
+   * The `<lid>@lid` WhatsApp holds for the number, or `null` when it holds none. An unregistered number answers
+   * `null` too; `contacts.check` tells the two apart.
+   */
+  lid: string | null;
+}
+
 // ── Group ─────────────────────────────────────────────────────────
 
 export interface GroupParticipant {
@@ -850,7 +860,7 @@ export interface GroupInfo {
   locked?: boolean;
   /** Who may add participants. Absent when the engine did not report it. */
   memberAddMode?: 'all' | 'admins';
-  owner?: Jid | null;
+  owner?: Jid;
   /** Unix timestamp in seconds. */
   createdAt?: number;
   participants: GroupParticipant[];
@@ -1473,8 +1483,10 @@ export interface SendProductRequest {
 
 /**
  * How `q` matches: `word` (the server default) matches whole words; `contains` matches any part of a
- * word, ignoring case and accents, and needs at least one term of 3+ characters and a server with
- * `SEARCH_CONTAINS_ENABLED=true` (501 otherwise).
+ * word, ignoring case and accents. `contains` needs `SEARCH_CONTAINS_ENABLED=true` and a finished index
+ * build on the server (501 otherwise) and at least one term of 3+ characters with at most 64 characters
+ * across its terms (400 otherwise); it ranks the 1000 most recently stored matches, so `total` is at
+ * most 1000.
  */
 export type SearchMatch = 'word' | 'contains';
 

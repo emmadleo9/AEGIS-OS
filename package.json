@@ -1,0 +1,12 @@
+{
+  "name": "aegis-os",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/start-singularity.js",
+    "dev:singularity": "node scripts/start-singularity.js",
+    "start": "node scripts/start-singularity.js",
+    "gateway": "node gateway/index.js",
+    "console": "npm --prefix console run dev:fast"
+  }
+}

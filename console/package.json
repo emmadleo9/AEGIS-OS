@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:fast": "vite --host 0.0.0.0 --port 5173",
+    "dev": "node ../scripts/start-singularity.js",
+    "dev:fast": "node ../scripts/start-singularity.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -26,6 +26,7 @@
     "axios": "^1.21.0",
     "core-js-pure": "^3.46.0",
     "dayjs": "^1.11.19",
+    "firebase": "^13.2.0",
     "fuse.js": "^7.1.0",
     "he": "^1.2.0",
     "idb-keyval": "^6.2.2",

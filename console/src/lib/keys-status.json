@@ -2,21 +2,21 @@
   "aliveModels": [],
   "dead": [
     {
-      "model": "meta/llama-3.3-70b-instruct",
-      "status": "EOL SKIPPED",
-      "detail": "410"
+      "model": "google/gemma-3-4b-it",
+      "status": "PROVIDER UNAVAILABLE",
+      "detail": "account inference route not found"
     },
     {
-      "model": "google/gemini-2.0-flash-001",
-      "status": "EOL SKIPPED",
-      "detail": "404"
+      "model": "ibm/granite-3.0-3b-a800m-instruct",
+      "status": "PROVIDER UNAVAILABLE",
+      "detail": "account inference route not found"
     },
     {
-      "model": "nvidia/llama-3.1-nemotron-70b-instruct",
-      "status": "EOL SKIPPED",
-      "detail": "404"
+      "model": "nvidia/mistral-nemo-minitron-8b-8k-instruct",
+      "status": "PROVIDER UNAVAILABLE",
+      "detail": "account inference route not found"
     }
   ],
   "nvidiaKeyWorks": false,
-  "testedAt": "2026-11-02T16:24:12.720Z"
+  "testedAt": "2026-11-03T10:24:56.116Z"
 }

@@ -9,10 +9,11 @@ import { SocialHub } from '@/features/social/SocialHub';
 import { TimeView } from '@/features/time/TimeView';
 import { WeatherView } from '@/features/weather/WeatherView';
 import { WorldView } from '@/features/world/WorldView';
-import { initDB } from '@/lib/aegis-memory';
 import { NovaAssistant } from '@/features/nova/NovaAssistant';
 import { AiStudio } from '@/features/studio/AiStudio';
 import { SettingsView } from '@/features/settings/SettingsView';
+import { AegisWhatsApp } from '@/features/social/AegisWhatsApp';
+import { initAegisStorage } from '@/services/persistentStorage';
 
 const links = [
   ['/', '◈', 'DASHBOARD'],
@@ -20,6 +21,7 @@ const links = [
   ['/weather', '☼', 'WEATHER INTEL'],
   ['/feeds', '▤', 'NEWS & CONFLICT'],
   ['/social', '◌', 'SOCIAL HUB'],
+  ['/whatsapp', '💬', 'AEGIS WHATSAPP'],
   ['/scopes', '⌁', 'SCOPES & RADARS'],
   ['/devices', '▣', 'MY DEVICES'],
   ['/time', '◷', 'WORLD CLOCK'],
@@ -32,12 +34,19 @@ function Shell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const [now, setNow] = useState(() => new Date());
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [websiteScrollLock, setWebsiteScrollLock] = useState(
+    () => localStorage.getItem('aegis_website_scroll_lock') !== 'false',
+  );
+  const [memorySaver, setMemorySaver] = useState(
+    () => localStorage.getItem('aegis_memory_saver') !== 'false',
+  );
   const titles: Record<string, string> = {
     '/': 'COMMAND DASHBOARD',
     '/world': 'WORLD VIEW',
     '/weather': 'WEATHER INTEL',
     '/feeds': 'NEWS & CONFLICT FEED',
     '/social': 'SOCIAL HUB',
+    '/whatsapp': 'AEGIS WHATSAPP',
     '/scopes': 'SCOPES & RADARS',
     '/devices': 'MY DEVICES',
     '/time': 'WORLD CLOCK & TIME INTEL',
@@ -55,7 +64,21 @@ function Shell({ children }: { children: ReactNode }) {
     setMobileNavOpen(false);
   }, [pathname]);
 
-  useEffect(() => { void initDB(); }, []);
+  useEffect(() => {
+    void initAegisStorage().catch((reason: unknown) => {
+      console.error('AEGIS persistent storage initialization failed:', reason);
+    });
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('aegis-scroll-locked', websiteScrollLock);
+    localStorage.setItem('aegis_website_scroll_lock', String(websiteScrollLock));
+  }, [websiteScrollLock]);
+
+  useEffect(() => {
+    localStorage.setItem('aegis_memory_saver', String(memorySaver));
+    window.dispatchEvent(new CustomEvent('aegis:memory-saver-change', { detail: memorySaver }));
+  }, [memorySaver]);
 
   return (
     <div className="aegis-app">
@@ -65,8 +88,9 @@ function Shell({ children }: { children: ReactNode }) {
       </button>
       <aside className={`aegis-sidebar${mobileNavOpen ? ' mobile-open' : ''}`}>
         <div className="aegis-brand">
-          AEGIS
-          <small>PUBLIC DATA CONSOLE // 03.2</small>
+          <img className="aegis-brand-logo" src="/aegis-official.png" alt="AEGIS-OS official shield logo" />
+          <span>AEGIS-OS</span>
+          <small>PUBLIC DATA CONSOLE // 04.0</small>
         </div>
         <nav className="aegis-nav" aria-label="Main navigation">
           {links.map(([to, icon, label]) => (
@@ -84,10 +108,28 @@ function Shell({ children }: { children: ReactNode }) {
       <main className="aegis-main">
         <header className="aegis-topline">
           <div>
-            <div className="aegis-kicker">SYSTEM MONITOR v3.2 // AEGIS-OS ONLINE</div>
+            <div className="aegis-kicker">SYSTEM MONITOR v4.0 // AEGIS-OS ONLINE</div>
             <h1 className="aegis-heading">{titles[pathname] ?? 'AEGIS CONSOLE'}</h1>
           </div>
           <div className="aegis-clock">
+            <div className="aegis-header-toggles">
+              <button
+                type="button"
+                className={`device-tab${websiteScrollLock ? ' active' : ''}`}
+                aria-pressed={websiteScrollLock}
+                onClick={() => setWebsiteScrollLock((locked) => !locked)}
+              >
+                WEBSITE SCROLL LOCK {websiteScrollLock ? 'ON' : 'OFF'}
+              </button>
+              <button
+                type="button"
+                className={`device-tab${memorySaver ? ' active' : ''}`}
+                aria-pressed={memorySaver}
+                onClick={() => setMemorySaver((enabled) => !enabled)}
+              >
+                MEMORY SAVER + CHAT SCROLL {memorySaver ? 'ON' : 'OFF'}
+              </button>
+            </div>
             LOCAL NODE // ACTIVE
             <br />
             <span>{now.toISOString().replace('T', ' ').slice(0, 19)}Z</span>
@@ -124,6 +166,7 @@ export default function AegisApp() {
           <Route path="/weather" element={<WeatherView />} />
           <Route path="/feeds" element={<NewsConflictView />} />
           <Route path="/social" element={<SocialHub />} />
+          <Route path="/whatsapp" element={<AegisWhatsApp />} />
           <Route path="/scopes" element={<ScopesView />} />
           <Route path="/devices" element={<DevicesView />} />
           <Route path="/time" element={<TimeView />} />

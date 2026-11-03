@@ -655,6 +655,15 @@ curl -X GET "$BASE/api/sessions/$SESSION_ID/contacts/12345678901234@lid/phone" \
   -H "X-API-Key: $API_KEY"
 ```
 
+#### GET /api/sessions/:sessionId/contacts/:number/lid
+
+Look up the `@lid` WhatsApp holds for a phone number, without sending a message (`lid` is `null` when it holds none). Requires an `OPERATOR` key.
+
+```bash
+curl -X GET "$BASE/api/sessions/$SESSION_ID/contacts/628123456789/lid" \
+  -H "X-API-Key: $API_KEY"
+```
+
 #### PUT /api/sessions/:sessionId/contacts/:contactId
 
 Save or edit an addressbook contact.
@@ -1780,8 +1789,8 @@ curl "$BASE/api/sessions/$SESSION_ID/media/convert" \
 #### POST /api/sessions/:sessionId/media/convert/voice
 
 Convert audio (or a video's audio track) into a WhatsApp voice note — Ogg/Opus, mono, 48 kHz
-(OPERATOR). Exactly one of `url` / `base64`. Post the returned `base64` to `messages/send-audio`
-with `ptt: true` (or to `status/send-voice`).
+(OPERATOR). At least one of `url` / `base64`; when both are given, `base64` is used. Post the
+returned `base64` to `messages/send-audio` with `ptt: true` (or to `status/send-voice`).
 
 ```bash
 curl -X POST "$BASE/api/sessions/$SESSION_ID/media/convert/voice" \

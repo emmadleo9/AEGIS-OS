@@ -14,7 +14,7 @@ html[lang='ar'] {
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--text-primary);
   background-color: var(--bg-light);
 
@@ -22,17 +22,57 @@ html[lang='ar'] {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* AEGIS-OS theme: obsidian #050A0E, cyan #8AF8FF */
+  --aegis-bg: #050A0E;
+  --aegis-panel: rgba(8, 24, 30, 0.88);
+  --aegis-cyan: #8AF8FF;
+  --aegis-cyan-dim: rgba(138, 248, 255, 0.18);
+  --aegis-border: rgba(138, 248, 255, 0.38);
+  --aegis-text: #D4F1F3;
+  --aegis-muted: rgba(212, 241, 243, 0.54);
+  --aegis-green: #00FF9C;
+  --aegis-amber: #FFC857;
+  --aegis-red: #FF5F6D;
+  --aegis-glow: 0 0 15px rgba(138, 248, 255, 0.82), 0 0 30px rgba(138, 248, 255, 0.22);
+
+  --bg-light: var(--aegis-bg);
+  --bg-white: rgba(8, 24, 30, 0.9);
+  --bg-card: var(--aegis-panel);
+  --text-primary: var(--aegis-text);
+  --text-secondary: rgba(212, 241, 243, 0.75);
+  --text-muted: var(--aegis-muted);
+  --border: var(--aegis-border);
+  --primary: var(--aegis-cyan);
+  --primary-text: var(--aegis-cyan);
+  --primary-hover: #aefbff;
+  --primary-soft: var(--aegis-cyan-dim);
+  --focus-ring: var(--aegis-cyan);
+  --error: var(--aegis-red);
+  --error-text: var(--aegis-red);
+  --success: var(--aegis-green);
+  --success-text: var(--aegis-green);
+  --warning: var(--aegis-amber);
+  --warning-text: var(--aegis-amber);
+  --info: var(--aegis-cyan);
+  --shadow-sm: 0 0 15px rgba(138, 248, 255, 0.4);
+  --shadow-md: 0 0 25px rgba(138, 248, 255, 0.5);
+  --shadow-lg: 0 0 40px rgba(138, 248, 255, 0.6);
+  --radius: 8px;
 }
 
 a {
   font-weight: 500;
   text-decoration: inherit;
+  color: var(--aegis-cyan);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--bg-light);
+  color: var(--text-primary);
 }
 
 h1 {
@@ -43,9 +83,6 @@ h1 {
   letter-spacing: -0.025em;
 }
 
-/* h2 is a real heading again — the old global made EVERY h2 a small uppercase eyebrow, which
-   forced pages to keep resetting it (and left section titles smaller than body text). The eyebrow
-   look is now opt-in via .eyebrow for the section/card labels that actually want it. */
 h2 {
   font-size: 1.25rem;
   font-weight: 700;
@@ -78,9 +115,11 @@ button {
   font-family: inherit;
   cursor: pointer;
   transition: border-color 0.25s;
+  background: var(--aegis-panel);
+  color: var(--text-primary);
+  border-color: var(--aegis-border);
 }
-/* Visible keyboard focus — cross-browser and keyboard-only, so the ring guides Tab navigation
-   without flashing on every mouse click. Every ring is drawn in --focus-ring (App.css, which has the contrast). */
+
 button:focus-visible,
 a:focus-visible,
 [tabindex]:focus-visible {
@@ -91,75 +130,57 @@ button:focus:not(:focus-visible) {
   outline: none;
 }
 
-/* Icons keep their size: an svg that is a flex item would otherwise shrink when its row runs short of room
-   (a larger browser text size left some sidebar entries and Dashboard tiles with a sliver or no icon). */
 svg {
   flex-shrink: 0;
 }
 
 html {
-  /* Root/overscroll background follows the app theme token, so an explicit dark theme on a
-     light-OS device doesn't reveal a white <html> background above/below the body (overscroll). */
   background-color: var(--bg-light);
 }
 
-@media (prefers-color-scheme: light) {
-  /* Guarded with :not([data-theme='dark']): when the OS prefers light but the user explicitly
-     picked the dark theme, the app's own choice must win (otherwise the root is force-whitened). */
-  :root:not([data-theme='dark']) {
-    color: #213547;
-    background-color: #ffffff;
-  }
-}
-
-/* Global select/dropdown styling */
 select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   width: 100%;
   padding: 0.75rem 2.5rem 0.75rem 1rem;
-  /* The chevron below sits in the end padding; a page rule with its own padding must not take that
-     room back, or a long value runs under the arrow. */
   padding-inline-end: 2.5rem !important;
   font-size: 0.9375rem;
   font-family: inherit;
   color: var(--text-primary);
-  background-color: var(--bg-white, #fff);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-color: var(--bg-white);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238AF8FF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 16px;
-  border: 1px solid var(--border, #e2e8f0);
+  border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 select:hover {
-  border-color: var(--primary, #25d366);
+  border-color: var(--aegis-cyan);
 }
 
 select:focus {
   outline: none;
   border-color: var(--focus-ring);
-  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+  box-shadow: 0 0 0 3px rgba(138, 248, 255, 0.15);
 }
 
 select:disabled {
-  background-color: var(--bg-light, #f8fafc);
-  color: var(--text-muted, #94a3b8);
+  background-color: rgba(8, 24, 30, 0.6);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
 /* GLOBAL MODAL STYLES */
-
-/* Modal Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(5, 10, 14, 0.7);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,47 +189,31 @@ select:disabled {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Modal Card */
 .modal {
-  background: var(--bg-white, #fff);
+  background: var(--bg-card);
   border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(138, 248, 255, 0.25);
   width: 90%;
   max-width: 480px;
   animation: slideUp 0.3s ease;
-  /* Cap height and lay out as a flex column so the body scrolls while the header and footer stay
-     pinned — config-heavy modals no longer push the title/Save button off-screen. */
   display: flex;
   flex-direction: column;
   max-height: 90vh;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 
-/* The install-plugin modal holds the catalog list — a bit wider on desktop for comfortable reading.
-   The responsive rules below (<=768px: 95% width; <=480px: full-width bottom sheet) still apply, so
-   it stays responsive on small screens. Lives here (global modal styles) rather than in a page CSS
-   so it isn't subject to the page-root scoping rule. */
 .modal.install-modal {
   max-width: 680px;
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header {
@@ -216,14 +221,14 @@ select:disabled {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 1.5rem 1rem;
-  border-bottom: 1px solid var(--border, #e2e8f0);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .modal-header h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary);
   margin: 0;
   text-transform: none;
   letter-spacing: normal;
@@ -231,26 +236,27 @@ select:disabled {
 
 .modal-body {
   padding: 1.5rem;
-  /* Scroll the body (not the whole card) so the pinned header/footer stay visible. */
   overflow-y: auto;
   flex: 1 1 auto;
+  background: var(--bg-card);
 }
 
 .modal-body > label {
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
 }
 
 .modal-body input {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 1px solid var(--border, #e2e8f0);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.9375rem;
-  background: var(--bg-light, #f8fafc);
+  background: rgba(8, 24, 30, 0.7);
+  color: var(--text-primary);
   transition: all 0.2s;
   box-sizing: border-box;
 }
@@ -258,14 +264,10 @@ select:disabled {
 .modal-body input:focus {
   outline: none;
   border-color: var(--focus-ring);
-  background: var(--bg-white, #fff);
-  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+  background: var(--bg-white);
+  box-shadow: 0 0 0 3px rgba(138, 248, 255, 0.15);
 }
 
-/* The rule above is meant for TEXT inputs. Radios/checkboxes would otherwise stretch to width:100%
-   and shove their labels far to the right; reset them back to their native box. The :not() excludes
-   the visually-hidden toggle-switch checkbox (it must stay width:0) so this never ties with the
-   per-page `.toggle-switch input { width:0 }` rule on specificity. */
 .modal-body input[type='radio']:not(.toggle-switch input),
 .modal-body input[type='checkbox']:not(.toggle-switch input) {
   width: auto;
@@ -277,9 +279,6 @@ select:disabled {
   flex: none;
 }
 
-/* The text field focus rules here and on the pages are written for `input` and also reach a native checkbox or radio:
-   they switch its outline off and draw a border it does not show, so a focused one showed nothing (in a dialog, on
-   the Message Tester). The ring comes back for keyboard focus. A switch draws its ring on the slider instead. */
 input[type='checkbox']:not(.toggle-switch input):focus-visible,
 input[type='radio']:not(.toggle-switch input):focus-visible {
   outline: 2px solid var(--focus-ring);
@@ -292,20 +291,21 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
   gap: 0.75rem;
   padding: 1rem 1.5rem 1.5rem;
   flex-shrink: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
 }
 
-/* Icon Button (modal close X) */
 .btn-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: var(--bg-light, #f8fafc);
-  border: 1px solid var(--border, #e2e8f0);
+  background: rgba(8, 24, 30, 0.6);
+  border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary);
   transition: all 0.2s;
   flex-shrink: 0;
   padding: 0;
@@ -314,28 +314,27 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
 .btn-icon svg {
   width: 20px;
   height: 20px;
-  stroke: var(--text-secondary, #64748b);
+  stroke: var(--text-secondary);
 }
 
 .btn-icon:hover {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: var(--error-text);
+  background: rgba(138, 248, 255, 0.12);
+  border-color: var(--aegis-cyan);
+  color: var(--aegis-cyan);
 }
 
 .btn-icon:hover svg {
-  stroke: var(--error);
+  stroke: var(--aegis-cyan);
 }
 
-/* Secondary Button */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: var(--bg-light, #f8fafc);
-  color: var(--text-secondary, #64748b);
-  border: 1px solid var(--border, #e2e8f0);
+  background: rgba(8, 24, 30, 0.6);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -344,9 +343,9 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-white, #fff);
-  border-color: var(--text-muted, #94a3b8);
-  color: var(--text-primary, #1e293b);
+  background: var(--bg-white);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .btn-secondary:disabled {
@@ -354,17 +353,13 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
   cursor: not-allowed;
 }
 
-/* Primary Button — canonical definition; page-scoped copies were consolidated here so the
-   primary CTA looks identical on every page (padding/radius/disabled used to drift per page). */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: var(--primary, #25d366);
-  /* Dark text on the WhatsApp green: 9.0:1 (AAA). White was 1.98:1, failing even the AA
-     large-text floor - the single worst contrast pair in the dashboard. */
-  color: #0f172a;
+  background: var(--primary);
+  color: #050A0E;
   border: none;
   border-radius: 8px;
   font-size: 0.9375rem;
@@ -374,7 +369,7 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-hover, #1da851);
+  background: var(--primary-hover);
 }
 
 .btn-primary:disabled {
@@ -382,13 +377,12 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
   cursor: not-allowed;
 }
 
-/* Danger Button — canonical definition (page copies also used two different base reds). */
 .btn-danger {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: var(--error, #ef4444);
+  background: var(--error);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -399,7 +393,7 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
+  background: #d63044;
 }
 
 .btn-danger:disabled {
@@ -407,22 +401,12 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
   cursor: not-allowed;
 }
 
-/* Spin Animation */
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
+.animate-spin { animation: spin 1s linear infinite; }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* For a user who asked the OS to reduce motion: every animation and transition runs once, instantly. The
-   spinners are left alone, since without them a wait shows no sign of progress. */
 @media (prefers-reduced-motion: reduce) {
   *:not(.animate-spin, .spin-slow),
   *:not(.animate-spin, .spin-slow)::before,
@@ -434,19 +418,15 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
   }
 }
 
-/* Code element styling */
 code {
-  background: var(--bg-light, #f1f5f9);
+  background: rgba(8, 24, 30, 0.6);
   padding: 0.125rem 0.375rem;
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.875em;
-  color: var(--text-primary, #1e293b);
+  color: var(--text-primary);
 }
 
-/* RTL / Hebrew direction support */
-
-/* Keep code, technical identifiers, and numbers LTR even inside RTL containers */
 [dir='rtl'] code,
 [dir='rtl'] .mono,
 [dir='rtl'] pre {
@@ -455,21 +435,16 @@ code {
   unicode-bidi: embed;
 }
 
-/* Modal footer: actions should align to the start of the writing direction */
 [dir='rtl'] .modal-footer {
   justify-content: flex-end;
   flex-direction: row-reverse;
 }
 
-/* Select dropdown caret on the opposite side */
 [dir='rtl'] select {
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   background-position: left 0.75rem center;
 }
 
-/* Glyphs that point along the reading direction flip with it, and so does the chat page's contact panel toggle,
-   whose panel opens on the inline end. The sidebar's panel icons are swapped in Layout.tsx instead, so they are not
-   listed here. */
 [dir='rtl'] .lucide-arrow-left,
 [dir='rtl'] .lucide-arrow-right,
 [dir='rtl'] .lucide-corner-up-left,
@@ -481,7 +456,6 @@ code {
   transform: scaleX(-1);
 }
 
-/* Inputs in modals: text aligns naturally */
 [dir='rtl'] .modal-body input,
 [dir='rtl'] .modal-body textarea,
 [dir='rtl'] input[type='text'],
@@ -492,7 +466,6 @@ code {
   text-align: right;
 }
 
-/* URLs, emails, phones — force LTR even inside RTL */
 [dir='rtl'] input[type='url'],
 [dir='rtl'] input[type='email'],
 [dir='rtl'] input[type='tel'] {
@@ -500,61 +473,23 @@ code {
   text-align: left;
 }
 
-/* Toast container — slide in from the opposite side */
 [dir='rtl'] .toast-container {
   right: auto;
   left: 1rem;
 }
 
-/* Mobile Responsive - Global */
 @media (max-width: 768px) {
-  h1 {
-    font-size: 1.5rem;
-  }
-
-  .modal {
-    width: 95%;
-    max-width: none;
-    margin: 1rem;
-    border-radius: 12px;
-  }
-
-  .modal-header {
-    padding: 1.25rem 1.25rem 0.875rem;
-  }
-
-  .modal-header h2 {
-    font-size: 1.125rem;
-  }
-
-  .modal-body {
-    padding: 1.25rem;
-  }
-
-  .modal-footer {
-    padding: 0.875rem 1.25rem 1.25rem;
-  }
-
-  select {
-    padding: 0.625rem 2.25rem 0.625rem 0.875rem;
-    font-size: 0.875rem;
-  }
+  h1 { font-size: 1.5rem; }
+  .modal { width: 95%; max-width: none; margin: 1rem; border-radius: 12px; }
+  .modal-header { padding: 1.25rem 1.25rem 0.875rem; }
+  .modal-header h2 { font-size: 1.125rem; }
+  .modal-body { padding: 1.25rem; }
+  .modal-footer { padding: 0.875rem 1.25rem 1.25rem; }
+  select { padding: 0.625rem 2.25rem 0.625rem 0.875rem; font-size: 0.875rem; }
 }
 
 @media (max-width: 480px) {
-  h1 {
-    font-size: 1.25rem;
-  }
-
-  .modal-overlay {
-    align-items: flex-end;
-  }
-
-  .modal {
-    width: 100%;
-    margin: 0;
-    border-radius: 16px 16px 0 0;
-    /* max-height + body scroll already come from the base .modal rule; the bottom-sheet only
-       changes width/anchoring. (Scrolling lives on .modal-body to avoid a double scrollbar.) */
-  }
+  h1 { font-size: 1.25rem; }
+  .modal-overlay { align-items: flex-end; }
+  .modal { width: 100%; margin: 0; border-radius: 16px 16px 0 0; }
 }

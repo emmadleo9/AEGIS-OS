@@ -3,8 +3,16 @@ import path from 'node:path';
 
 const candidates = [
   'meta/llama-3.3-70b-instruct',
+  'meta-llama/llama-4-maverick',
   'google/gemini-2.0-flash-001',
-  'nvidia/llama-3.1-nemotron-70b-instruct',
+  'anthropic/claude-3.5-sonnet',
+  'openai/gpt-4o-mini',
+  'qwen/qwen-2.5-72b-instruct',
+];
+const nvidiaCandidates = [
+  'google/gemma-3-4b-it',
+  'ibm/granite-3.0-3b-a800m-instruct',
+  'nvidia/mistral-nemo-minitron-8b-8k-instruct',
 ];
 
 // shorter sweep, only Likely-subscribed -> Preserve this logic
@@ -68,6 +76,7 @@ const light = process.argv.includes('--light');
 // light mode: test only NVIDIA key, skip OpenRouter entirely
 const provider = light ? (nvidiaKey ? 'nvidia' : '') : openRouterKey ? 'openrouter' : nvidiaKey ? 'nvidia' : '';
 const key = provider === 'nvidia' ? nvidiaKey : openRouterKey;
+const selectedCandidates = provider === 'nvidia' ? nvidiaCandidates : candidates;
 
 if (!key) {
   console.error('No OpenRouter or NVIDIA API key found in process environment or local key files.');
@@ -78,7 +87,7 @@ if (!key) {
     : 'https://integrate.api.nvidia.com/v1/chat/completions';
   const results = [];
 
-  for (const model of candidates) {
+  for (const model of selectedCandidates) {
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -96,6 +105,19 @@ if (!key) {
         signal: AbortSignal.timeout(30_000),
       });
 
+      const responseData = await response.json().catch(() => ({}));
+      const providerMessage = [
+        responseData.detail,
+        responseData.error?.message,
+        responseData.message,
+        responseData.title,
+      ].find((message) => typeof message === 'string') ?? '';
+      if (response.status === 404 && /function.{0,100}not found for account/i.test(providerMessage)) {
+        console.log(`PROVIDER UNAVAILABLE: ${model} (account inference route not found)`);
+        results.push({ model, status: 'PROVIDER UNAVAILABLE', detail: 'account inference route not found' });
+        continue;
+      }
+
       if ([404, 410, 484].includes(response.status)) {
         console.log(`SKIP EOL: ${model}`);
         results.push({ model, status: 'EOL SKIPPED', detail: `${response.status}` });
@@ -107,8 +129,7 @@ if (!key) {
         continue;
       }
 
-      const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content;
+      const reply = responseData.choices?.[0]?.message?.content;
       if (typeof reply !== 'string' || !reply.trim()) {
         results.push({ model, status: 'FAILED', detail: 'empty response' });
         continue;

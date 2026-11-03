@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./console/public/aegis-official.png" alt="AEGIS-OS official shield logo" width="160" />
+
 <img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1000&color=8AF8FF&center=true&width=600&lines=AEGIS-OS+%2F%2F+TACTICAL+COMMAND;Local-first+AI+OS;One+OS+to+control+all+devices" alt="AEGIS-OS // TACTICAL COMMAND — Local-first AI OS — One OS to control all devices" />
 
 <h1>AEGIS-OS</h1>
@@ -36,6 +38,10 @@ AEGIS-OS is a **local-first AI operating system** that turns a modest machine in
 | 🗞️ **News & Conflict** | GDELT global events with country search, recommendations and a live mini-map. |
 | 🔋 **Memory** | Persistent everywhere — IndexedDB in the console, SQLite in the gateway. Sessions survive restarts. |
 | ✈️ **Offline-first** | Feeds degrade gracefully; the console keeps running without internet. |
+
+### AI Studio online models
+
+AI Studio keeps its local Ollama models available and adds optional NVIDIA NIM and Groq chat models. The **FREE-SEARCH // TAVILY + LLAMA - Perplexity Clone 🌐 FREE** option searches Tavily and summarizes results with NVIDIA. Add keys through **AI Studio → API KEYS** or configure server-side variables in the repository-root `.env.local`, `.env`, or `gateway/.env.local`: `NVIDIA_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`, and `TAVILY_API_KEY`. Use [.env.local.example](./.env.local.example) as the template for a root `.env.local`. Browser-entered keys stay in that browser's local storage and provider requests go through the local gateway. Do not use `VITE_`-prefixed provider secrets because Vite embeds those values in browser bundles. If NVIDIA's account inference route is unavailable, AI Studio falls back to local Ollama; Tavily search still returns the retrieved answer or source text.
 
 ---
 
@@ -79,10 +85,11 @@ flowchart LR
 ```bash
 git clone https://github.com/emmadleo9/AEGIS-OS.git
 cd AEGIS-OS
-./start.bat          # boots gateway (2785) + console (5173)
+npm run dev          # boots gateway (2785) + console (5173)
+# Or use start.bat on Windows
 ```
 
-Then open **http://localhost:5173** — the AEGIS HUD. Pair AEGIS WhatsApp from the Social Hub by scanning the QR with your phone.
+Then open **http://localhost:5173** — the AEGIS HUD. The gateway stays on its internal port and the Vite server proxies `/api`, `/gateway`, and `/v1` through the console origin. Pair AEGIS WhatsApp from the Social Hub by scanning the QR with your phone.
 
 ---
 

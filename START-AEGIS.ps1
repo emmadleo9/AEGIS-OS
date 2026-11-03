@@ -36,6 +36,13 @@ function Start-AegisService {
 $gatewayDirectory = Join-Path $root 'gateway'
 $consoleDirectory = Join-Path $root 'console'
 $viteEntry = Join-Path $consoleDirectory 'node_modules\vite\bin\vite.js'
-Start-AegisService -Name 'gateway' -Port 2785 -WorkingDirectory $gatewayDirectory -Arguments @((Join-Path $gatewayDirectory 'index.js'))
+$openwaMain = Join-Path $gatewayDirectory 'dist\main.js'
+# OpenWA (NestJS) is the WhatsApp gateway on port 2785; ensure it is built.
+if (-not (Test-Path -LiteralPath $openwaMain)) {
+    Write-Host "[AEGIS-OS] Building OpenWA gateway..."
+    Push-Location $gatewayDirectory
+    try { & npm.cmd run build --silent } finally { Pop-Location }
+}
+Start-AegisService -Name 'gateway' -Port 2785 -WorkingDirectory $gatewayDirectory -Arguments @($openwaMain)
 Start-AegisService -Name 'console' -Port 5173 -WorkingDirectory $consoleDirectory -Arguments @($viteEntry, '--host', '0.0.0.0', '--port', '5173')
-Write-Host '[AEGIS-OS] Console: http://localhost:5173  Gateway: http://localhost:2785'
+Write-Host '[AEGIS-OS] Console: http://localhost:5173  Gateway (OpenWA): http://localhost:2785'

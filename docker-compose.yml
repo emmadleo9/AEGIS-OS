@@ -61,9 +61,10 @@ services:
       - SSRF_ALLOWED_HOSTS=brain
       - API_MASTER_KEY=aegis_master_key
       - CORS_ORIGINS=http://console:3000,http://localhost:3000
-      - MEMORY_LIMIT=2g
       - OPENWA_MEM_LIMIT=2g
       - OPENWA_PIDS_LIMIT=2048
+      - MCP_ENABLED=true
+      - SERVE_DASHBOARD=true
     volumes:
       - ./data/gateway:/app/data
     mem_limit: 2g

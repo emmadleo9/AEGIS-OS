@@ -2,7 +2,9 @@
  * AEGIS persistent memory — IndexedDB (idb-keyval stores) with localStorage fallback.
  * Restores chats, devices, logs, stats, world filters, search history on load.
  */
-import { createStore, get, set } from 'idb-keyval';
+import { createStore, get } from 'idb-keyval';
+import { canWrite } from '@/services/quotaManager';
+import { getAegisItem, setAegisItem } from '@/services/persistentStorage';
 
 const DB_NAME = 'aegis-os-db';
 const STORE_NAME = 'keyval-store';
@@ -25,43 +27,41 @@ function memoryAvailable(): boolean {
 const hasIdb = memoryAvailable();
 
 export async function initDB(): Promise<void> {
-  if (hasIdb) {
-    try {
-      // request durable storage so the OS does not evict us
-      if (navigator.storage?.persist) void navigator.storage.persist();
-    } catch {
-      /* storage persistence is best effort */
-    }
-  }
+  if (!hasIdb || !navigator.storage?.persist) return;
+  await navigator.storage.persist();
 }
 
 export async function saveMemory(key: MemoryKey, value: unknown): Promise<void> {
-  try {
-    if (hasIdb) await set(key, value, store);
-    else localStorage.setItem(lsKey(key), JSON.stringify(value));
-  } catch (reason) {
-    console.warn(`[aegis-memory] save ${key} failed`, reason);
+  if (hasIdb) {
+    await setAegisItem('memory', key, value);
+    return;
   }
+
+  const serialized = JSON.stringify(value);
+  if (!await canWrite(new Blob([serialized]).size)) {
+    throw new Error('AEGIS storage is at its 20GB limit. Export or move data before saving more.');
+  }
+  localStorage.setItem(lsKey(key), serialized);
 }
 
 export async function loadMemory<T>(key: MemoryKey, fallback: T): Promise<T> {
-  try {
-    if (hasIdb) {
-      const value = await get<T>(key, store);
-      return value ?? fallback;
+  if (hasIdb) {
+    const value = await getAegisItem<T | undefined>('memory', key, undefined);
+    if (value !== undefined) return value;
+    const legacyValue = await get<T | undefined>(key, store);
+    if (legacyValue !== undefined) {
+      await setAegisItem('memory', key, legacyValue);
+      return legacyValue;
     }
-    const raw = localStorage.getItem(lsKey(key));
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch (reason) {
-    console.warn(`[aegis-memory] load ${key} failed`, reason);
-    return fallback;
   }
+  const raw = localStorage.getItem(lsKey(key));
+  return raw ? (JSON.parse(raw) as T) : fallback;
 }
 
 export async function saveLog(entry: string): Promise<void> {
-  const logs = await loadMemory<string[]>('logs', []);
+  const logs = await getAegisItem<string[]>('logs', 'entries', []);
   logs.unshift(`[${new Date().toISOString()}] ${entry}`);
-  await saveMemory('logs', logs.slice(0, 200));
+  await setAegisItem('logs', 'entries', logs.slice(0, 200));
 }
 
 export async function saveStatsPoint(point: Record<string, number>): Promise<void> {

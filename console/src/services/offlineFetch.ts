@@ -2,8 +2,6 @@
  * Offline-mode fetch wrapper — replaces throw-on-fail with cached/mock fallbacks.
  * Any consumer gets { data, offline } and UI renders the "offline mode - using cached data" badge.
  */
-import { NVIDIA_OFFLINE } from './ai/nvidia.config';
-
 export type OfflineResult<T> = { data: T; offline: boolean; error?: string };
 
 const cache = new Map<string, unknown>();
@@ -23,5 +21,3 @@ export async function safeFetch<T>(url: string, mock: T, options: RequestInit = 
     return { data: mock, offline: true, error: reason instanceof Error ? reason.message : String(reason) };
   }
 }
-
-export { NVIDIA_OFFLINE };

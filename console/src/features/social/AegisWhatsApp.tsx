@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HudFrame } from '@/components/hud';
 import { loadMemory, saveMemory } from '@/lib/aegis-memory';
+import { api } from '@/lib/api';
 
 type Status = 'offline' | 'connecting' | 'waiting_qr' | 'reconnecting' | 'online' | 'error';
 type WaStatus = { status: Status; qr: string | null; user: { id?: string; name?: string } | null; lastError: string | null; pairingCode?: string | null };
@@ -20,6 +21,8 @@ function formatJid(jid: string): string {
   return jid.replace(/@.*$/, '').replace(/(\d{3})(?=\d)/g, '$1 ');
 }
 
+const API_KEY = localStorage.getItem('aegis-api-key') || 'aegis_master_key';
+
 export function AegisWhatsApp() {
   const [status, setStatus] = useState<WaStatus>({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });
   const [chats, setChats] = useState<ChatEntry[]>([]);
@@ -33,18 +36,19 @@ export function AegisWhatsApp() {
   const wsRef = useRef<WebSocket | null>(null);
   const online = status.status === 'online';
 
+  const headers = { 'X-API-Key': API_KEY };
+
   const refreshChats = useCallback(async () => {
     if (!online) return;
     const stored = await loadMemory<ChatEntry[]>('whatsappAuth', []);
     try {
-      const response = await fetch('/api/whatsapp/chats');
-      if (response.ok) {
-        const data = await response.json() as { chats?: ChatEntry[] };
-        if (data.chats?.length) {
-          setChats(data.chats.slice(0, 60));
-          await saveMemory('whatsappAuth', data.chats.slice(0, 60));
-          return;
-        }
+      const response = await api.get('/sessions/aegis-whatsapp-session/chats', { headers });
+      const data = response.data as { chats?: ChatEntry[] } | ChatEntry[];
+      const list = Array.isArray(data) ? data : data.chats ?? [];
+      if (list.length) {
+        setChats(list.slice(0, 60));
+        await saveMemory('whatsappAuth', list.slice(0, 60));
+        return;
       }
     } catch {
       /* fall through to cached chats */
@@ -56,9 +60,12 @@ export function AegisWhatsApp() {
     let alive = true;
     const poll = async () => {
       try {
-        const response = await fetch('/api/whatsapp/status', { cache: 'no-store' });
-        const data = await response.json() as WaStatus;
-        if (alive) setStatus(data);
+        const response = await api.get('/sessions/aegis-whatsapp-session', { headers });
+        const data = response.data;
+        const st = data.status?.toLowerCase() || 'offline';
+        const mapped: Status = st === 'connected' ? 'online' : st === 'connecting' ? 'connecting' : st === 'qr_ready' || st === 'waiting_qr' ? 'waiting_qr' : 'offline';
+        if (alive) setStatus((current) => ({ ...current, status: mapped, lastError: null }));
+        if (data.qrCode && alive) setStatus((current) => ({ ...current, qr: data.qrCode }));
       } catch {
         if (alive) setStatus((current) => ({ ...current, status: 'offline', lastError: 'Gateway unreachable' }));
       }
@@ -66,13 +73,7 @@ export function AegisWhatsApp() {
     void poll();
     const timer = window.setInterval(poll, 4000);
     try {
-      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/whatsapp`);
-      ws.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data as string) as { event: string; payload: unknown };
-          if (parsed.event === 'status') setStatus(parsed.payload as WaStatus);
-        } catch { /* ignore malformed frames */ }
-      };
+      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/events`);
       wsRef.current = ws;
     } catch {
       /* WebSocket optional — polling covers it */
@@ -85,7 +86,7 @@ export function AegisWhatsApp() {
   }, []);
 
   useEffect(() => {
-    if (online) void fetch('/api/whatsapp/start').catch(() => undefined);
+    if (online) void api.post('/sessions/aegis-whatsapp-session/start', {}, { headers }).catch(() => undefined);
   }, [online]);
 
   useEffect(() => { void refreshChats(); }, [refreshChats]);
@@ -94,11 +95,10 @@ export function AegisWhatsApp() {
     if (!activeJid) return;
     void (async () => {
       try {
-        const response = await fetch(`/api/whatsapp/messages/${encodeURIComponent(activeJid)}`);
-        if (response.ok) {
-          const data = await response.json() as { messages?: ChatMessage[] };
-          setMessages(data.messages ?? []);
-        }
+        const response = await api.get(`/sessions/aegis-whatsapp-session/messages?chatId=${encodeURIComponent(activeJid)}`, { headers });
+        const data = response.data as { messages?: ChatMessage[] } | ChatMessage[];
+        const list = Array.isArray(data) ? data : data.messages ?? [];
+        setMessages(list.map((m: any) => ({ fromMe: m.fromMe || m.outgoing, text: m.body || m.text || '(media message)', at: m.timestamp || m.at || new Date().toISOString() })));
       } catch {
         setMessages([]);
       }
@@ -110,11 +110,7 @@ export function AegisWhatsApp() {
     if (!text || !activeJid) return;
     setDraft('');
     try {
-      await fetch('/api/whatsapp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jid: activeJid, text }),
-      });
+      await api.post('/sessions/aegis-whatsapp-session/messages/send-text', { chatId: activeJid, text }, { headers });
       setMessages((current) => [...current, { fromMe: true, text, at: new Date().toISOString() }]);
     } catch {
       /* gateway will surface errors via status */
@@ -122,7 +118,7 @@ export function AegisWhatsApp() {
   };
 
   const logout = async () => {
-    await fetch('/api/whatsapp/logout', { method: 'POST' }).catch(() => undefined);
+    await api.post(`/sessions/aegis-whatsapp-session/logout`, {}, { headers }).catch(() => undefined);
     setStatus({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });
     setPairingCode('');
     setChats([]);
@@ -136,13 +132,9 @@ export function AegisWhatsApp() {
     }
     setPairingBusy(true);
     try {
-      await fetch('/api/whatsapp/start', { method: 'POST' });
-      const response = await fetch('/api/whatsapp/pairing-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: digits }),
-      });
-      const data = await response.json() as { code?: string; error?: string };
+      await api.post('/sessions/aegis-whatsapp-session/start', {}, { headers });
+      const response = await api.post('/sessions/aegis-whatsapp-session/pairing-code', { phoneNumber: digits }, { headers });
+      const data = response.data as { code?: string; error?: string };
       setPairingCode(data.code ?? data.error ?? 'FAILED');
     } catch {
       setPairingCode('FAILED');
@@ -238,7 +230,7 @@ export function AegisWhatsApp() {
         {status.user?.id && <p className="credential-notice">Linked as {status.user.id}</p>}
         {status.lastError && <p className="credential-notice" style={{ color: '#ff8792' }}>{status.lastError}</p>}
         <div className="wa-session-actions">
-          <button type="button" className="hud-button" onClick={() => void fetch('/api/whatsapp/start', { method: 'POST' })} disabled={online}>
+          <button type="button" className="hud-button" onClick={() => void api.post('/sessions/aegis-whatsapp-session/start', {}, { headers }).catch(() => undefined)} disabled={online}>
             {online ? 'CONNECTED' : 'START SESSION'}
           </button>
           {status.user && (

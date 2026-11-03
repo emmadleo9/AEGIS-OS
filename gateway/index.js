@@ -1,8 +1,24 @@
 const { spawn } = require('node:child_process');
 const os = require('node:os');
+const fs = require('node:fs');
+const path = require('node:path');
+const dotenv = require('dotenv');
 const express = require('express');
 const si = require('systeminformation');
 const AdmZip = require('adm-zip');
+
+const repoRoot = path.resolve(__dirname, '..');
+for (const envFile of [
+  path.join(repoRoot, 'console', '.env.local'),
+  path.join(repoRoot, '.env.local'),
+  path.join(repoRoot, '.env'),
+  path.join(__dirname, '.env.local'),
+  path.join(__dirname, '.env'),
+]) {
+  if (!fs.existsSync(envFile)) continue;
+  const result = dotenv.config({ path: envFile });
+  if (result.error) throw result.error;
+}
 
 const { createServer } = require('node:http');
 const memoryDb = require('./routes/memory');
@@ -13,13 +29,16 @@ const firesRoute = require('./routes/fires');
 const tasksRoute = require('./routes/system-tasks');
 const keysRoute = require('./routes/keys');
 const novaRoute = require('./routes/nova');
+const localAiRoute = require('./routes/local-ai');
+const onlineAiRoute = require('./routes/online-ai');
 
 const app = express();
 const server = createServer(app);
-const port = Number(process.env.AEGIS_PORT || 2785);
+const port = Number(process.env.GATEWAY_PORT || process.env.AEGIS_PORT || 2785);
+const consolePort = Number(process.env.CONSOLE_PORT || 5173);
 const allowedOrigins = new Set([
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
+  `http://localhost:${consolePort}`,
+  `http://127.0.0.1:${consolePort}`,
 ]);
 const logs = [];
 
@@ -44,7 +63,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/api/health', (_req, res) => res.json({ status: 'online', service: 'aegis-local-gateway', timestamp: new Date().toISOString() }));
+const healthResponse = (_req, res) => res.json({ status: 'online', service: 'aegis-local-gateway', timestamp: new Date().toISOString() });
+app.get(['/api/health', '/gateway/health'], healthResponse);
 
 memoryDb.registerMemoryRoutes(app);
 satellitesRoute.register(app);
@@ -52,6 +72,8 @@ gdeltSearch.register(app);
 firesRoute.register(app);
 tasksRoute.register(app);
 keysRoute.register(app);
+localAiRoute.register(app, novaRoute.IMAGE_MODELS);
+onlineAiRoute.register(app);
 novaRoute.register(app);
 whatsapp.registerAegisWhatsApp(app);
 
@@ -326,6 +348,7 @@ app.use((error, _req, res, _next) => {
 let serverRef;
 const restartDelay = Number(process.env.AEGIS_RESTART_DELAY_MS || 0);
 const startGateway = () => {
+  log(`API Keys loaded: nvidia ${Boolean(keysRoute.getApiKey('NV_API_KEY'))}, openrouter ${Boolean(keysRoute.getApiKey('OPENROUTER_API_KEY'))}, tavily ${Boolean(keysRoute.getApiKey('TAVILY_API_KEY'))}`);
   serverRef = server.listen(port, '127.0.0.1', () => log(`AEGIS local gateway listening on http://127.0.0.1:${port}`));
   whatsapp.attachAegisWhatsAppWs(serverRef);
   serverRef.on('error', (error) => {

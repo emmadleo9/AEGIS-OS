@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $runtime = Join-Path $env:LOCALAPPDATA 'AEGIS-OS\runtime'
 $specifications = @(
+    @{ Name = 'singularity'; Entry = 'start-singularity.js' },
     @{ Name = 'gateway'; Entry = '\gateway\index.js' },
     @{ Name = 'console'; Entry = '\console\node_modules\vite\bin\vite.js' }
 )
@@ -15,9 +16,15 @@ foreach ($specification in $specifications) {
     $rootId = [int](Get-Content -LiteralPath $pidPath -Raw)
     $processes = @(Get-CimInstance Win32_Process)
     $rootProcess = $processes | Where-Object { $_.ProcessId -eq $rootId } | Select-Object -First 1
-    if (-not $rootProcess -or -not $rootProcess.CommandLine -or $rootProcess.CommandLine.IndexOf($specification.Entry, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+    if (-not $rootProcess) {
+        Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
+        Write-Host "[AEGIS-OS] Cleared stale $($specification.Name) PID record."
+        continue
+    }
+
+    if (-not $rootProcess.CommandLine -or $rootProcess.CommandLine.IndexOf($specification.Entry, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
         Write-Host "[AEGIS-OS] PID $rootId no longer matches the recorded $($specification.Name) command; leaving it untouched."
-        Remove-Item -LiteralPath $pidPath -Force
+        Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
         continue
     }
 

@@ -2,22 +2,86 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { HudFrame } from '@/components/hud';
 import { loadMemory, saveMemory, pushSearchHistory } from '@/lib/aegis-memory';
 
-type Article = { title: string; url: string; domain?: string; sourceCountry?: string; date?: string };
-type FeedEvent = { title: string; date: string; url?: string; name?: string; lon?: number; lat?: number; articles?: number };
+type Article = {
+  title: string;
+  url: string;
+  domain?: string;
+  sourceCountry?: string;
+  date?: string;
+};
+type FeedEvent = {
+  title: string;
+  date: string;
+  url?: string;
+  name?: string;
+  lon?: number;
+  lat?: number;
+  articles?: number;
+};
 
 const COUNTRIES = [
-  'Pakistan', 'India', 'United States', 'United Kingdom', 'China', 'Russia', 'Ukraine', 'Israel', 'Palestine',
-  'Iran', 'Iraq', 'Syria', 'Afghanistan', 'Turkey', 'Egypt', 'Saudi Arabia', 'United Arab Emirates', 'Qatar',
-  'Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'Brazil', 'Argentina', 'Mexico', 'Canada', 'Australia',
-  'Japan', 'South Korea', 'Indonesia', 'Malaysia', 'Bangladesh', 'Nigeria', 'South Africa', 'Ethiopia', 'Kenya',
+  'Pakistan',
+  'India',
+  'United States',
+  'United Kingdom',
+  'China',
+  'Russia',
+  'Ukraine',
+  'Israel',
+  'Palestine',
+  'Iran',
+  'Iraq',
+  'Syria',
+  'Afghanistan',
+  'Turkey',
+  'Egypt',
+  'Saudi Arabia',
+  'United Arab Emirates',
+  'Qatar',
+  'Germany',
+  'France',
+  'Italy',
+  'Spain',
+  'Netherlands',
+  'Brazil',
+  'Argentina',
+  'Mexico',
+  'Canada',
+  'Australia',
+  'Japan',
+  'South Korea',
+  'Indonesia',
+  'Malaysia',
+  'Bangladesh',
+  'Nigeria',
+  'South Africa',
+  'Ethiopia',
+  'Kenya',
 ];
 
 const COUNTRY_CENTER: Record<string, [number, number]> = {
-  Pakistan: [69.3, 30.4], India: [78.9, 20.6], 'United States': [-98, 39.8], 'United Kingdom': [-1.5, 52.4],
-  China: [104, 35.9], Russia: [95, 61.5], Ukraine: [31.2, 48.4], Israel: [34.9, 31], Palestine: [35.2, 31.9],
-  Iran: [53.7, 32.4], Iraq: [43.8, 33.2], Syria: [38.3, 34.8], Afghanistan: [66, 33.9], Turkey: [35.2, 39],
-  Egypt: [30.8, 26.8], 'Saudi Arabia': [45.1, 23.9], Brazil: [-52, -10.8], Japan: [138.2, 36.2],
-  Germany: [10.4, 51.2], France: [2.5, 46.6], Nigeria: [8.1, 9.1], 'South Africa': [24.7, -28.5],
+  Pakistan: [69.3, 30.4],
+  India: [78.9, 20.6],
+  'United States': [-98, 39.8],
+  'United Kingdom': [-1.5, 52.4],
+  China: [104, 35.9],
+  Russia: [95, 61.5],
+  Ukraine: [31.2, 48.4],
+  Israel: [34.9, 31],
+  Palestine: [35.2, 31.9],
+  Iran: [53.7, 32.4],
+  Iraq: [43.8, 33.2],
+  Syria: [38.3, 34.8],
+  Afghanistan: [66, 33.9],
+  Turkey: [35.2, 39],
+  Egypt: [30.8, 26.8],
+  'Saudi Arabia': [45.1, 23.9],
+  Brazil: [-52, -10.8],
+  Japan: [138.2, 36.2],
+  Germany: [10.4, 51.2],
+  France: [2.5, 46.6],
+  Nigeria: [8.1, 9.1],
+  'South Africa': [24.7, -28.5],
 };
 
 function useDebounced(value: string, delay: number): string {
@@ -48,13 +112,22 @@ function useMiniMap(query: string) {
         attributionControl: false,
       });
     })();
-    return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
+    return () => {
+      cancelled = true;
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
     const center = COUNTRY_CENTER[query];
     if (!center || !mapRef.current || !maplibreRef.current) return;
-    mapRef.current.flyTo({ center, zoom: 3.2, duration: 1600, essential: true });
+    mapRef.current.flyTo({
+      center,
+      zoom: 3.2,
+      duration: 1600,
+      essential: true,
+    });
   }, [query]);
 
   return containerRef;
@@ -65,6 +138,7 @@ export function NewsConflictView() {
   const [showRecs, setShowRecs] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [events, setEvents] = useState<FeedEvent[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
   const [selected, setSelected] = useState<Article | null>(null);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
@@ -72,7 +146,9 @@ export function NewsConflictView() {
   const debouncedQuery = useDebounced(query, 300);
   const miniMapRef = useMiniMap(debouncedQuery);
 
-  useEffect(() => { void loadMemory<string[]>('searchHistory', []).then(setHistory); }, []);
+  useEffect(() => {
+    void loadMemory<string[]>('searchHistory', []).then(setHistory);
+  }, []);
 
   // Global feed (preserve original behaviour)
   useEffect(() => {
@@ -81,25 +157,39 @@ export function NewsConflictView() {
       try {
         const response = await fetch('/api/feeds/gdelt', { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const result = await response.json() as { features?: Array<{ geometry?: { coordinates?: number[] }; properties?: { name?: string; url?: string; articles?: number } }> };
+        const result = (await response.json()) as {
+          features?: Array<{
+            geometry?: { coordinates?: number[] };
+            properties?: { name?: string; url?: string; articles?: number };
+          }>;
+        };
         if (alive) {
-          setEvents((result.features ?? []).slice(0, 30).map((feature) => ({
-            title: feature.properties?.name ?? 'Unlabeled event',
-            name: feature.properties?.name,
-            url: feature.properties?.url,
-            articles: feature.properties?.articles,
-            lon: feature.geometry?.coordinates?.[0],
-            lat: feature.geometry?.coordinates?.[1],
-            date: feature.properties?.articles ? `${feature.properties.articles} REPORTS` : '',
-          })));
+          setEvents(
+            (result.features ?? []).slice(0, 30).map((feature) => ({
+              title: feature.properties?.name ?? 'Unlabeled event',
+              name: feature.properties?.name,
+              url: feature.properties?.url,
+              articles: feature.properties?.articles,
+              lon: feature.geometry?.coordinates?.[0],
+              lat: feature.geometry?.coordinates?.[1],
+              date: feature.properties?.articles ? `${feature.properties.articles} REPORTS` : '',
+            })),
+          );
+          setEventsLoaded(true);
         }
       } catch (reason) {
-        if (alive) setError(reason instanceof Error ? reason.message : String(reason));
+        if (alive) {
+          setError(reason instanceof Error ? reason.message : String(reason));
+          setEventsLoaded(true);
+        }
       }
     };
     void load();
     const timer = window.setInterval(load, 5 * 60_000);
-    return () => { alive = false; window.clearInterval(timer); };
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   const recommendations = useMemo(() => {
@@ -111,14 +201,18 @@ export function NewsConflictView() {
 
   useEffect(() => {
     const q = debouncedQuery.trim();
-    if (q.length < 2) { setArticles([]); setError(''); return; }
+    if (q.length < 2) {
+      setArticles([]);
+      setError('');
+      return;
+    }
     let alive = true;
     void (async () => {
       setSearching(true);
       try {
         const response = await fetch(`/api/gdelt/search?q=${encodeURIComponent(q)}`);
         if (!response.ok) throw new Error(`Search failed (HTTP ${response.status})`);
-        const data = await response.json() as { articles?: Article[] };
+        const data = (await response.json()) as { articles?: Article[] };
         if (alive) {
           setArticles(data.articles ?? []);
           setError('');
@@ -135,43 +229,86 @@ export function NewsConflictView() {
         if (alive) setSearching(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [debouncedQuery]);
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div
+      data-aegis-section="news-conflict"
+      data-section-loaded={eventsLoaded}
+      data-searching={searching || debouncedQuery.trim() !== query.trim()}
+      style={{ display: 'grid', gap: 16 }}
+    >
       <HudFrame title="NEWS & CONFLICT // SEARCH">
         <div className="feed-search-bar">
-          <span className="feed-search-icon" aria-hidden="true">⌕</span>
+          <span className="feed-search-icon" aria-hidden="true">
+            ⌕
+          </span>
           <input
             aria-label="Search country or conflict"
             placeholder="Search country or conflict…"
             value={query}
-            onChange={(event) => { setQuery(event.target.value); setShowRecs(true); }}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setShowRecs(true);
+            }}
             onFocus={() => setShowRecs(true)}
             onBlur={() => window.setTimeout(() => setShowRecs(false), 150)}
           />
           {showRecs && (recommendations.length > 0 || history.length > 0) && (
             <div className="feed-search-recs">
-              {recommendations.length > 0 && <button type="button" className="rec-header" tabIndex={-1}>SUGGESTIONS</button>}
+              {recommendations.length > 0 && (
+                <button type="button" className="rec-header" tabIndex={-1}>
+                  SUGGESTIONS
+                </button>
+              )}
               {recommendations.map((item) => (
-                <button type="button" key={item} onMouseDown={() => { setQuery(item); setShowRecs(false); }}>{item}</button>
+                <button
+                  type="button"
+                  key={item}
+                  onMouseDown={() => {
+                    setQuery(item);
+                    setShowRecs(false);
+                  }}
+                >
+                  {item}
+                </button>
               ))}
-              {!query && history.length > 0 && <button type="button" className="rec-header" tabIndex={-1}>RECENT</button>}
-              {!query && history.slice(0, 6).map((item) => (
-                <button type="button" key={`h-${item}`} onMouseDown={() => setQuery(item)}>{item}</button>
-              ))}
+              {!query && history.length > 0 && (
+                <button type="button" className="rec-header" tabIndex={-1}>
+                  RECENT
+                </button>
+              )}
+              {!query &&
+                history.slice(0, 6).map((item) => (
+                  <button type="button" key={`h-${item}`} onMouseDown={() => setQuery(item)}>
+                    {item}
+                  </button>
+                ))}
             </div>
           )}
         </div>
         {searching && <p className="inline-status">Querying GDELT DOC 2.0…</p>}
-        {error && <p className="inline-status" style={{ color: '#ff8792' }}>{error}</p>}
+        {error && (
+          <p className="inline-status" style={{ color: '#ff8792' }}>
+            {error}
+          </p>
+        )}
       </HudFrame>
 
       <div className="feeds-layout">
         <HudFrame title={debouncedQuery.trim().length >= 2 ? `RESULTS // "${debouncedQuery.trim().toUpperCase()}"` : 'GDELT // GLOBAL EVENTS'}>
           <div className="feed-list">
-            {(debouncedQuery.trim().length >= 2 ? articles.map((article) => ({ title: article.title, date: article.date, url: article.url })) : events).map((item, index) => (
+            {(debouncedQuery.trim().length >= 2
+              ? articles.map((article) => ({
+                  title: article.title,
+                  date: article.date,
+                  url: article.url,
+                }))
+              : events
+            ).map((item, index) => (
               <a
                 className="aegis-row feed-row"
                 href={item.url || 'https://www.gdeltproject.org/'}
@@ -180,23 +317,27 @@ export function NewsConflictView() {
                 key={`${item.title}-${index}`}
                 onMouseDown={() => item.url && setSelected({ title: item.title, url: item.url })}
               >
-                <strong>{item.title}</strong><span>{item.date}</span>
+                <strong>{item.title}</strong>
+                <span>{item.date}</span>
               </a>
             ))}
-            {debouncedQuery.trim().length >= 2 && articles.length === 0 && !searching && (
-              <p className="inline-status">No GDELT articles matched this query.</p>
-            )}
+            {debouncedQuery.trim().length >= 2 && articles.length === 0 && !searching && <p className="inline-status">No GDELT articles matched this query.</p>}
+            {debouncedQuery.trim().length < 2 && eventsLoaded && events.length === 0 && !error && <p className="inline-status">No global events are currently available.</p>}
           </div>
         </HudFrame>
 
         <div style={{ display: 'grid', gap: 16 }}>
           <HudFrame title="EVENT DETAIL">
-            {selected
-              ? <div style={{ display: 'grid', gap: 10 }}>
+            {selected ? (
+              <div style={{ display: 'grid', gap: 10 }}>
                 <strong style={{ color: 'var(--aegis-cyan)' }}>{selected.title}</strong>
-                <a className="hud-link" href={selected.url} target="_blank" rel="noreferrer">OPEN SOURCE ARTICLE →</a>
+                <a className="hud-link" href={selected.url} target="_blank" rel="noreferrer">
+                  OPEN SOURCE ARTICLE →
+                </a>
               </div>
-              : <p className="inline-status">Select an event card to inspect it here.</p>}
+            ) : (
+              <p className="inline-status">Select an event card to inspect it here.</p>
+            )}
           </HudFrame>
           <HudFrame title="REGION MAP">
             <div className="weather-map-container" style={{ minHeight: 260 }}>

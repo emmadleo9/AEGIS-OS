@@ -16,7 +16,6 @@ import { MessageModule } from './modules/message/message.module';
 import { TemplateModule } from './modules/template/template.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { HealthModule } from './modules/health/health.module';
-import { SystemModule } from './modules/system/system.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { EngineModule } from './engine/engine.module';
@@ -288,7 +287,6 @@ if (dashboardServingEnabled && dashboardBuildPresent) {
     TemplateModule,
     WebhookModule,
     HealthModule,
-    SystemModule,
     SettingsModule,
     InfraModule,
     ContactModule,

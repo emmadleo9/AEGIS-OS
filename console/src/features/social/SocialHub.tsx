@@ -1,6 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { HudFrame } from '@/components/hud';
-import { AegisWhatsApp } from '@/features/social/AegisWhatsApp';
 
 type Platform = 'WHATSAPP' | 'TELEGRAM' | 'INSTAGRAM' | 'DISCORD';
 type Message = { id: number; sender: string; text: string; time: string; outgoing?: boolean };
@@ -9,8 +8,6 @@ type IntegrationStatus = 'unknown' | 'online' | 'offline';
 
 const platforms: Platform[] = ['WHATSAPP', 'TELEGRAM', 'INSTAGRAM', 'DISCORD'];
 const fields = [
-  { key: 'whatsapp_phone_id', label: 'WHATSAPP PHONE ID', platform: 'WHATSAPP' as const },
-  { key: 'whatsapp_token', label: 'WHATSAPP ACCESS TOKEN', platform: 'WHATSAPP' as const, secret: true },
   { key: 'telegram_bot_token', label: 'TELEGRAM BOT TOKEN', platform: 'TELEGRAM' as const, secret: true },
   { key: 'instagram_user_id', label: 'INSTAGRAM USER ID', platform: 'INSTAGRAM' as const },
   { key: 'instagram_token', label: 'INSTAGRAM ACCESS TOKEN', platform: 'INSTAGRAM' as const, secret: true },
@@ -20,8 +17,6 @@ type CredentialKey = typeof fields[number]['key'];
 type Credentials = Record<CredentialKey, string>;
 
 const emptyCredentials: Credentials = {
-  whatsapp_phone_id: '',
-  whatsapp_token: '',
   telegram_bot_token: '',
   instagram_user_id: '',
   instagram_token: '',
@@ -79,19 +74,14 @@ export function SocialHub() {
     try {
       let url = '';
       const headers = new Headers();
-      if (platform === 'WHATSAPP') {
-        const { whatsapp_phone_id: phoneId, whatsapp_token: token } = credentials;
-        if (!phoneId || !token) throw new Error('Enter the WhatsApp phone ID and access token first.');
-        url = `https://graph.facebook.com/v23.0/${encodeURIComponent(phoneId)}?fields=id,display_phone_number`;
-        headers.set('Authorization', `Bearer ${token}`);
+      if (platform === 'TELEGRAM') {
+        if (!credentials.telegram_bot_token) throw new Error('Enter the Telegram bot token first.');
+        url = `https://api.telegram.org/bot${encodeURIComponent(credentials.telegram_bot_token)}/getMe`;
       } else if (platform === 'INSTAGRAM') {
         const { instagram_user_id: userId, instagram_token: token } = credentials;
         if (!userId || !token) throw new Error('Enter the Instagram user ID and access token first.');
         url = `https://graph.facebook.com/v23.0/${encodeURIComponent(userId)}?fields=id,username`;
         headers.set('Authorization', `Bearer ${token}`);
-      } else if (platform === 'TELEGRAM') {
-        if (!credentials.telegram_bot_token) throw new Error('Enter the Telegram bot token first.');
-        url = `https://api.telegram.org/bot${encodeURIComponent(credentials.telegram_bot_token)}/getMe`;
       } else {
         if (!credentials.discord_bot_token) throw new Error('Enter the Discord bot token first.');
         url = 'https://discord.com/api/v10/users/@me';
@@ -129,14 +119,14 @@ export function SocialHub() {
     <div className="social-page">
       <div className="social-tabs" role="tablist" aria-label="Messaging platform">
         {platforms.map((item) => (
-          <button type="button" role="tab" aria-selected={platform === item} className={platform === item ? 'social-tab active' : 'social-tab'} key={item} onClick={() => { setPlatform(item); setChatId(seedChats[item][0].id); setTestMessage(''); }}>
+          <button type="button" role="tab" aria-selected={platform === item} className={platform === item ? 'social-tab active' : 'social-tab'} key={item} onClick={() => { 
+            if (item === 'WHATSAPP') { window.location.href = '/whatsapp'; return; }
+            setPlatform(item); setChatId(seedChats[item][0].id); setTestMessage(''); 
+          }}>
             {item === 'WHATSAPP' ? 'AEGIS WHATSAPP' : item}
           </button>
         ))}
       </div>
-      {platform === 'WHATSAPP' ? (
-        <AegisWhatsApp />
-      ) : (
       <div className="social-workspace">
         <HudFrame title={`${platform} // CONVERSATIONS`} className="social-chat-list">
           {selectedChats.map((chat) => (
@@ -186,7 +176,6 @@ export function SocialHub() {
           <p className="credential-notice">Credentials remain in local browser storage and are sent only to the matching official platform API during a connection test.</p>
         </HudFrame>
       </div>
-      )}
     </div>
   );
 }

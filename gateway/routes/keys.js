@@ -7,9 +7,20 @@ const path = require('node:path');
 
 const KEY_DIR = 'D:/AEGIS-OS-STORAGE/config';
 const KEY_FILE = path.join(KEY_DIR, 'keys.json');
+const REPO_ROOT = path.join(__dirname, '..', '..');
+const ENV_FILES = [
+  path.join(REPO_ROOT, '.env'),
+  path.join(REPO_ROOT, '.env.local'),
+  path.join(REPO_ROOT, 'gateway', '.env.local'),
+  path.join(REPO_ROOT, 'console', '.env'),
+  path.join(REPO_ROOT, 'console', '.env.local'),
+];
 
 const KEY_REGISTRY = [
-  { id: 'NV_API_KEY', envKeys: ['NV_API_KEY', 'NVIDIA_NIM_API_KEY', 'VITE_NVIDIA_NIM_API_KEY'], label: 'NVIDIA NIM (build.nvidia.com)', url: 'https://build.nvidia.com', scope: 'chat, image, video, audio, vision' },
+  { id: 'NV_API_KEY', envKeys: ['NV_API_KEY', 'NVIDIA_NIM_API_KEY', 'NVIDIA_API_KEY', 'VITE_NVIDIA_API_KEY', 'VITE_NVIDIA_NIM_API_KEY', 'nvidia_api_key', 'vite_nvidia_api_key'], label: 'NVIDIA NIM (build.nvidia.com)', url: 'https://build.nvidia.com', scope: 'chat, image, video, audio, vision' },
+  { id: 'GROQ_API_KEY', envKeys: ['GROQ_API_KEY', 'VITE_GROQ_API_KEY'], label: 'Groq', url: 'https://console.groq.com/keys', scope: 'online chat' },
+  { id: 'OPENROUTER_API_KEY', envKeys: ['OPENROUTER_API_KEY', 'OPENROUTER_KEY', 'VITE_OPENROUTER_API_KEY'], label: 'OpenRouter', url: 'https://openrouter.ai/keys', scope: 'online chat' },
+  { id: 'TAVILY_API_KEY', envKeys: ['TAVILY_API_KEY', 'VITE_TAVILY_API_KEY'], label: 'Tavily Search', url: 'https://tavily.com', scope: 'web search' },
   { id: 'VITE_CESIUM_ION_TOKEN', envKeys: ['VITE_CESIUM_ION_TOKEN', 'CESIUM_ION_TOKEN'], label: 'Cesium ion (cesium.com)', url: 'https://cesium.com/ion/tokens', scope: '3D terrain, satellite, buildings' },
   { id: 'VITE_OPENWEATHER_API_KEY', envKeys: ['VITE_OPENWEATHER_API_KEY', 'OPENWEATHER_API_KEY'], label: 'OpenWeatherMap', url: 'https://home.openweathermap.org/api_keys', scope: 'thermal, wind, precipitation layers' },
   { id: 'VITE_MAPBOX_TOKEN', envKeys: ['VITE_MAPBOX_TOKEN', 'MAPBOX_TOKEN'], label: 'Mapbox', url: 'https://account.mapbox.com/access-tokens/', scope: 'satellite basemap fallback' },
@@ -30,6 +41,39 @@ function writeStore(store) {
   fs.writeFileSync(KEY_FILE, JSON.stringify(store, null, 2));
 }
 
+function readEnvValues(file) {
+  if (!fs.existsSync(file)) return {};
+  try {
+    return Object.fromEntries(
+      fs.readFileSync(file, 'utf8')
+        .split(/\r?\n/)
+        .map((line) => line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/))
+        .filter(Boolean)
+        .map(([, name, value]) => [name, value.replace(/^(['"])(.*)\1$/, '$2')]),
+    );
+  } catch (error) {
+    console.warn(`Could not read local environment file ${file}: ${error instanceof Error ? error.message : String(error)}`);
+    return {};
+  }
+}
+
+function getApiKey(id) {
+  const entry = KEY_REGISTRY.find((item) => item.id === id);
+  if (!entry) return '';
+  const stored = readStore()[id];
+  if (typeof stored === 'string' && stored.trim()) return stored.trim();
+  for (const name of entry.envKeys) {
+    if (typeof process.env[name] === 'string' && process.env[name].trim()) return process.env[name].trim();
+  }
+  for (const file of ENV_FILES) {
+    const values = readEnvValues(file);
+    for (const name of entry.envKeys) {
+      if (typeof values[name] === 'string' && values[name].trim()) return values[name].trim();
+    }
+  }
+  return '';
+}
+
 function mask(value) {
   if (!value) return '';
   if (value.length <= 8) return '••••';
@@ -39,12 +83,11 @@ function mask(value) {
 module.exports = {
   register(app) {
     app.get('/api/keys', (_req, res) => {
-      const store = readStore();
       res.json({
         keys: KEY_REGISTRY.map(({ id, label, url, scope }) => ({
           id, label, url, scope,
-          connected: Boolean(store[id]),
-          masked: mask(store[id]),
+          connected: Boolean(getApiKey(id)),
+          masked: mask(getApiKey(id)),
         })),
         file: KEY_FILE,
       });
@@ -69,8 +112,8 @@ module.exports = {
     });
 
     // Internal resolver for other gateway routes
-    app.locals.getApiKey = (id) => readStore()[id] ?? process.env[id] ?? '';
+    app.locals.getApiKey = getApiKey;
   },
   KEY_REGISTRY,
-  getApiKey: (id) => readStore()[id] ?? process.env[id] ?? '',
+  getApiKey,
 };
