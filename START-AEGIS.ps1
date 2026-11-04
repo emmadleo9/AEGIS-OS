@@ -36,13 +36,21 @@ function Start-AegisService {
 $gatewayDirectory = Join-Path $root 'gateway'
 $consoleDirectory = Join-Path $root 'console'
 $viteEntry = Join-Path $consoleDirectory 'node_modules\vite\bin\vite.js'
-$openwaMain = Join-Path $gatewayDirectory 'dist\main.js'
-# OpenWA (NestJS) is the WhatsApp gateway on port 2785; ensure it is built.
-if (-not (Test-Path -LiteralPath $openwaMain)) {
-    Write-Host "[AEGIS-OS] Building OpenWA gateway..."
-    Push-Location $gatewayDirectory
-    try { & npm.cmd run build --silent } finally { Pop-Location }
+$gatewayEntry = Join-Path $gatewayDirectory 'index.js'
+Start-AegisService -Name 'gateway' -Port 2785 -WorkingDirectory $gatewayDirectory -Arguments @($gatewayEntry)
+
+$gatewayReady = $false
+$deadline = (Get-Date).AddSeconds(30)
+do {
+    try {
+        $status = Invoke-RestMethod -Uri 'http://127.0.0.1:2785/api/whatsapp/status' -TimeoutSec 3
+        $gatewayReady = $status.PSObject.Properties.Name -contains 'status'
+    } catch { }
+    if (-not $gatewayReady) { Start-Sleep -Seconds 1 }
+} while (-not $gatewayReady -and (Get-Date) -lt $deadline)
+if (-not $gatewayReady) {
+    throw 'The AEGIS local gateway is not responding with WhatsApp routes on port 2785. Check gateway-error.log and stop any other service using that port.'
 }
-Start-AegisService -Name 'gateway' -Port 2785 -WorkingDirectory $gatewayDirectory -Arguments @($openwaMain)
+
 Start-AegisService -Name 'console' -Port 5173 -WorkingDirectory $consoleDirectory -Arguments @($viteEntry, '--host', '0.0.0.0', '--port', '5173')
-Write-Host '[AEGIS-OS] Console: http://localhost:5173  Gateway (OpenWA): http://localhost:2785'
+Write-Host '[AEGIS-OS] Console: http://localhost:5173  AEGIS local gateway: http://localhost:2785'

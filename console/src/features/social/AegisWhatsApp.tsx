@@ -240,7 +240,7 @@ export function AegisWhatsApp() {
               </div>
             )}
             {(actionError || status.lastError) && <p className="wa-error" role="alert">{actionError || status.lastError}</p>}
-            <p className="credential-notice">Session persists on Disk D across gateway restarts.</p>
+            <p className="credential-notice">Scan from WhatsApp → Linked devices. Approve history sync on your phone if prompted. Chats and messages are stored locally; media files are not downloaded.</p>
           </div>
         )}
         {(online || (activeJid && !showPairing)) && (

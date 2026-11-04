@@ -13,7 +13,7 @@ const runtimeDir = process.env.LOCALAPPDATA
   ? path.join(process.env.LOCALAPPDATA, 'AEGIS-OS', 'runtime')
   : path.join(os.homedir(), '.aegis-os', 'runtime');
 const gatewayRequire = createRequire(path.join(gatewayDir, 'package.json'));
-const openwaMain = path.join(gatewayDir, 'dist', 'main.js');
+const gatewayEntry = path.join(gatewayDir, 'index.js');
 const dotenv = gatewayRequire('dotenv');
 for (const envFile of [
   path.join(consoleDir, '.env.local'),
@@ -59,20 +59,25 @@ function assertPort(port, name) {
   }
 }
 
-async function getHealth(url) {
+async function getHealth(url, requiredPath) {
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(1000) });
     if (!response.ok) return false;
     const data = await response.json();
-    return data.status === 'ok' || data.status === 'online';
+    if (data.status !== 'ok' && data.status !== 'online') return false;
+    if (!requiredPath) return true;
+    const probe = await fetch(new URL(requiredPath, url), { signal: AbortSignal.timeout(1000) });
+    if (!probe.ok) return false;
+    const probeData = await probe.json();
+    return typeof probeData.status === 'string';
   } catch {
     return false;
   }
 }
 
-async function waitForHealth(url, label, child) {
+async function waitForHealth(url, label, child, requiredPath) {
   for (let attempt = 0; attempt < 80; attempt += 1) {
-    if (await getHealth(url)) return;
+    if (await getHealth(url, requiredPath)) return;
     if (child?.exitCode !== null && child?.exitCode !== undefined) {
       throw new Error(`${label} exited with code ${child.exitCode} before becoming ready.`);
     }
@@ -143,23 +148,18 @@ async function main() {
   if (gatewayPort === consolePort) throw new Error('GATEWAY_PORT and CONSOLE_PORT must be different.');
 
   let gateway;
-  if (!(await getHealth(gatewayHealthUrl))) {
-    // Build OpenWA if the compiled NestJS entry is missing.
-    if (!fs.existsSync(openwaMain)) {
-      console.log('[AGUS] Building OpenWA gateway...');
-      await new Promise((resolve, reject) => {
-        const build = spawn('npm.cmd', ['run', 'build'], { cwd: gatewayDir, stdio: 'inherit' });
-        build.once('exit', (code) => (code === 0 ? resolve() : reject(new Error(`OpenWA build exited ${code}`))));
-      });
+  if (!(await getHealth(gatewayHealthUrl, '/api/whatsapp/status'))) {
+    if (await getHealth(gatewayHealthUrl)) {
+      throw new Error(`Port ${gatewayPort} is serving a different gateway. Stop it and restart AEGIS so WhatsApp can use the local API.`);
     }
     gateway = startChild(
       'Gateway',
       process.execPath,
-      [openwaMain],
+      [gatewayEntry],
       gatewayDir,
       { ...process.env, GATEWAY_PORT: String(gatewayPort), AEGIS_PORT: String(gatewayPort), PORT: String(gatewayPort) },
     );
-    await waitForHealth(gatewayHealthUrl, 'Gateway', gateway);
+    await waitForHealth(gatewayHealthUrl, 'AEGIS local gateway', gateway, '/api/whatsapp/status');
   }
 
   if (!(await getHealth(consoleHealthUrl))) {
