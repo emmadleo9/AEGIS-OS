@@ -6,10 +6,10 @@
 |---|---|---|
 | `console/` | OpenBSP UI with AEGIS console work | A Vite/React/TypeScript single-page app. The original source includes WhatsApp/Instagram conversations, organization and contact management, templates, integrations, stats, and settings. The AEGIS additions provide a separate HUD app shell and public-data pages. |
 | `gateway/` | OpenWA | A NestJS/TypeScript WhatsApp API gateway with REST and WebSocket APIs, a React dashboard, multi-session support, Baileys and whatsapp-web.js engines, scoped API keys, webhooks, plugins, and database/storage adapters. It is not a minimal Express server. `gateway/index.js` is an additive local AEGIS telemetry adapter; the existing OpenWA entry point and package scripts remain unchanged. |
-| `brain/` | OpenJarvis | A Python local-first AI framework. Its source includes CLI/runtime services, local and cloud model engines, agent/tool orchestration, connectors, evaluations, and messaging channel adapters including WhatsApp, Telegram, and Discord. |
-| `_ref_osiris/` | OSIRIS reference | A Next.js/TypeScript and MapLibre intelligence dashboard. Its API routes and source cover public aircraft, earthquake, weather, GDELT/conflict, satellite, news, maritime, and map data, alongside additional OSINT tools. It is reference material, not part of the AEGIS runtime. |
+| `core/` | OpenJarvis | A Python local-first AI framework. Its source includes CLI/runtime services, local and cloud model engines, agent/tool orchestration, connectors, evaluations, and messaging channel adapters including WhatsApp, Telegram, and Discord. |
+| `_ref_map/` | OSIRIS reference | A Next.js/TypeScript and MapLibre intelligence dashboard. Its API routes and source cover public aircraft, earthquake, weather, GDELT/conflict, satellite, news, maritime, and map data, alongside additional OSINT tools. It is reference material, not part of the AEGIS runtime. |
 
-`manus-slides/` contains design and architecture presentation assets, rather than a runnable source repository. No other top-level cloned repositories were present during this audit.
+`manus-slides/` was removed — it contained design and architecture presentation assets, not runtime code. No other top-level cloned repositories remain.
 
 ## Runtime notes
 

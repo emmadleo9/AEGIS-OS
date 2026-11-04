@@ -16,8 +16,8 @@ Do NOT generate these from zero ever again.
 
 | Folder | Upstream | License | Used For |
 |--------|----------|---------|----------|
-| `_ref_jarvis-full/` | OpenJarvis | Apache 2.0 | Brain engine |
-| `_ref_osiris-full/` | osiris | MIT | World View globe, OSINT feeds |
+| `_ref_jarvis-full/` | OpenJarvis | Apache 2.0 | Core engine |
+| `_ref_map-full/` | osiris | MIT | World View globe, OSINT feeds |
 | `_ref_openwa-full/` | OpenWA | MIT | WhatsApp/comms engine |
 | `_ref_bspui-full/` | open-bsp-ui | The Unlicense | UI component kit |
 

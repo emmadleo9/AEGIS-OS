@@ -7,7 +7,7 @@ This project uses open-source libraries as inspiration and engine parts in the b
 ## Inspiration Repos (forked under emmadleo9):
 
 1.  **OpenJarvis** - Apache License 2.0 - Original: github.com/open-jarvis/OpenJarvis - Used for: brain engine, voice assistant logic - Local: _refs/_ref_jarvis-full/
-2.  **osiris** - MIT License - Used for: World View globe, OSINT feeds - Local: _refs/_ref_osiris-full/
+2.  **osiris** - MIT License - Used for: World View globe, OSINT feeds - Local: _refs/_ref_map-full/
 3.  **OpenWA / Baileys** - MIT License - Used for: Comms feature, WhatsApp engine - Local: _refs/_ref_openwa-full/
 4.  **open-bsp-ui** - The Unlicense (Public Domain) - Used for: UI component kit - Local: _refs/_ref_bspui-full/
 

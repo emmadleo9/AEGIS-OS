@@ -11,4 +11,4 @@ The supplied SYSTEM MONITOR v3.2 HUD reference is the source of truth: a dark, c
 - Preserve the Vite proxy for `/api` to localhost:2785.
 
 ## Project structure
-`src/App.tsx` owns layout, navigation, and page route composition; `src/components/hud` owns visual primitives; `src/features/world` owns map rendering and public-data hooks; `public/manus-routes.json` declares valid routes.
+`src/App.tsx` owns layout, navigation, and page route composition; `src/components/hud` owns visual primitives; `src/features/world` owns map rendering and public-data hooks; `public/routes.json` declares valid routes.

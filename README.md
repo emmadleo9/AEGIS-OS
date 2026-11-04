@@ -11,7 +11,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-00C853?style=for-the-badge" alt="License: MIT" />
-  <img src="https://img.shields.io/badge/brain-OpenJarvis-2962FF?style=for-the-badge" alt="Brain: OpenJarvis" />
+  <img src="https://img.shields.io/badge/core-OpenJarvis-2962FF?style=for-the-badge" alt="Core: OpenJarvis" />
   <img src="https://img.shields.io/badge/gateway-OpenWA-546E7A?style=for-the-badge" alt="Gateway: OpenWA" />
   <img src="https://img.shields.io/badge/console-AEGIS-212121?style=for-the-badge" alt="Console: AEGIS" />
   <img src="https://img.shields.io/badge/model-qwen2.5:3b-AA00FF?style=for-the-badge" alt="Model: qwen2.5:3b" />
@@ -26,11 +26,11 @@
 
 ## ⚡ What is AEGIS-OS?
 
-AEGIS-OS is a **local-first AI operating system** that turns a modest machine into a tactical command console: messaging across WhatsApp, Telegram, Instagram and Discord, a live OSINT world map, and a self-hosted AI brain — all running on your own hardware, no cloud required.
+AEGIS-OS is a **local-first AI operating system** that turns a modest machine into a tactical command console: messaging across WhatsApp, Telegram, Instagram and Discord, a live OSINT world map, and a self-hosted AI core — all running on your own hardware, no cloud required.
 
 | ⚡ Feature | 🛡️ Capability |
 |-----------|---------------|
-| 🧠 **Brain (OpenJarvis)** | Local AI framework with 5 primitives — Intelligence, Engine, Agents, Tools, Memory. Serves a local LLM (`qwen2.5:3b` via Ollama). |
+| 🧠 **Core (OpenJarvis)** | Local AI framework with 5 primitives — Intelligence, Engine, Agents, Tools, Memory. Serves a local LLM (`qwen2.5:3b` via Ollama). |
 | 📡 **Gateway (OpenWA)** | WhatsApp API gateway — REST API + dashboard, multi-session, SQLite mode, QR pairing. |
 | 🖥️ **Console (AEGIS)** | Dark OLED HUD (`#050A0E` / cyan `#8AF8FF`), glassmasonry panels, animated tactical UI. |
 | 🌍 **World View** | Searchable 2D / 3D / satellite map with saved layers, GeoJSON drawing/export, OSRM driving directions, terrain relief, public GTFS-RT transit in supported regions, Open-Meteo wind vectors, NOAA satellite cloud and water-vapor imagery, selectable and animatable RainViewer radar frames, solar day/night shading, 3D buildings, and live ADS-B, USGS, satellite, NASA fire, GDELT, weather and NOAA weather-alert overlays. |
@@ -105,7 +105,7 @@ The Windows master launcher and `npm run start` use the same local gateway + con
 
 ```
 AEGIS-OS/
-├── /brain       OpenJarvis — local-first AI brain
+├── /core       OpenJarvis — local-first AI core
 ├── /gateway     OpenWA + AEGIS feeds — local API gateway
 ├── /console     AEGIS — dark OLED HUD console
 └── README.md

@@ -1,17 +1,17 @@
 # AEGIS-OS — Monorepo Docker Compose
-# WhatsApp -> OpenWA (gateway:2785) -> Webhook -> OpenJarvis (brain:8000) -> LLM -> OpenWA SDK reply -> Console
+# WhatsApp -> OpenWA (gateway:2785) -> Webhook -> OpenJarvis (core:8000) -> LLM -> OpenWA SDK reply -> Console
 #
 # Hardware target: i7-7500U, 16GB RAM, 2GB GPU -> tiny models (qwen2.5:3b), SQLite for OpenWA
 #
 # Run: docker compose up -d
 
 services:
-  # ===== BRAIN: OpenJarvis =====
-  brain:
+  # ===== CORE: OpenJarvis =====
+  core:
     build:
-      context: ./brain
+      context: ./core
       dockerfile: Dockerfile
-    container_name: aegis-brain
+    container_name: aegis-core
     restart: unless-stopped
     ports:
       - "127.0.0.1:8000:8000"
@@ -29,7 +29,7 @@ services:
       - OPENJARVIS_CORS_ORIGINS=http://console:3000,http://localhost:3000
       - LOG_LEVEL=info
     volumes:
-      - ./data/brain:/app/data
+      - ./data/core:/app/data
     depends_on:
       ollama:
         condition: service_healthy
@@ -57,8 +57,8 @@ services:
       - ENGINE_TYPE=whatsapp-web.js
       - PUPPETEER_HEADLESS=true
       - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu
-      - WEBHOOK_URL=http://brain:8000/webhooks/whatsapp
-      - SSRF_ALLOWED_HOSTS=brain
+      - WEBHOOK_URL=http://core:8000/webhooks/whatsapp
+      - SSRF_ALLOWED_HOSTS=core
       - API_MASTER_KEY=aegis_master_key
       - CORS_ORIGINS=http://console:3000,http://localhost:3000
       - OPENWA_MEM_LIMIT=2g
@@ -70,7 +70,7 @@ services:
     mem_limit: 2g
     pids_limit: 2048
     depends_on:
-      - brain
+      - core
     networks:
       - aegis
 
@@ -87,12 +87,12 @@ services:
       - "3000"
     environment:
       - VITE_GATEWAY_URL=http://gateway:2785
-      - VITE_BRAIN_URL=http://brain:8000
+      - VITE_BRAIN_URL=http://core:8000
       - VITE_APP_NAME=AEGIS
       - NODE_ENV=production
     depends_on:
       - gateway
-      - brain
+      - core
     networks:
       - aegis
 
@@ -146,7 +146,7 @@ services:
       - aegis
 
 volumes:
-  brain-data:
+  core-data:
   gateway-data:
   console-data:
   db-data:

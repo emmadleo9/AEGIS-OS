@@ -15,7 +15,7 @@ config/keys.json
 *.node
 
 # vendored refs - no node_modules, lock files, or binaries
-_refs/_ref_osiris-full/intel/node_modules/
+_refs/_ref_map-full/intel/node_modules/
 _refs/**/package-lock.json
 **/package-lock.json
 !console/package-lock.json
