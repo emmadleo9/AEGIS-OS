@@ -13,13 +13,13 @@
 
 ## Runtime notes
 
-- The console uses Vite on port `5173` and proxies `/api` to the local AEGIS adapter on `2785`.
-- Start the telemetry adapter with `node gateway/index.js`; it binds to loopback and exposes local system stats, local network interfaces, logs, health, and a loopback-only restart action.
+- The console uses Vite on port `5173` and proxies `/api` to the AEGIS local gateway on `2785`.
+- Use `MASTER START AEGIS-OS V.04.bat` on Windows or `npm run start` to start the coordinated local stack. The launcher starts/reuses Ollama when available, waits for gateway health before starting the console, and rejects duplicate or conflicting startup.
 - Global ADS-B coverage is attempted first; because the upstream global endpoint currently returns HTTP 400, the adapter falls back to rate-paced regional ADS-B requests capped at 400 aircraft. GDELT conflict events are read from the 15-minute GDELT 2.0 Events export and cached for five minutes.
-- `gateway/` itself is OpenWA and should be started with its own documented scripts/configuration when its WhatsApp service is needed. Do not treat the standalone telemetry adapter as a replacement for OpenWA.
+- The active `gateway/index.js` hosts AEGIS's local API, World View feed proxies, local AI routes, and AEGIS WhatsApp service. The separate Docker Compose topology is an alternative deployment and must not run alongside the local launcher because it publishes overlapping service ports.
 - Public intelligence feeds can be unavailable or rate-limited independently; the map and shell must continue rendering without them.
 - Social connection tests use credentials configured by the operator and contact official platform APIs directly. The conversation list and messages are local demo content, not live message ingestion.
 - Weather forecasts and city suggestions are served through `/api/weather` and `/api/geocode`; the gateway validates coordinates and keeps upstream requests out of browser CORS paths.
 - World Clock includes all 39 locations named in the current request (the supplied list contains 39, despite its “38” label), with live IANA timezone offsets, search, and offset filtering.
-- The launcher scripts start only the local telemetry adapter and Vite console, avoid rebuilding on each start, and never terminate unrelated Node or Docker processes. Launcher-owned process IDs are tracked under the user's local application data.
+- Launcher-owned process IDs and the singleton startup lock are tracked under the user's local application data. `STOP-AEGIS.bat` only stops processes started by the launcher.
 - The MapLibre worker is explicitly served as a Vite asset, and the world map container has a fixed responsive height so it renders instead of collapsing to zero.

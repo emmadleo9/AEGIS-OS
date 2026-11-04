@@ -1,12 +1,27 @@
 import axios from 'axios';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { HudFrame } from '@/components/hud';
 import { api } from '@/lib/api';
 
 type Status = 'offline' | 'connecting' | 'waiting_qr' | 'reconnecting' | 'online' | 'error';
 type WaStatus = { status: Status; qr: string | null; user: { id?: string; name?: string } | null; lastError: string | null; pairingCode?: string | null; historySyncStatus?: string };
-type ChatEntry = { jid: string; name: string; lastMessage?: string | null; lastMessageAt?: string | null };
-type ChatMessage = { id: string; fromMe: boolean; text: string; type: string; sender: string; at: string };
+type ChatEntry = { jid: string; name: string; lastMessage?: string | null; lastMessageAt?: string | null; category?: 'chat' | 'group' | 'channel' };
+type ChatMessage = {
+  id: string;
+  fromMe: boolean;
+  text: string;
+  type: string;
+  sender: string;
+  at: string;
+  mediaId?: string | null;
+  mediaMimeType?: string | null;
+  mediaFileName?: string | null;
+  mediaStatus?: string | null;
+  mediaError?: string | null;
+};
+
+const MESSAGE_REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🙏'];
+const MAX_WHATSAPP_UPLOAD_BYTES = 2 * 1024 ** 3;
 
 const STATUS_LABEL: Record<Status, string> = {
   offline: 'OFFLINE',
@@ -28,20 +43,101 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function renderMedia(
+  message: ChatMessage,
+  online: boolean,
+  retryingMediaId: string | null,
+  onRetry: (message: ChatMessage) => void,
+) {
+  if (!message.mediaId) return null;
+  const mediaUrl = `/api/whatsapp/media/${encodeURIComponent(message.mediaId)}`;
+
+  if (message.mediaStatus !== 'downloaded') {
+    const mediaError = message.mediaError?.includes('empty media key')
+      ? 'WhatsApp did not provide a decryption key for this attachment.'
+      : message.mediaError;
+    const status = message.mediaStatus === 'failed'
+      ? `Download failed${mediaError ? `: ${mediaError}` : ''}`
+      : message.mediaStatus === 'downloading'
+        ? 'Downloading media…'
+        : 'Media download queued…';
+    return (
+      <div className="wa-media-status" role={message.mediaStatus === 'failed' ? 'alert' : undefined}>
+        <p>{status}</p>
+        {message.mediaStatus === 'failed' && (
+          <button type="button" onClick={() => onRetry(message)} disabled={!online || retryingMediaId === message.mediaId}>
+            {retryingMediaId === message.mediaId ? 'RETRYING…' : 'RETRY FROM WHATSAPP'}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const mimeType = message.mediaMimeType ?? '';
+  return (
+    <div className="wa-message-media">
+      {mimeType.startsWith('image/') && (
+        <a href={mediaUrl} target="_blank" rel="noreferrer">
+          <img className="wa-media-preview" src={mediaUrl} alt={message.mediaFileName || 'WhatsApp image'} loading="lazy" />
+        </a>
+      )}
+      {mimeType.startsWith('video/') && (
+        <video className="wa-media-preview" src={mediaUrl} controls preload="metadata">
+          Your browser cannot play this video. Use the download link below.
+        </video>
+      )}
+      {mimeType.startsWith('audio/') && (
+        <audio src={mediaUrl} controls preload="metadata">
+          Your browser cannot play this audio. Use the download link below.
+        </audio>
+      )}
+      <a className="wa-media-download" href={mediaUrl} download={message.mediaFileName || true}>
+        DOWNLOAD {message.mediaFileName || `${message.type.replace(/Message$/, '').toUpperCase()} FILE`}
+      </a>
+    </div>
+  );
+}
+
 export function AegisWhatsApp() {
   const [status, setStatus] = useState<WaStatus>({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });
   const [chats, setChats] = useState<ChatEntry[]>([]);
   const [activeJid, setActiveJid] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatFilter, setChatFilter] = useState<'all' | 'chat' | 'group' | 'channel'>('all');
+  const [chatSearch, setChatSearch] = useState('');
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [draft, setDraft] = useState('');
   const [linkTab, setLinkTab] = useState<'qr' | 'phone'>('qr');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [pairingBusy, setPairingBusy] = useState(false);
   const [pairingCode, setPairingCode] = useState('');
   const [actionError, setActionError] = useState('');
+  const [retryingMediaId, setRetryingMediaId] = useState<string | null>(null);
   const [showPairing, setShowPairing] = useState(false);
   const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [messageSearch, setMessageSearch] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [sendingMedia, setSendingMedia] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [groupParticipants, setGroupParticipants] = useState('');
+  const [remoteTyping, setRemoteTyping] = useState(false);
+  const [callLinkBusy, setCallLinkBusy] = useState(false);
+  const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
+  const [profileStatus, setProfileStatus] = useState('');
+  const [savingProfileStatus, setSavingProfileStatus] = useState(false);
+  const typingTimer = useRef<number | null>(null);
+  const typingActive = useRef(false);
   const online = status.status === 'online';
+  const visibleChats = useMemo(() => chats.filter((chat) => {
+    const category = chat.category ?? (chat.jid.endsWith('@g.us') ? 'group' : chat.jid.endsWith('@newsletter') ? 'channel' : 'chat');
+    return (chatFilter === 'all' || category === chatFilter)
+      && `${chat.name} ${chat.jid} ${chat.lastMessage ?? ''}`.toLowerCase().includes(chatSearch.toLowerCase());
+  }), [chatFilter, chatSearch, chats]);
+  const visibleMessages = useMemo(() => {
+    const query = messageSearch.trim().toLowerCase();
+    return query ? messages.filter((message) => message.text.toLowerCase().includes(query)) : messages;
+  }, [messageSearch, messages]);
 
   const refreshChats = useCallback(async () => {
     try {
@@ -58,14 +154,17 @@ export function AegisWhatsApp() {
   const refreshMessages = useCallback(async () => {
     if (!activeJid) return;
     try {
-      const response = await api.get<{ messages: ChatMessage[]; hasOlder: boolean }>(`/whatsapp/messages/${encodeURIComponent(activeJid)}`);
+      const response = await api.get<{ messages: ChatMessage[]; hasOlder: boolean }>(
+        `/whatsapp/messages/${encodeURIComponent(activeJid)}`,
+        { params: messageSearch ? { search: messageSearch } : undefined },
+      );
       setMessages(response.data.messages);
       setHasOlderMessages(response.data.hasOlder);
       setActionError('');
     } catch (error) {
       setActionError(`Could not load WhatsApp messages: ${getErrorMessage(error)}`);
     }
-  }, [activeJid]);
+  }, [activeJid, messageSearch]);
 
   const loadOlderMessages = async () => {
     const before = messages[0]?.at;
@@ -73,7 +172,7 @@ export function AegisWhatsApp() {
     try {
       const response = await api.get<{ messages: ChatMessage[]; hasOlder: boolean }>(
         `/whatsapp/messages/${encodeURIComponent(activeJid)}`,
-        { params: { before, beforeId: messages[0]?.id } },
+        { params: { before, beforeId: messages[0]?.id, ...(messageSearch ? { search: messageSearch } : {}) } },
       );
       setMessages((current) => [...response.data.messages, ...current]);
       setHasOlderMessages(response.data.hasOlder);
@@ -122,18 +221,206 @@ export function AegisWhatsApp() {
     if (!activeJid) return;
     const timer = window.setInterval(() => void refreshMessages(), 3000);
     return () => window.clearInterval(timer);
-  }, [activeJid, refreshMessages]);
+  }, [activeJid, messageSearch, refreshMessages]);
+
+  useEffect(() => {
+    setReplyTo(null);
+    setMessageSearch('');
+    setRemoteTyping(false);
+    typingActive.current = false;
+    if (typingTimer.current !== null) window.clearTimeout(typingTimer.current);
+  }, [activeJid]);
+
+  useEffect(() => {
+    if (!activeJid || !online) return;
+    let alive = true;
+    const pollPresence = async () => {
+      try {
+        const response = await api.get<{ presences: { lastKnownPresence: string }[] }>(
+          `/whatsapp/presence/${encodeURIComponent(activeJid)}`,
+        );
+        if (alive) setRemoteTyping(response.data.presences.some((presence) => presence.lastKnownPresence === 'composing'));
+      } catch (error) {
+        if (alive) setActionError(`Could not load WhatsApp presence: ${getErrorMessage(error)}`);
+      }
+    };
+    void pollPresence();
+    const timer = window.setInterval(() => void pollPresence(), 2500);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [activeJid, online]);
+
+  useEffect(() => () => {
+    if (typingTimer.current !== null) window.clearTimeout(typingTimer.current);
+    if (typingActive.current && activeJid) {
+      void api.post('/whatsapp/typing', { jid: activeJid, typing: false }).catch((error: unknown) => {
+        console.error('Could not clear WhatsApp typing state:', getErrorMessage(error));
+      });
+    }
+  }, [activeJid]);
 
   const send = async () => {
     const text = draft.trim();
     if (!text || !activeJid) return;
     try {
-      await api.post('/whatsapp/send', { jid: activeJid, text });
+      await api.post('/whatsapp/send', { jid: activeJid, text, replyToMessageId: replyTo?.id });
       await refreshMessages();
       setDraft('');
+      setReplyTo(null);
       setActionError('');
     } catch (error) {
       setActionError(`Could not send message: ${getErrorMessage(error)}`);
+    }
+  };
+
+  const updateDraft = (value: string) => {
+    setDraft(value);
+    if (!activeJid || !online) return;
+    if (!typingActive.current) {
+      typingActive.current = true;
+      void api.post('/whatsapp/typing', { jid: activeJid, typing: true }).catch((error: unknown) => {
+        setActionError(`Could not update typing state: ${getErrorMessage(error)}`);
+      });
+    }
+    if (typingTimer.current !== null) window.clearTimeout(typingTimer.current);
+    typingTimer.current = window.setTimeout(() => {
+      typingActive.current = false;
+      void api.post('/whatsapp/typing', { jid: activeJid, typing: false }).catch((error: unknown) => {
+        setActionError(`Could not stop typing indicator: ${getErrorMessage(error)}`);
+      });
+    }, 1200);
+  };
+
+  const sendMedia = async (file: File) => {
+    if (!activeJid) return;
+    if (file.size > MAX_WHATSAPP_UPLOAD_BYTES) {
+      setActionError('WhatsApp attachments are limited to 2 GB.');
+      return;
+    }
+    setSendingMedia(true);
+    try {
+      await api.post(
+        `/whatsapp/send-media/${encodeURIComponent(activeJid)}`,
+        file,
+        {
+          params: { fileName: file.name, ...(replyTo ? { replyToMessageId: replyTo.id } : {}) },
+          headers: { 'Content-Type': 'application/octet-stream', 'X-Media-Mime-Type': file.type || 'application/octet-stream' },
+          timeout: 0,
+        },
+      );
+      await refreshMessages();
+      setReplyTo(null);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not send attachment: ${getErrorMessage(error)}`);
+    } finally {
+      setSendingMedia(false);
+    }
+  };
+
+  const createGroup = async () => {
+    const phoneNumbers = groupParticipants.split(/[,\n;]/).map((value) => value.trim()).filter(Boolean);
+    try {
+      const response = await api.post<{ jid: string; name: string }>('/whatsapp/groups', { name: groupName, phoneNumbers });
+      setChats((current) => [{ jid: response.data.jid, name: response.data.name, category: 'group' }, ...current]);
+      setActiveJid(response.data.jid);
+      setGroupName('');
+      setGroupParticipants('');
+      setShowCreateGroup(false);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not create WhatsApp group: ${getErrorMessage(error)}`);
+    }
+  };
+
+  const createCallLink = async (type: 'audio' | 'video') => {
+    setCallLinkBusy(true);
+    try {
+      const response = await api.post<{ link: string }>('/whatsapp/call-link', { type });
+      await navigator.clipboard.writeText(response.data.link);
+      setActionError(`${type === 'audio' ? 'VOICE' : 'VIDEO'} call link copied. Share it with the people you want to invite.`);
+    } catch (error) {
+      setActionError(`Could not create WhatsApp call link: ${getErrorMessage(error)}`);
+    } finally {
+      setCallLinkBusy(false);
+    }
+  };
+
+  const saveProfileStatus = async () => {
+    setSavingProfileStatus(true);
+    try {
+      await api.post('/whatsapp/profile-status', { text: profileStatus });
+      setActionError('WhatsApp About updated.');
+    } catch (error) {
+      setActionError(`Could not update WhatsApp About: ${getErrorMessage(error)}`);
+    } finally {
+      setSavingProfileStatus(false);
+    }
+  };
+
+  const reactToMessage = async (message: ChatMessage, reaction: string) => {
+    try {
+      await api.post('/whatsapp/react', { jid: activeJid, messageId: message.id, reaction });
+      setReactionMessageId(null);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not react to message: ${getErrorMessage(error)}`);
+    }
+  };
+
+  const copyMessage = async (message: ChatMessage) => {
+    try {
+      await navigator.clipboard.writeText(message.text);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not copy message: ${getErrorMessage(error)}`);
+    }
+  };
+
+  const forwardMessage = async (message: ChatMessage) => {
+    const recipient = window.prompt('Forward to a WhatsApp phone number (country code + number) or chat address:');
+    if (!recipient?.trim()) return;
+    try {
+      await api.post('/whatsapp/forward', { jid: activeJid, messageId: message.id, toJid: recipient.trim() });
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not forward message: ${getErrorMessage(error)}`);
+    }
+  };
+
+  const deleteMessage = async (message: ChatMessage, scope: 'local' | 'everyone') => {
+    const confirmation = scope === 'everyone'
+      ? 'Delete this message for everyone? WhatsApp may restrict this by message age.'
+      : 'Delete this message from the AEGIS local archive only?';
+    if (!window.confirm(confirmation)) return;
+    try {
+      await api.post('/whatsapp/delete', { jid: activeJid, messageId: message.id, scope });
+      await refreshMessages();
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not delete message: ${getErrorMessage(error)}`);
+    }
+  };
+
+  const retryMedia = async (message: ChatMessage) => {
+    if (!message.mediaId) return;
+    setRetryingMediaId(message.mediaId);
+    try {
+      const response = await api.post<{ status: string; message?: string }>(
+        `/whatsapp/media/${encodeURIComponent(message.mediaId)}/retry`,
+      );
+      await refreshMessages();
+      setActionError(response.data.message ?? '');
+    } catch (error) {
+      const messageError = getErrorMessage(error);
+      setMessages((current) => current.map((item) => item.mediaId === message.mediaId
+        ? { ...item, mediaError: messageError }
+        : item));
+      setActionError(`Could not recover WhatsApp media: ${messageError}`);
+    } finally {
+      setRetryingMediaId(null);
     }
   };
 
@@ -191,8 +478,27 @@ export function AegisWhatsApp() {
           {STATUS_LABEL[status.status]}
         </div>
         <div className="wa-chat-list">
+          {online && <button type="button" className="hud-button wa-create-group" onClick={() => setShowCreateGroup((value) => !value)}>NEW GROUP</button>}
+          {showCreateGroup && (
+            <div className="wa-group-create">
+              <input aria-label="Group name" value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="Group name" maxLength={100} />
+              <textarea aria-label="Group participant phone numbers" value={groupParticipants} onChange={(event) => setGroupParticipants(event.target.value)} placeholder="Participant phone numbers with country codes, separated by commas" rows={3} />
+              <button type="button" className="hud-button" onClick={() => void createGroup()}>CREATE GROUP</button>
+            </div>
+          )}
           {online && chats.length === 0 && <p className="inline-status">Loading chat list from session…</p>}
-          {chats.map((chat) => (
+          <label className="wa-chat-search">
+            <span className="sr-only">Search WhatsApp chats</span>
+            <input value={chatSearch} onChange={(event) => setChatSearch(event.target.value)} placeholder="Search chats…" />
+          </label>
+          <div className="wa-chat-filters" role="group" aria-label="Filter chats">
+            {(['all', 'chat', 'group', 'channel'] as const).map((filter) => (
+              <button key={filter} type="button" className={`device-tab${chatFilter === filter ? ' active' : ''}`} onClick={() => setChatFilter(filter)}>
+                {filter === 'chat' ? 'CHATS' : filter === 'all' ? 'ALL' : `${filter.toUpperCase()}S`}
+              </button>
+            ))}
+          </div>
+          {visibleChats.map((chat) => (
             <button
               type="button"
               key={chat.jid}
@@ -203,6 +509,7 @@ export function AegisWhatsApp() {
               <span className="wa-chat-preview">{chat.lastMessage || (chat.jid.endsWith('@g.us') ? 'GROUP' : 'DIRECT')}</span>
             </button>
           ))}
+          {online && visibleChats.length === 0 && <p className="inline-status">No chats match this filter.</p>}
           {!online && <p className="inline-status">Pair AEGIS WhatsApp to see your chats.</p>}
         </div>
       </HudFrame>
@@ -240,24 +547,57 @@ export function AegisWhatsApp() {
               </div>
             )}
             {(actionError || status.lastError) && <p className="wa-error" role="alert">{actionError || status.lastError}</p>}
-            <p className="credential-notice">Scan from WhatsApp → Linked devices. Approve history sync on your phone if prompted. Chats and messages are stored locally; media files are not downloaded.</p>
+            <p className="credential-notice">Scan from WhatsApp → Linked devices. Approve history sync on your phone if prompted. Chats, messages, and available media are stored locally.</p>
           </div>
         )}
         {(online || (activeJid && !showPairing)) && (
           <>
             <div className="chat-messages" aria-live="polite">
+              <div className="wa-message-search">
+                <input aria-label="Search messages in this chat" value={messageSearch} onChange={(event) => setMessageSearch(event.target.value)} placeholder="Search messages in this chat…" />
+              </div>
               {hasOlderMessages && <button type="button" className="device-tab" onClick={() => void loadOlderMessages()}>LOAD OLDER MESSAGES</button>}
-              {messages.map((message, index) => (
+              {remoteTyping && <p className="wa-typing-indicator" aria-live="polite">CONTACT IS TYPING…</p>}
+              {visibleMessages.map((message, index) => (
                 <div key={message.id || `${message.at}-${index}`} className={message.fromMe ? 'chat-bubble outgoing' : 'chat-bubble'}>
-                  <div>{message.text || `(${message.type} message)`}</div>
+                  <div>{message.text || (message.mediaId ? '' : `(${message.type} message)`)}</div>
+                  {renderMedia(message, online, retryingMediaId, retryMedia)}
                   <time>{message.fromMe ? 'YOU' : message.sender || 'THEM'} · {new Date(message.at).toLocaleString()}</time>
+                  <div className="wa-message-actions" aria-label="Message actions">
+                    <button type="button" onClick={() => void copyMessage(message)} disabled={!message.text}>COPY</button>
+                    <button type="button" onClick={() => setReplyTo(message)} disabled={!online}>REPLY</button>
+                    <button type="button" onClick={() => void forwardMessage(message)} disabled={!online}>FORWARD</button>
+                    <button type="button" onClick={() => setReactionMessageId((current) => current === message.id ? null : message.id)} disabled={!online} aria-label="Choose a reaction">REACT</button>
+                    <button type="button" onClick={() => void deleteMessage(message, 'local')}>DELETE LOCAL</button>
+                    {message.fromMe && <button type="button" onClick={() => void deleteMessage(message, 'everyone')} disabled={!online}>DELETE FOR EVERYONE</button>}
+                  </div>
+                  {reactionMessageId === message.id && (
+                    <div className="wa-reaction-picker" role="group" aria-label="Message reactions">
+                      {MESSAGE_REACTIONS.map((reaction) => <button key={reaction} type="button" onClick={() => void reactToMessage(message, reaction)}>{reaction}</button>)}
+                    </div>
+                  )}
                 </div>
               ))}
-              {messages.length === 0 && <p className="inline-status">{online ? 'No stored messages for this chat yet.' : 'No locally stored messages for this chat yet.'}</p>}
+              {visibleMessages.length === 0 && <p className="inline-status">{messages.length ? 'No messages match your search.' : online ? 'No stored messages for this chat yet.' : 'No locally stored messages for this chat yet.'}</p>}
             </div>
             {online
               ? <form className="chat-compose" onSubmit={(event) => { event.preventDefault(); void send(); }}>
-                  <input aria-label="WhatsApp message" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={`Message ${activeJid ? formatJid(activeJid) : ''}…`} />
+                  <div className="wa-compose-controls">
+                    {replyTo && <div className="wa-reply-context">Replying to {replyTo.sender || (replyTo.fromMe ? 'you' : 'contact')}: {replyTo.text || `(${replyTo.type})`} <button type="button" onClick={() => setReplyTo(null)}>CANCEL</button></div>}
+                    <input aria-label="WhatsApp message" value={draft} onChange={(event) => updateDraft(event.target.value)} placeholder={`Message ${activeJid ? formatJid(activeJid) : ''}…`} />
+                  </div>
+                  <div className="wa-compose-extras">
+                    <button type="button" className="device-tab" onClick={() => setShowEmojiPicker((value) => !value)} aria-expanded={showEmojiPicker}>EMOJI</button>
+                    <label className={`device-tab${sendingMedia ? ' disabled' : ''}`}>
+                      {sendingMedia ? 'UPLOADING…' : 'ATTACH'}
+                      <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" disabled={sendingMedia} onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) void sendMedia(file);
+                        event.currentTarget.value = '';
+                      }} />
+                    </label>
+                  </div>
+                  {showEmojiPicker && <div className="wa-emoji-picker" role="group" aria-label="Emoji picker">{['😀', '😂', '😊', '😍', '👍', '❤️', '🙏', '🎉', '😢', '🔥', '✅', '👋'].map((emoji) => <button key={emoji} type="button" onClick={() => updateDraft(`${draft}${emoji}`)}>{emoji}</button>)}</div>}
                   <button className="hud-button" type="submit" disabled={!activeJid}>SEND</button>
                 </form>
               : <p className="inline-status">LOCAL ARCHIVE · reconnect to WhatsApp to send messages</p>}
@@ -271,6 +611,17 @@ export function AegisWhatsApp() {
           {STATUS_LABEL[status.status]}
         </div>
         {online && status.user?.id && <p className="credential-notice">Linked as {status.user.id}</p>}
+        <div className="wa-call-actions" title="Creates a WhatsApp call link; share it with participants to join.">
+          <button type="button" className="hud-button" onClick={() => void createCallLink('audio')} disabled={!online || callLinkBusy}>CREATE VOICE CALL LINK</button>
+          <button type="button" className="hud-button" onClick={() => void createCallLink('video')} disabled={!online || callLinkBusy}>CREATE VIDEO CALL LINK</button>
+        </div>
+        <div className="wa-profile-status">
+          <label htmlFor="wa-profile-status">WHATSAPP ABOUT</label>
+          <textarea id="wa-profile-status" value={profileStatus} maxLength={139} onChange={(event) => setProfileStatus(event.target.value)} placeholder="Set your WhatsApp About…" />
+          <button type="button" className="hud-button" onClick={() => void saveProfileStatus()} disabled={!online || savingProfileStatus}>
+            {savingProfileStatus ? 'SAVING…' : 'UPDATE ABOUT'}
+          </button>
+        </div>
         {(actionError || status.lastError) && <p className="wa-error" role="alert">{actionError || status.lastError}</p>}
         <div className="wa-session-actions">
           <button type="button" className="hud-button" onClick={() => void startSession()} disabled={online || status.status === 'connecting' || status.status === 'waiting_qr'}>
@@ -289,7 +640,7 @@ export function AegisWhatsApp() {
         </div>
         {status.historySyncStatus === 'syncing' && <p className="credential-notice">Syncing WhatsApp chat history…</p>}
         {status.historySyncStatus === 'complete' && <p className="credential-notice">WhatsApp history sync complete. Messages are stored locally.</p>}
-        <p className="credential-notice">WhatsApp chat history is stored locally in the AEGIS database and remains after logout. Media files are not downloaded.</p>
+        <p className="credential-notice">WhatsApp chat history and available media are stored locally in the AEGIS database and remain after logout.</p>
       </HudFrame>
     </div>
   );

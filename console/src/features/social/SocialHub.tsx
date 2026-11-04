@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { HudFrame } from '@/components/hud';
+import { AegisWhatsApp } from '@/features/social/AegisWhatsApp';
 
 type Platform = 'WHATSAPP' | 'TELEGRAM' | 'INSTAGRAM' | 'DISCORD';
 type Message = { id: number; sender: string; text: string; time: string; outgoing?: boolean };
@@ -116,18 +117,19 @@ export function SocialHub() {
   };
 
   return (
-    <div className="social-page">
+    <div className={`social-page${platform === 'WHATSAPP' ? ' social-page-whatsapp' : ''}`}>
       <div className="social-tabs" role="tablist" aria-label="Messaging platform">
         {platforms.map((item) => (
-          <button type="button" role="tab" aria-selected={platform === item} className={platform === item ? 'social-tab active' : 'social-tab'} key={item} onClick={() => { 
-            if (item === 'WHATSAPP') { window.location.href = '/whatsapp'; return; }
-            setPlatform(item); setChatId(seedChats[item][0].id); setTestMessage(''); 
+          <button type="button" role="tab" aria-selected={platform === item} className={platform === item ? 'social-tab active' : 'social-tab'} key={item} onClick={() => {
+            setPlatform(item);
+            if (item !== 'WHATSAPP') setChatId(seedChats[item][0].id);
+            setTestMessage('');
           }}>
             {item === 'WHATSAPP' ? 'AEGIS WHATSAPP' : item}
           </button>
         ))}
       </div>
-      <div className="social-workspace">
+      {platform === 'WHATSAPP' ? <AegisWhatsApp /> : <div className="social-workspace">
         <HudFrame title={`${platform} // CONVERSATIONS`} className="social-chat-list">
           {selectedChats.map((chat) => (
             <button type="button" className={chat.id === chatId ? 'chat-list-item selected' : 'chat-list-item'} key={chat.id} onClick={() => setChatId(chat.id)}>
@@ -175,7 +177,7 @@ export function SocialHub() {
           {testMessage && <p className="connection-message" role="status">{testMessage}</p>}
           <p className="credential-notice">Credentials remain in local browser storage and are sent only to the matching official platform API during a connection test.</p>
         </HudFrame>
-      </div>
+      </div>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
@@ -31,8 +31,12 @@ const gatewayPort = Number(process.env.GATEWAY_PORT || process.env.AEGIS_PORT ||
 const consolePort = Number(process.env.CONSOLE_PORT || 5173);
 const gatewayHealthUrl = `http://127.0.0.1:${gatewayPort}/api/health`;
 const consoleHealthUrl = `http://127.0.0.1:${consolePort}/api/health`;
+const ollamaBaseUrl = process.env.AEGIS_OLLAMA_URL || 'http://127.0.0.1:11434';
+const ollamaHealthUrl = new URL('/api/tags', ollamaBaseUrl).toString();
 const children = new Set();
 let stopping = false;
+let coordinatorLock;
+const coordinatorLockFile = path.join(runtimeDir, 'master-start-v04.lock');
 const providerSecretEnvKeys = [
   'NV_API_KEY',
   'NVIDIA_API_KEY',
@@ -50,8 +54,61 @@ const providerSecretEnvKeys = [
 
 fs.mkdirSync(runtimeDir, { recursive: true });
 const coordinatorPidFile = path.join(runtimeDir, 'singularity.pid');
-fs.writeFileSync(coordinatorPidFile, String(process.pid), 'utf8');
-process.once('exit', () => removePidFile(coordinatorPidFile, process.pid));
+
+function isProcessRunning(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === 'EPERM';
+  }
+}
+
+function readPidFile(file) {
+  try {
+    const pid = Number(fs.readFileSync(file, 'utf8'));
+    return Number.isSafeInteger(pid) && pid > 0 ? pid : null;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    return null;
+  }
+}
+
+function acquireCoordinatorLock() {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      coordinatorLock = fs.openSync(coordinatorLockFile, 'wx');
+      fs.writeSync(coordinatorLock, String(process.pid));
+      fs.writeFileSync(coordinatorPidFile, String(process.pid), 'utf8');
+      return;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      const owner = readPidFile(coordinatorLockFile);
+      if (isProcessRunning(owner)) {
+        throw new Error(`Another AEGIS master launcher is already running (PID ${owner}).`);
+      }
+      if (Date.now() - fs.statSync(coordinatorLockFile).mtimeMs < 5000) {
+        throw new Error('Another AEGIS master launcher is acquiring the startup lock. Retry in a few seconds.');
+      }
+      fs.unlinkSync(coordinatorLockFile);
+    }
+  }
+  throw new Error('Could not acquire the AEGIS startup lock. Retry after checking the runtime folder.');
+}
+
+function releaseCoordinatorLock() {
+  removePidFile(coordinatorPidFile, process.pid);
+  if (coordinatorLock !== undefined) {
+    fs.closeSync(coordinatorLock);
+    coordinatorLock = undefined;
+  }
+  if (readPidFile(coordinatorLockFile) === process.pid) {
+    fs.unlinkSync(coordinatorLockFile);
+  }
+}
+
+process.on('exit', releaseCoordinatorLock);
 
 function assertPort(port, name) {
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -87,6 +144,54 @@ async function waitForHealth(url, label, child, requiredPath) {
     await delay(250);
   }
   throw new Error(`${label} did not become healthy at ${url} within 20 seconds.`);
+}
+
+async function waitForEndpoint(url, label, child, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(1500) });
+      if (response.ok) return;
+    } catch { }
+    if (child?.exitCode !== null && child?.exitCode !== undefined) {
+      throw new Error(`${label} exited with code ${child.exitCode} before becoming ready.`);
+    }
+    if (child?.signalCode) {
+      throw new Error(`${label} exited from signal ${child.signalCode} before becoming ready.`);
+    }
+    await delay(500);
+  }
+  throw new Error(`${label} did not become healthy at ${url} within ${timeoutMs / 1000} seconds.`);
+}
+
+async function startOllamaWhenAvailable() {
+  try {
+    const response = await fetch(ollamaHealthUrl, { signal: AbortSignal.timeout(1500) });
+    if (response.ok) {
+      console.log(`[AGUS] Local AI service is already available at ${new URL(ollamaHealthUrl).origin}.`);
+      return;
+    }
+  } catch { }
+
+  const ollamaUrl = new URL(ollamaBaseUrl);
+  if (!['localhost', '127.0.0.1', '::1'].includes(ollamaUrl.hostname)) {
+    console.warn(`[AGUS] Optional Ollama service is unavailable at ${ollamaUrl.origin}; continuing without local AI.`);
+    return;
+  }
+
+  const locator = process.platform === 'win32' ? 'where.exe' : 'which';
+  try {
+    execFileSync(locator, ['ollama'], { stdio: 'ignore' });
+  } catch {
+    console.warn('[AGUS] Ollama is not installed or not on PATH; continuing without local AI.');
+    return;
+  }
+
+  const host = `${ollamaUrl.hostname}:${ollamaUrl.port || '11434'}`;
+  const ollama = startChild('Ollama', 'ollama', ['serve'], root, { ...process.env, OLLAMA_HOST: host });
+  console.log('[AGUS] Starting Ollama local AI service...');
+  await waitForEndpoint(ollamaHealthUrl, 'Ollama local AI service', ollama, 60_000);
+  console.log(`[AGUS] Local AI service is ready at ${ollamaUrl.origin}.`);
 }
 
 function stopChildren() {
@@ -147,6 +252,21 @@ async function main() {
   assertPort(consolePort, 'CONSOLE_PORT');
   if (gatewayPort === consolePort) throw new Error('GATEWAY_PORT and CONSOLE_PORT must be different.');
 
+  const existingCoordinator = readPidFile(coordinatorPidFile);
+  if (existingCoordinator !== process.pid && isProcessRunning(existingCoordinator)) {
+    if (await getHealth(gatewayHealthUrl, '/api/whatsapp/status')
+      && await getHealth(consoleHealthUrl)) {
+      console.log(`[AGUS] AEGIS is already running (launcher PID ${existingCoordinator}).`);
+      console.log(`[AGUS] Console: http://localhost:${consolePort} | Gateway: http://127.0.0.1:${gatewayPort}`);
+      return;
+    }
+    throw new Error(`Launcher PID ${existingCoordinator} exists but the full AEGIS stack is not healthy. Use STOP-AEGIS.bat before restarting.`);
+  }
+
+  acquireCoordinatorLock();
+
+  await startOllamaWhenAvailable();
+
   let gateway;
   if (!(await getHealth(gatewayHealthUrl, '/api/whatsapp/status'))) {
     if (await getHealth(gatewayHealthUrl)) {
@@ -182,7 +302,10 @@ async function main() {
     await waitForHealth(consoleHealthUrl, 'Console proxy', consoleServer);
   }
 
-  console.log(`[AGUS] Singularity running on http://localhost:${consolePort} (Gateway proxied via /api).`);
+  console.log('[AGUS] AEGIS-OS v0.4 startup complete.');
+  console.log(`[AGUS] Console: http://localhost:${consolePort}`);
+  console.log(`[AGUS] Local gateway: http://127.0.0.1:${gatewayPort} (proxied via /api)`);
+  console.log('[AGUS] WhatsApp, World View feeds, and AI routes are ready through the local gateway.');
 
   process.once('SIGINT', () => {
     process.exitCode = 130;

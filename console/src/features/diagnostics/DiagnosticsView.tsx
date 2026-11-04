@@ -3,19 +3,42 @@ import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAx
 import { GaugeCircle, HudFrame, StatusCard } from '@/components/hud';
 
 type CheckStatus = 'checking' | 'online' | 'offline' | 'unconfigured';
-type ApiCheck = { name: string; url?: string; tokenKey?: string; userIdKey?: string; status: CheckStatus; latency: number | null; lastChecked: string; detail: string };
+type ApiCheck = { name: string; url?: string; tokenKey?: string; userIdKey?: string; statusField?: string; availabilityField?: string; expectedFeed?: string; status: CheckStatus; latency: number | null; lastChecked: string; detail: string };
 type CpuPoint = { time: string; cpu: number | null; memory: number | null; disk: number | null };
 type SystemStats = { cpuLoad: number; memoryLoad: number; memoryUsedGb: number; memoryTotalGb: number; diskLoad: number; diskUsedGb: number; diskTotalGb: number };
 
-const checks: Array<Pick<ApiCheck, 'name' | 'url' | 'tokenKey' | 'userIdKey'>> = [
+const checks: Array<Pick<ApiCheck, 'name' | 'url' | 'tokenKey' | 'userIdKey' | 'statusField' | 'availabilityField' | 'expectedFeed'>> = [
   { name: 'GATEWAY', url: '/api/health' },
   { name: 'ADS-B', url: '/api/feeds/adsb' },
   { name: 'USGS', url: '/api/feeds/usgs' },
-  { name: 'OPEN-METEO', url: 'https://api.open-meteo.com/v1/forecast?latitude=33.68&longitude=73.04&current=temperature_2m' },
   { name: 'GDELT', url: '/api/feeds/gdelt' },
+  { name: 'GDELT SEARCH', url: '/api/gdelt/search?q=earthquake' },
+  { name: 'SATELLITE TRACKING', url: '/api/satellites' },
+  { name: 'OPEN-METEO WEATHER', url: '/api/weather?latitude=33.68&longitude=73.04' },
+  { name: 'OPEN-METEO GEOCODING', url: '/api/geocode?q=Islamabad' },
+  { name: 'OPEN-METEO WIND', url: '/api/feeds/wind?bbox=72.95,33.60,73.12,33.75' },
+  { name: 'NASA EONET FIRES', url: '/api/feeds/fires' },
+  { name: 'NOAA WEATHER ALERTS', url: '/api/feeds/weather-alerts' },
+  { name: 'NOAA SATELLITE WMS', url: 'https://nowcoast.noaa.gov/geoserver/observations/satellite/wms?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=global_longwave_imagery_mosaic&STYLES=&FORMAT=image%2Fpng&TRANSPARENT=true&SRS=EPSG%3A3857&BBOX=-8239000,4970000,-8220000,4990000&WIDTH=256&HEIGHT=256' },
+  { name: 'RAINVIEWER RADAR', url: '/api/feeds/rain-radar' },
+  { name: 'OSRM DIRECTIONS', url: '/api/feeds/directions?from=-73.9857,40.7484&to=-73.9851,40.7580' },
+  { name: 'MTA NEW YORK TRANSIT', url: '/api/feeds/transit?bbox=-74.01,40.70,-73.99,40.72', expectedFeed: 'MTA New York City buses' },
+  { name: 'SEPTA PHILADELPHIA', url: '/api/feeds/transit?bbox=-75.18,39.93,-75.14,39.97', expectedFeed: 'SEPTA Philadelphia' },
+  { name: 'ENTUR NORWAY', url: '/api/feeds/transit?bbox=10.65,59.85,10.90,59.98', expectedFeed: 'Entur Norway' },
+  { name: 'HSL HELSINKI', url: '/api/feeds/transit?bbox=24.90,60.15,25.15,60.30', expectedFeed: 'HSL Helsinki region' },
+  { name: 'SOFIA TRANSIT', url: '/api/feeds/transit?bbox=23.30,42.60,23.40,42.75', expectedFeed: 'Sofia Traffic' },
+  { name: 'ROME TRANSIT', url: '/api/feeds/transit?bbox=12.45,41.85,12.55,41.95', expectedFeed: 'Roma Mobilità' },
+  { name: 'LVIV TRANSIT', url: '/api/feeds/transit?bbox=23.95,49.80,24.05,49.90', expectedFeed: 'Lvivavtodor' },
+  { name: 'BUCHAREST TRANSIT', url: '/api/feeds/transit?bbox=26.00,44.40,26.15,44.50', expectedFeed: 'Bucharest TPBI' },
+  { name: 'TRANSLINK QUEENSLAND', url: '/api/feeds/transit?bbox=153.00,-27.60,153.15,-27.45', expectedFeed: 'TransLink Queensland' },
+  { name: 'ADELAIDE METRO', url: '/api/feeds/transit?bbox=138.55,-34.95,138.65,-34.85', expectedFeed: 'Adelaide Metro' },
+  { name: 'CARTO BASEMAP', url: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json' },
+  { name: 'ESRI SATELLITE TILES', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/2/1/1' },
+  { name: 'AWS TERRAIN TILES', url: 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/2/1/1.png' },
+  { name: 'LOCAL AI / OLLAMA', url: '/api/nova/models', availabilityField: 'available' },
   { name: 'TELEGRAM', tokenKey: 'telegram_bot_token' },
   { name: 'DISCORD', tokenKey: 'discord_bot_token' },
-  { name: 'WHATSAPP', tokenKey: 'whatsapp_token', userIdKey: 'whatsapp_phone_id' },
+  { name: 'AEGIS WHATSAPP', url: '/api/whatsapp/status', statusField: 'status' },
   { name: 'INSTAGRAM', tokenKey: 'instagram_token', userIdKey: 'instagram_user_id' },
 ];
 
@@ -27,7 +50,9 @@ function formatCheckTime() {
   return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-type CheckConfig = Pick<ApiCheck, 'name' | 'url' | 'tokenKey' | 'userIdKey'>;
+type CheckConfig = Pick<ApiCheck, 'name' | 'url' | 'tokenKey' | 'userIdKey' | 'statusField' | 'availabilityField' | 'expectedFeed'>;
+
+const CHECK_CONCURRENCY = 4;
 
 async function checkApi(check: CheckConfig): Promise<ApiCheck> {
   const start = performance.now();
@@ -60,11 +85,25 @@ async function checkApi(check: CheckConfig): Promise<ApiCheck> {
 
 async function performCheck(check: CheckConfig, url: string, headers: Headers, start: number, checkedAt: string): Promise<ApiCheck> {
   try {
-    const response = await fetch(url, { headers, signal: AbortSignal.timeout(7000), cache: 'no-store' });
+    const response = await fetch(url, { headers, signal: AbortSignal.timeout(15_000), cache: 'no-store' });
     const latency = Math.round(performance.now() - start);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const body = await response.json().catch(() => null) as { ok?: boolean; error?: { message?: string } } | null;
+    const body = await response.json().catch(() => null) as ({ [key: string]: unknown; ok?: boolean; error?: { message?: string } } | null);
+    if (check.availabilityField && body?.[check.availabilityField] === false) {
+      throw new Error('SERVICE UNAVAILABLE');
+    }
     if (body?.ok === false) throw new Error(body.error?.message || 'API rejected the check.');
+    if (check.expectedFeed) {
+      const feeds = body?.feeds as Array<{ feed?: string; count?: number; error?: string }> | undefined;
+      const feed = feeds?.find((item) => item.feed === check.expectedFeed);
+      if (!feed) throw new Error('FEED NOT AVAILABLE IN THIS REGION');
+      if (feed.error) throw new Error(feed.error);
+      return { ...check, status: 'online', latency, lastChecked: checkedAt, detail: `FEED RESPONDED · ${feed.count ?? 0} VEHICLES` };
+    }
+    if (check.statusField && body?.[check.statusField] !== 'online') {
+      const state = body?.[check.statusField];
+      return { ...check, status: 'offline', latency, lastChecked: checkedAt, detail: typeof state === 'string' ? `SESSION ${state.toUpperCase()}` : 'SERVICE OFFLINE' };
+    }
     return { ...check, status: 'online', latency, lastChecked: checkedAt, detail: 'ENDPOINT RESPONDED' };
   } catch (reason) {
     return {
@@ -92,12 +131,28 @@ export function DiagnosticsView() {
     const runChecks = async () => {
       if (checking) return;
       checking = true;
-      const results = await Promise.all(checks.map(checkApi));
-      if (active) setApiChecks(results);
-      checking = false;
+      let nextCheck = 0;
+      const worker = async () => {
+        while (nextCheck < checks.length) {
+          const index = nextCheck++;
+          const result = await checkApi(checks[index]!);
+          if (active) {
+            setApiChecks((current) => {
+              const updated = [...current];
+              updated[index] = result;
+              return updated;
+            });
+          }
+        }
+      };
+      try {
+        await Promise.all(Array.from({ length: Math.min(CHECK_CONCURRENCY, checks.length) }, worker));
+      } finally {
+        checking = false;
+      }
     };
     void runChecks();
-    const timer = window.setInterval(() => void runChecks(), 10_000);
+    const timer = window.setInterval(() => void runChecks(), 60_000);
     return () => { active = false; window.clearInterval(timer); };
   }, []);
 
@@ -183,7 +238,7 @@ export function DiagnosticsView() {
       <div className="aegis-grid aegis-grid-3">
         <StatusCard label="API SERVICES ONLINE" value={`${onlineCount} / ${apiChecks.length}`} sub="LIVE PUBLIC ENDPOINT CHECKS" status={onlineCount ? 'online' : 'warning'} />
         <StatusCard label="MEAN API LATENCY" value={averageLatency === null ? '--' : `${averageLatency}ms`} sub="SUCCESSFUL + FAILED CHECKS" status={averageLatency === null ? 'warning' : averageLatency > 500 ? 'offline' : averageLatency > 200 ? 'warning' : 'online'} />
-        <StatusCard label="LAST CHECK" value={new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(now)} sub="API CHECK 10S // HOST SAMPLE 2S" />
+        <StatusCard label="LAST CHECK" value={new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(now)} sub="API CHECK 60S // HOST SAMPLE 2S" />
       </div>
 
       <div className="diagnostics-layout">

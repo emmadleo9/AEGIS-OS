@@ -1,4 +1,4 @@
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0START-AEGIS.ps1"
+call "%~dp0MASTER START AEGIS-OS V.04.bat"
 exit /b %ERRORLEVEL%

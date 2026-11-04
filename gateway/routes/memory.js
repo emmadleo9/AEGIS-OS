@@ -36,16 +36,43 @@ function getDb() {
       message_id TEXT NOT NULL,
       jid TEXT NOT NULL,
       sender TEXT NOT NULL DEFAULT '',
+      participant TEXT,
       from_me INTEGER NOT NULL DEFAULT 0,
       text TEXT NOT NULL DEFAULT '',
       message_type TEXT NOT NULL DEFAULT 'unknown',
       timestamp TEXT NOT NULL,
+      message_content TEXT,
+      media_id TEXT,
+      media_mime_type TEXT,
+      media_file_name TEXT,
+      media_path TEXT,
+      media_status TEXT,
+      media_error TEXT,
       PRIMARY KEY (jid, message_id)
     );
     CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_chat_time ON whatsapp_messages (jid, timestamp DESC);
     CREATE TABLE IF NOT EXISTS telegram_session (id INTEGER PRIMARY KEY CHECK (id = 1), payload TEXT, updated_at TEXT DEFAULT (datetime('now')));
     CREATE TABLE IF NOT EXISTS system_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, cpu REAL, memory REAL, disk REAL, created_at TEXT DEFAULT (datetime('now')));
   `);
+  const whatsappMessageColumns = new Set(
+    db.pragma('table_info(whatsapp_messages)').map((column) => column.name),
+  );
+  const whatsappMessageMigrations = {
+    message_content: 'TEXT',
+    participant: 'TEXT',
+    media_id: 'TEXT',
+    media_mime_type: 'TEXT',
+    media_file_name: 'TEXT',
+    media_path: 'TEXT',
+    media_status: 'TEXT',
+    media_error: 'TEXT',
+  };
+  for (const [column, type] of Object.entries(whatsappMessageMigrations)) {
+    if (!whatsappMessageColumns.has(column)) {
+      db.exec(`ALTER TABLE whatsapp_messages ADD COLUMN ${column} ${type}`);
+    }
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_media_id ON whatsapp_messages (media_id) WHERE media_id IS NOT NULL');
   return db;
 }
 
