@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/gateway-OpenWA-546E7A?style=for-the-badge" alt="Gateway: OpenWA" />
   <img src="https://img.shields.io/badge/console-AEGIS-212121?style=for-the-badge" alt="Console: AEGIS" />
   <img src="https://img.shields.io/badge/model-qwen2.5:3b-AA00FF?style=for-the-badge" alt="Model: qwen2.5:3b" />
-  <img src="https://img.shields.io/badge/hud-v3.2-8AF8FF?style=for-the-badge" alt="HUD: v3.2" />
+  <img src="https://img.shields.io/badge/hud-v4.0-8AF8FF?style=for-the-badge" alt="HUD: v4.0" />
   <img src="https://img.shields.io/badge/offline--first-212121?style=for-the-badge" alt="Offline-first" />
   <img src="https://img.shields.io/badge/status-ONLINE-00C853?style=for-the-badge" alt="Status: ONLINE" />
 </p>
@@ -31,9 +31,9 @@ AEGIS-OS is a **local-first AI operating system** that turns a modest machine in
 | ⚡ Feature | 🛡️ Capability |
 |-----------|---------------|
 | 🧠 **Core (OpenJarvis)** | Local AI framework with 5 primitives — Intelligence, Engine, Agents, Tools, Memory. Serves a local LLM (`qwen2.5:3b` via Ollama). |
-| 📡 **Gateway (OpenWA)** | WhatsApp API gateway — REST API + dashboard, multi-session, SQLite mode, QR pairing. |
-| 🖥️ **Console (AEGIS)** | Dark OLED HUD (`#050A0E` / cyan `#8AF8FF`), glassmasonry panels, animated tactical UI. |
-| 🌍 **World View** | Searchable 2D / 3D / satellite map with saved layers, GeoJSON drawing/export, OSRM driving directions, terrain relief, public GTFS-RT transit in supported regions, Open-Meteo wind vectors, NOAA satellite cloud and water-vapor imagery, selectable and animatable RainViewer radar frames, solar day/night shading, 3D buildings, and live ADS-B, USGS, satellite, NASA fire, GDELT, weather and NOAA weather-alert overlays. |
+| 📡 **Gateway (OpenWA)** | WhatsApp API gateway — REST API + dashboard, multi-session, SQLite mode, QR pairing, local telemetry and feed proxies. |
+| 🖥️ **Console (AEGIS)** | Dark OLED HUD (`#050A0E` / cyan `#8AF8FF`), glassmasonry panels, animated tactical UI. System Monitor v4.0. |
+| 🌍 **World View** | Searchable 2D / 3D / satellite map with saved layers, GeoJSON drawing/export, OSRM driving directions, terrain relief, public GTFS-RT transit in supported regions, Open-Meteo wind vectors, NOAA satellite cloud and water-vapor imagery, RainViewer radar frames, solar day/night shading, 3D buildings, and live ADS-B, USGS, satellite, NASA fire, GDELT, weather and NOAA weather-alert overlays. |
 | 💬 **Social Hub** | **AEGIS WhatsApp** embedded — scan a QR, chat in the HUD. Plus Telegram / Instagram / Discord connectors. |
 | 🗞️ **News & Conflict** | GDELT global events with country search, recommendations and a live mini-map. |
 | 🔋 **Memory** | Persistent everywhere — IndexedDB in the console, SQLite in the gateway. Sessions survive restarts. |
@@ -45,9 +45,9 @@ The WhatsApp panel uses the linked WhatsApp session and local AEGIS SQLite/media
 
 Direct WhatsApp voice/video calling and Status-story creation are not exposed by the current linked-device adapter; call links can be generated and shared instead. Availability of synced history and media depends on what WhatsApp provides to the linked session.
 
-### AI Studio online models
+### AI Studio
 
-AI Studio keeps its local Ollama models available and adds optional NVIDIA NIM and Groq chat models. The **FREE-SEARCH // TAVILY + LLAMA - Perplexity Clone 🌐 FREE** option searches Tavily and summarizes results with NVIDIA. Add keys through **AI Studio → API KEYS** or configure server-side variables in the repository-root `.env.local`, `.env`, or `gateway/.env.local`: `NVIDIA_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`, and `TAVILY_API_KEY`. Use [.env.local.example](./.env.local.example) as the template for a root `.env.local`. Browser-entered keys stay in that browser's local storage and provider requests go through the local gateway. Do not use `VITE_`-prefixed provider secrets because Vite embeds those values in browser bundles. If NVIDIA's account inference route is unavailable, AI Studio falls back to local Ollama; Tavily search still returns the retrieved answer or source text.
+AI Studio keeps its local Ollama models available and adds optional NVIDIA NIM, Groq, and OpenRouter chat models. The **FREE-SEARCH // TAVILY + LLAMA - Perplexity Clone 🌐 FREE** option searches Tavily and summarizes results with NVIDIA. Add keys through **AI Studio → API KEYS** or configure server-side variables in the repository-root `.env.local`, `.env`, or `gateway/.env.local`: `NVIDIA_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`, and `TAVILY_API_KEY`. Use [.env.local.example](./.env.local.example) as the template for a root `.env.local`. Browser-entered keys stay in that browser's local storage and provider requests go through the local gateway. Do not use `VITE_`-prefixed provider secrets because Vite embeds those values in browser bundles. If NVIDIA's account inference route is unavailable, AI Studio falls back to local Ollama; Tavily search still returns the retrieved answer or source text.
 
 ---
 
@@ -57,13 +57,13 @@ AI Studio keeps its local Ollama models available and adds optional NVIDIA NIM a
 flowchart LR
     U[User Devices] --> C[Console / AEGIS HUD]
     C --> G[Gateway / OpenWA]
-    C --> B[Brain / OpenJarvis]
+    C --> K[Core / OpenJarvis]
     G --> WA[WhatsApp]
     G --> TG[Telegram]
     G --> DC[Discord]
     G --> IG[Instagram]
     C --> O[OSINT Feeds / ADS-B · USGS · GDELT · Satellites]
-    B --> LLM[qwen2.5:3b · Ollama]
+    K --> LLM[qwen2.5:3b · Ollama]
     G --> DB[(SQLite Persistence)]
 ```
 
@@ -108,8 +108,13 @@ AEGIS-OS/
 ├── /core       OpenJarvis — local-first AI core
 ├── /gateway     OpenWA + AEGIS feeds — local API gateway
 ├── /console     AEGIS — dark OLED HUD console
+├── /_ref_map    OSIRIS reference — map and public-feed patterns (not runtime)
+├── /_refs       Vendored open-source references (jarvis, openwa, bspui, map)
+├── /scripts     Startup and utility scripts
 └── README.md
 ```
+
+Console routes (`/` Dashboard, `/world` World View, `/weather` Weather Intel, `/feeds` News & Conflict, `/social` Social Hub, `/whatsapp` AEGIS WhatsApp, `/scopes` Scopes & Radars, `/devices` My Devices, `/time` World Clock, `/ai-studio` AI Studio, `/settings` Settings, `/diagnostics` Diagnostics).
 
 ---
 
@@ -118,6 +123,7 @@ AEGIS-OS/
 MIT — see [LICENSE](LICENSE).
 
 ---
+
 Built with open-source. See CREDITS.md for licenses.
 
 ---
