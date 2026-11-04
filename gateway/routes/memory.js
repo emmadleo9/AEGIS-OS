@@ -1,6 +1,6 @@
 /**
  * AEGIS gateway memory — SQLite persistence (better-sqlite3).
- * Stores messages, devices, logs, sessions, whatsapp_session, telegram_session, system_stats.
+ * Stores messages, devices, logs, sessions, WhatsApp history, telegram_session, system_stats.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -20,6 +20,29 @@ function getDb() {
     CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY AUTOINCREMENT, level TEXT, message TEXT, created_at TEXT DEFAULT (datetime('now')));
     CREATE TABLE IF NOT EXISTS sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE, payload TEXT, updated_at TEXT DEFAULT (datetime('now')));
     CREATE TABLE IF NOT EXISTS whatsapp_session (id INTEGER PRIMARY KEY CHECK (id = 1), payload TEXT, updated_at TEXT DEFAULT (datetime('now')));
+    CREATE TABLE IF NOT EXISTS whatsapp_chats (
+      jid TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      last_message TEXT,
+      last_message_at TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS whatsapp_contacts (
+      jid TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS whatsapp_messages (
+      message_id TEXT NOT NULL,
+      jid TEXT NOT NULL,
+      sender TEXT NOT NULL DEFAULT '',
+      from_me INTEGER NOT NULL DEFAULT 0,
+      text TEXT NOT NULL DEFAULT '',
+      message_type TEXT NOT NULL DEFAULT 'unknown',
+      timestamp TEXT NOT NULL,
+      PRIMARY KEY (jid, message_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_chat_time ON whatsapp_messages (jid, timestamp DESC);
     CREATE TABLE IF NOT EXISTS telegram_session (id INTEGER PRIMARY KEY CHECK (id = 1), payload TEXT, updated_at TEXT DEFAULT (datetime('now')));
     CREATE TABLE IF NOT EXISTS system_stats (id INTEGER PRIMARY KEY AUTOINCREMENT, cpu REAL, memory REAL, disk REAL, created_at TEXT DEFAULT (datetime('now')));
   `);
@@ -30,7 +53,7 @@ function registerMemoryRoutes(app) {
   app.get('/api/memory/stats', (_req, res) => {
     try {
       const database = getDb();
-      const tables = ['messages', 'devices', 'logs', 'sessions', 'whatsapp_session', 'telegram_session', 'system_stats'];
+      const tables = ['messages', 'devices', 'logs', 'sessions', 'whatsapp_session', 'whatsapp_chats', 'whatsapp_contacts', 'whatsapp_messages', 'telegram_session', 'system_stats'];
       const counts = {};
       for (const table of tables) {
         counts[table] = database.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get().n;

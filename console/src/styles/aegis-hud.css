@@ -291,3 +291,12 @@ body{overflow-x:hidden}
   .studio-console-tabs .device-tab{flex:1}
   .studio-task-row{grid-template-columns:minmax(0,1fr)}
 }
+.wa-page{display:grid;height:calc(100vh - 166px);min-height:540px;align-items:stretch}
+.wa-page>.hud-frame{min-width:0}
+.wa-center{min-width:0}
+.wa-qr-box{width:min(400px,100%,calc(100vh - 320px))}
+.wa-session-actions{flex-wrap:wrap}
+.wa-error{margin:4px 0;color:#ff8792;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:760px){
+  .wa-page{height:auto;min-height:calc(100vh - 166px);grid-template-rows:minmax(220px,auto) minmax(340px,1fr) auto}
+}

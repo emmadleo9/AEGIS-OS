@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import axios from 'axios';
+import { useCallback, useEffect, useState } from 'react';
 import { HudFrame } from '@/components/hud';
-import { loadMemory, saveMemory } from '@/lib/aegis-memory';
 import { api } from '@/lib/api';
 
 type Status = 'offline' | 'connecting' | 'waiting_qr' | 'reconnecting' | 'online' | 'error';
-type WaStatus = { status: Status; qr: string | null; user: { id?: string; name?: string } | null; lastError: string | null; pairingCode?: string | null };
-type ChatEntry = { jid: string; name: string };
-type ChatMessage = { fromMe: boolean; text: string; at: string };
+type WaStatus = { status: Status; qr: string | null; user: { id?: string; name?: string } | null; lastError: string | null; pairingCode?: string | null; historySyncStatus?: string };
+type ChatEntry = { jid: string; name: string; lastMessage?: string | null; lastMessageAt?: string | null };
+type ChatMessage = { id: string; fromMe: boolean; text: string; type: string; sender: string; at: string };
 
 const STATUS_LABEL: Record<Status, string> = {
   offline: 'OFFLINE',
@@ -21,7 +21,12 @@ function formatJid(jid: string): string {
   return jid.replace(/@.*$/, '').replace(/(\d{3})(?=\d)/g, '$1 ');
 }
 
-const API_KEY = localStorage.getItem('aegis-api-key') || 'aa4b2b4142b6f0a9c0e8abbe00e0553b30db4157df72b419302ebe02182eb8f3';
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError<{ error?: string }>(error)) {
+    return error.response?.data?.error ?? error.message;
+  }
+  return error instanceof Error ? error.message : String(error);
+}
 
 export function AegisWhatsApp() {
   const [status, setStatus] = useState<WaStatus>({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });
@@ -33,113 +38,148 @@ export function AegisWhatsApp() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [pairingBusy, setPairingBusy] = useState(false);
   const [pairingCode, setPairingCode] = useState('');
-  const wsRef = useRef<WebSocket | null>(null);
+  const [actionError, setActionError] = useState('');
+  const [showPairing, setShowPairing] = useState(false);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
   const online = status.status === 'online';
 
-  const headers = { 'X-API-Key': API_KEY };
-
   const refreshChats = useCallback(async () => {
-    if (!online) return;
-    const stored = await loadMemory<ChatEntry[]>('whatsappAuth', []);
     try {
-      const response = await api.get('/sessions/aegis-whatsapp-session/chats', { headers });
-      const data = response.data as { chats?: ChatEntry[] } | ChatEntry[];
-      const list = Array.isArray(data) ? data : data.chats ?? [];
-      if (list.length) {
-        setChats(list.slice(0, 60));
-        await saveMemory('whatsappAuth', list.slice(0, 60));
-        return;
-      }
-    } catch {
-      /* fall through to cached chats */
+      const response = await api.get<{ chats: ChatEntry[] }>('/whatsapp/chats');
+      const list = response.data.chats;
+      setChats(list);
+      setActiveJid((current) => current || list[0]?.jid || '');
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not load WhatsApp chats: ${getErrorMessage(error)}`);
     }
-    if (stored.length) setChats(stored);
-  }, [online]);
+  }, []);
+
+  const refreshMessages = useCallback(async () => {
+    if (!activeJid) return;
+    try {
+      const response = await api.get<{ messages: ChatMessage[]; hasOlder: boolean }>(`/whatsapp/messages/${encodeURIComponent(activeJid)}`);
+      setMessages(response.data.messages);
+      setHasOlderMessages(response.data.hasOlder);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not load WhatsApp messages: ${getErrorMessage(error)}`);
+    }
+  }, [activeJid]);
+
+  const loadOlderMessages = async () => {
+    const before = messages[0]?.at;
+    if (!activeJid || !before) return;
+    try {
+      const response = await api.get<{ messages: ChatMessage[]; hasOlder: boolean }>(
+        `/whatsapp/messages/${encodeURIComponent(activeJid)}`,
+        { params: { before, beforeId: messages[0]?.id } },
+      );
+      setMessages((current) => [...response.data.messages, ...current]);
+      setHasOlderMessages(response.data.hasOlder);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not load older messages: ${getErrorMessage(error)}`);
+    }
+  };
 
   useEffect(() => {
     let alive = true;
     const poll = async () => {
       try {
-        const response = await api.get('/sessions/aegis-whatsapp-session', { headers });
-        const data = response.data;
-        const st = data.status?.toLowerCase() || 'offline';
-        const mapped: Status = st === 'connected' ? 'online' : st === 'connecting' ? 'connecting' : st === 'qr_ready' || st === 'waiting_qr' ? 'waiting_qr' : 'offline';
-        if (alive) setStatus((current) => ({ ...current, status: mapped, lastError: null }));
-        if (data.qrCode && alive) setStatus((current) => ({ ...current, qr: data.qrCode }));
-      } catch {
-        if (alive) setStatus((current) => ({ ...current, status: 'offline', lastError: 'Gateway unreachable' }));
+        const response = await api.get<WaStatus>('/whatsapp/status');
+        if (alive) {
+          setStatus(response.data);
+        }
+      } catch (error) {
+        if (alive) {
+          const message = getErrorMessage(error);
+          setStatus((current) => ({ ...current, status: 'error', lastError: message }));
+        }
       }
     };
-    void poll();
-    const timer = window.setInterval(poll, 4000);
-    try {
-      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/events`);
-      wsRef.current = ws;
-    } catch {
-      /* WebSocket optional — polling covers it */
-    }
+    void api.post('/whatsapp/start').then(poll).catch((error: unknown) => {
+      if (alive) {
+        const message = getErrorMessage(error);
+        setStatus((current) => ({ ...current, status: 'error', lastError: message }));
+      }
+    });
+    const timer = window.setInterval(() => void poll(), 2000);
     return () => {
       alive = false;
       window.clearInterval(timer);
-      wsRef.current?.close();
     };
   }, []);
 
   useEffect(() => {
-    if (online) void api.post('/sessions/aegis-whatsapp-session/start', {}, { headers }).catch(() => undefined);
-  }, [online]);
-
-  useEffect(() => { void refreshChats(); }, [refreshChats]);
+    void refreshChats();
+    const timer = window.setInterval(() => void refreshChats(), 15000);
+    return () => window.clearInterval(timer);
+  }, [refreshChats]);
 
   useEffect(() => {
+    void refreshMessages();
     if (!activeJid) return;
-    void (async () => {
-      try {
-        const response = await api.get(`/sessions/aegis-whatsapp-session/messages?chatId=${encodeURIComponent(activeJid)}`, { headers });
-        const data = response.data as { messages?: ChatMessage[] } | ChatMessage[];
-        const list = Array.isArray(data) ? data : data.messages ?? [];
-        setMessages(list.map((m: any) => ({ fromMe: m.fromMe || m.outgoing, text: m.body || m.text || '(media message)', at: m.timestamp || m.at || new Date().toISOString() })));
-      } catch {
-        setMessages([]);
-      }
-    })();
-  }, [activeJid]);
+    const timer = window.setInterval(() => void refreshMessages(), 3000);
+    return () => window.clearInterval(timer);
+  }, [activeJid, refreshMessages]);
 
   const send = async () => {
     const text = draft.trim();
     if (!text || !activeJid) return;
-    setDraft('');
     try {
-      await api.post('/sessions/aegis-whatsapp-session/messages/send-text', { chatId: activeJid, text }, { headers });
-      setMessages((current) => [...current, { fromMe: true, text, at: new Date().toISOString() }]);
-    } catch {
-      /* gateway will surface errors via status */
+      await api.post('/whatsapp/send', { jid: activeJid, text });
+      await refreshMessages();
+      setDraft('');
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not send message: ${getErrorMessage(error)}`);
     }
   };
 
   const logout = async () => {
-    await api.post(`/sessions/aegis-whatsapp-session/logout`, {}, { headers }).catch(() => undefined);
-    setStatus({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });
-    setPairingCode('');
-    setChats([]);
+    try {
+      await api.post('/whatsapp/logout');
+      setStatus({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });
+      setPairingCode('');
+      setChats([]);
+      setActiveJid('');
+      setMessages([]);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not log out of WhatsApp: ${getErrorMessage(error)}`);
+    }
   };
 
   const requestPairingCode = async () => {
     const digits = phoneNumber.replace(/\D/g, '');
     if (digits.length < 8) {
       setPairingCode('');
+      setActionError('Enter the full phone number in international format.');
       return;
     }
     setPairingBusy(true);
     try {
-      await api.post('/sessions/aegis-whatsapp-session/start', {}, { headers });
-      const response = await api.post('/sessions/aegis-whatsapp-session/pairing-code', { phoneNumber: digits }, { headers });
-      const data = response.data as { code?: string; error?: string };
-      setPairingCode(data.code ?? data.error ?? 'FAILED');
-    } catch {
-      setPairingCode('FAILED');
+      await api.post('/whatsapp/start');
+      const response = await api.post<{ code?: string }>('/whatsapp/pairing-code', { phoneNumber: digits });
+      if (!response.data.code) throw new Error('The gateway did not return a pairing code.');
+      setPairingCode(response.data.code);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not get a pairing code: ${getErrorMessage(error)}`);
     } finally {
       setPairingBusy(false);
+    }
+  };
+
+  const startSession = async () => {
+    try {
+      await api.post('/whatsapp/start');
+      const response = await api.get<WaStatus>('/whatsapp/status');
+      setStatus(response.data);
+      setActionError('');
+    } catch (error) {
+      setActionError(`Could not start WhatsApp: ${getErrorMessage(error)}`);
     }
   };
 
@@ -160,7 +200,7 @@ export function AegisWhatsApp() {
               onClick={() => setActiveJid(chat.jid)}
             >
               <span className="wa-chat-name">{chat.name || formatJid(chat.jid)}</span>
-              <span className="wa-chat-preview">{chat.jid.endsWith('@g.us') ? 'GROUP' : 'DIRECT'}</span>
+              <span className="wa-chat-preview">{chat.lastMessage || (chat.jid.endsWith('@g.us') ? 'GROUP' : 'DIRECT')}</span>
             </button>
           ))}
           {!online && <p className="inline-status">Pair AEGIS WhatsApp to see your chats.</p>}
@@ -168,7 +208,7 @@ export function AegisWhatsApp() {
       </HudFrame>
 
       <HudFrame title={activeJid ? formatJid(activeJid) : 'AEGIS WHATSAPP'} className="social-chat wa-center">
-        {!online && (
+        {!online && (!activeJid || showPairing) && (
           <div className="wa-qr-panel">
             <div className="wa-link-tabs" role="tablist">
               <button type="button" role="tab" aria-selected={linkTab === 'qr'} className={linkTab === 'qr' ? 'device-tab active' : 'device-tab'} onClick={() => setLinkTab('qr')}>QR CODE</button>
@@ -199,25 +239,28 @@ export function AegisWhatsApp() {
                 <p className="credential-notice">Enter the 8-character code in WhatsApp → Linked devices → Link with phone number instead.</p>
               </div>
             )}
-            {status.lastError && <p className="credential-notice" style={{ color: '#ff8792' }}>{status.lastError}</p>}
+            {(actionError || status.lastError) && <p className="wa-error" role="alert">{actionError || status.lastError}</p>}
             <p className="credential-notice">Session persists on Disk D across gateway restarts.</p>
           </div>
         )}
-        {online && (
+        {(online || (activeJid && !showPairing)) && (
           <>
             <div className="chat-messages" aria-live="polite">
+              {hasOlderMessages && <button type="button" className="device-tab" onClick={() => void loadOlderMessages()}>LOAD OLDER MESSAGES</button>}
               {messages.map((message, index) => (
-                <div key={index} className={message.fromMe ? 'chat-bubble outgoing' : 'chat-bubble'}>
-                  <div>{message.text || '(media message)'}</div>
-                  <time>{message.fromMe ? 'YOU' : 'THEM'} · {new Date(message.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time>
+                <div key={message.id || `${message.at}-${index}`} className={message.fromMe ? 'chat-bubble outgoing' : 'chat-bubble'}>
+                  <div>{message.text || `(${message.type} message)`}</div>
+                  <time>{message.fromMe ? 'YOU' : message.sender || 'THEM'} · {new Date(message.at).toLocaleString()}</time>
                 </div>
               ))}
-              {messages.length === 0 && <p className="inline-status">No messages routed for this chat yet.</p>}
+              {messages.length === 0 && <p className="inline-status">{online ? 'No stored messages for this chat yet.' : 'No locally stored messages for this chat yet.'}</p>}
             </div>
-            <form className="chat-compose" onSubmit={(event) => { event.preventDefault(); void send(); }}>
-              <input aria-label="WhatsApp message" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={`Message ${activeJid ? formatJid(activeJid) : ''}…`} />
-              <button className="hud-button" type="submit" disabled={!activeJid}>SEND</button>
-            </form>
+            {online
+              ? <form className="chat-compose" onSubmit={(event) => { event.preventDefault(); void send(); }}>
+                  <input aria-label="WhatsApp message" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={`Message ${activeJid ? formatJid(activeJid) : ''}…`} />
+                  <button className="hud-button" type="submit" disabled={!activeJid}>SEND</button>
+                </form>
+              : <p className="inline-status">LOCAL ARCHIVE · reconnect to WhatsApp to send messages</p>}
           </>
         )}
       </HudFrame>
@@ -227,19 +270,26 @@ export function AegisWhatsApp() {
           <span className={`status-dot${online ? ' online' : ''}`} />
           {STATUS_LABEL[status.status]}
         </div>
-        {status.user?.id && <p className="credential-notice">Linked as {status.user.id}</p>}
-        {status.lastError && <p className="credential-notice" style={{ color: '#ff8792' }}>{status.lastError}</p>}
+        {online && status.user?.id && <p className="credential-notice">Linked as {status.user.id}</p>}
+        {(actionError || status.lastError) && <p className="wa-error" role="alert">{actionError || status.lastError}</p>}
         <div className="wa-session-actions">
-          <button type="button" className="hud-button" onClick={() => void api.post('/sessions/aegis-whatsapp-session/start', {}, { headers }).catch(() => undefined)} disabled={online}>
-            {online ? 'CONNECTED' : 'START SESSION'}
+          <button type="button" className="hud-button" onClick={() => void startSession()} disabled={online || status.status === 'connecting' || status.status === 'waiting_qr'}>
+            {online ? 'CONNECTED' : status.status === 'waiting_qr' ? 'WAITING FOR SCAN' : status.status === 'connecting' ? 'STARTING…' : 'START SESSION'}
           </button>
-          {status.user && (
+          {online && status.user && (
             <button type="button" className="hud-button" onClick={() => void logout()}>
               LOG OUT
             </button>
           )}
+          {!online && activeJid && (
+            <button type="button" className="hud-button" onClick={() => setShowPairing((current) => !current)}>
+              {showPairing ? 'VIEW SAVED CHAT' : 'SHOW PAIRING QR'}
+            </button>
+          )}
         </div>
-        <p className="credential-notice">Auth material is stored only in the gateway data directory — never uploaded. Session survives gateway restarts.</p>
+        {status.historySyncStatus === 'syncing' && <p className="credential-notice">Syncing WhatsApp chat history…</p>}
+        {status.historySyncStatus === 'complete' && <p className="credential-notice">WhatsApp history sync complete. Messages are stored locally.</p>}
+        <p className="credential-notice">WhatsApp chat history is stored locally in the AEGIS database and remains after logout. Media files are not downloaded.</p>
       </HudFrame>
     </div>
   );

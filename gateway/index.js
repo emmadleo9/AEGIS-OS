@@ -50,6 +50,9 @@ function log(message) {
 }
 
 app.disable('x-powered-by');
+// Large body allowance for /api/nova/save (base64 image payloads); 16kb elsewhere would
+// reject every generated image before the route's own 20GB quota check can run.
+app.use(['/api/nova/save'], express.json({ limit: '64mb' }));
 app.use(express.json({ limit: '16kb' }));
 app.use((req, res, next) => {
   const origin = req.get('origin');

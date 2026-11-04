@@ -5,6 +5,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const QRCode = require('qrcode');
+const { getDb } = require('./memory');
 
 const {
   default: makeWASocket,
@@ -18,9 +19,101 @@ const AUTH_DIR = path.join(__dirname, '..', 'data', 'baileys_auth');
 let sock = null;
 let startingPromise = null;
 let connectionState = { status: 'offline', qr: null, user: null, lastError: null, pairingCode: null, updatedAt: new Date().toISOString() };
-let messageLog = [];
 const wsClients = new Set();
 let wsBroadcaster = null;
+
+function getWhatsAppStore() {
+  const db = getDb();
+  return {
+    upsertChat: db.prepare(`
+      INSERT INTO whatsapp_chats (jid, name, last_message, last_message_at)
+      VALUES (@jid, @name, @lastMessage, @lastMessageAt)
+      ON CONFLICT(jid) DO UPDATE SET
+        name = CASE WHEN excluded.name <> '' AND excluded.name <> excluded.jid THEN excluded.name ELSE whatsapp_chats.name END,
+        last_message = CASE
+          WHEN excluded.last_message IS NOT NULL
+            AND (whatsapp_chats.last_message_at IS NULL OR excluded.last_message_at >= whatsapp_chats.last_message_at)
+          THEN excluded.last_message ELSE whatsapp_chats.last_message END,
+        last_message_at = CASE
+          WHEN excluded.last_message_at IS NOT NULL
+            AND (whatsapp_chats.last_message_at IS NULL OR excluded.last_message_at >= whatsapp_chats.last_message_at)
+          THEN excluded.last_message_at ELSE whatsapp_chats.last_message_at END,
+        updated_at = datetime('now')
+    `),
+    upsertContact: db.prepare(`
+      INSERT INTO whatsapp_contacts (jid, name) VALUES (@jid, @name)
+      ON CONFLICT(jid) DO UPDATE SET
+        name = CASE WHEN excluded.name <> '' THEN excluded.name ELSE whatsapp_contacts.name END,
+        updated_at = datetime('now')
+    `),
+    saveMessage: db.prepare(`
+      INSERT INTO whatsapp_messages (message_id, jid, sender, from_me, text, message_type, timestamp)
+      VALUES (@messageId, @jid, @sender, @fromMe, @text, @messageType, @timestamp)
+      ON CONFLICT(jid, message_id) DO NOTHING
+    `),
+  };
+}
+
+function messageContent(message) {
+  let content = message.message ?? {};
+  while (content.ephemeralMessage?.message || content.viewOnceMessage?.message || content.viewOnceMessageV2?.message || content.documentWithCaptionMessage?.message) {
+    content = content.ephemeralMessage?.message
+      ?? content.viewOnceMessage?.message
+      ?? content.viewOnceMessageV2?.message
+      ?? content.documentWithCaptionMessage?.message;
+  }
+  const messageType = Object.keys(content)[0] ?? 'unknown';
+  const item = content[messageType] ?? {};
+  const text = content.conversation
+    ?? content.extendedTextMessage?.text
+    ?? item.caption
+    ?? item.fileName
+    ?? item.displayName
+    ?? item.name
+    ?? item.address
+    ?? '';
+  return { messageType, text: String(text) };
+}
+
+function persistChat(chat, store = getWhatsAppStore()) {
+  if (!chat?.id) return;
+  const jid = String(chat.id);
+  const timestamp = chat.lastMessageRecvTimestamp == null
+    ? null
+    : new Date(Number(chat.lastMessageRecvTimestamp) * 1000).toISOString();
+  store.upsertChat.run({
+    jid,
+    name: String(chat.name ?? chat.subject ?? chat.notify ?? chat.verifiedName ?? ''),
+    lastMessage: null,
+    lastMessageAt: timestamp,
+  });
+}
+
+function persistContact(contact, store = getWhatsAppStore()) {
+  if (!contact?.id) return;
+  store.upsertContact.run({
+    jid: String(contact.id),
+    name: String(contact.name ?? contact.notify ?? contact.verifiedName ?? contact.shortName ?? ''),
+  });
+}
+
+function persistMessage(message, store = getWhatsAppStore()) {
+  const jid = message.key?.remoteJid;
+  const messageId = message.key?.id;
+  if (!jid || !messageId || jid === 'status@broadcast') return;
+  const timestampValue = Number(message.messageTimestamp);
+  const timestamp = new Date(Number.isFinite(timestampValue) ? timestampValue * 1000 : Date.now()).toISOString();
+  const { messageType, text } = messageContent(message);
+  const sender = String(message.pushName ?? message.key.participant ?? '');
+  const fromMe = message.key.fromMe ? 1 : 0;
+  store.saveMessage.run({ messageId, jid, sender, fromMe, text, messageType, timestamp });
+  store.upsertChat.run({
+    jid,
+    name: sender && !fromMe && !jid.endsWith('@g.us') ? sender : '',
+    lastMessage: text || `[${messageType}]`,
+    lastMessageAt: timestamp,
+  });
+}
 
 function broadcast(event, payload) {
   for (const client of wsClients) {
@@ -50,10 +143,82 @@ async function startAegisWhatsApp() {
         auth: state,
         printQRInTerminal: false,
         browser: ['AEGIS WhatsApp', 'Chrome', '1.0'],
-        syncFullHistory: false,
+        syncFullHistory: true,
       });
 
       sock.ev.on('creds.update', saveCreds);
+
+      sock.ev.on('messaging-history.set', ({ chats = [], contacts = [], messages = [] }) => {
+        try {
+          const store = getWhatsAppStore();
+          const saveHistory = getDb().transaction(() => {
+            for (const chat of chats) persistChat(chat, store);
+            for (const contact of contacts) persistContact(contact, store);
+            for (const message of messages) persistMessage(message, store);
+          });
+          saveHistory();
+          setState({ historySyncStatus: 'syncing' });
+          broadcast('history', { chats: chats.length, contacts: contacts.length, messages: messages.length });
+          console.log(`[aegis-whatsapp] saved history batch: ${chats.length} chats, ${contacts.length} contacts, ${messages.length} messages`);
+        } catch (error) {
+          console.error('[aegis-whatsapp] history persistence failed:', error);
+          setState({ historySyncStatus: 'error', lastError: `Could not save WhatsApp history: ${error instanceof Error ? error.message : String(error)}` });
+        }
+      });
+
+      sock.ev.on('messaging-history.status', ({ status }) => {
+        setState({ historySyncStatus: status });
+      });
+
+      sock.ev.on('chats.upsert', (chats) => {
+        try {
+          const store = getWhatsAppStore();
+          const saveChats = getDb().transaction(() => {
+            for (const chat of chats) persistChat(chat, store);
+          });
+          saveChats();
+          broadcast('chats', { count: chats.length });
+        } catch (error) {
+          console.error('[aegis-whatsapp] chat persistence failed:', error);
+          setState({ lastError: `Could not save WhatsApp chats: ${error instanceof Error ? error.message : String(error)}` });
+        }
+      });
+
+      sock.ev.on('chats.update', (chats) => {
+        try {
+          const store = getWhatsAppStore();
+          const saveChats = getDb().transaction(() => {
+            for (const chat of chats) persistChat(chat, store);
+          });
+          saveChats();
+        } catch (error) {
+          console.error('[aegis-whatsapp] chat update persistence failed:', error);
+        }
+      });
+
+      sock.ev.on('contacts.upsert', (contacts) => {
+        try {
+          const store = getWhatsAppStore();
+          const saveContacts = getDb().transaction(() => {
+            for (const contact of contacts) persistContact(contact, store);
+          });
+          saveContacts();
+        } catch (error) {
+          console.error('[aegis-whatsapp] contact persistence failed:', error);
+        }
+      });
+
+      sock.ev.on('contacts.update', (contacts) => {
+        try {
+          const store = getWhatsAppStore();
+          const saveContacts = getDb().transaction(() => {
+            for (const contact of contacts) persistContact(contact, store);
+          });
+          saveContacts();
+        } catch (error) {
+          console.error('[aegis-whatsapp] contact update persistence failed:', error);
+        }
+      });
 
       sock.ev.on('connection.update', (update) => {
         console.log('[aegis-whatsapp] connection.update:', JSON.stringify({ connection: update.connection, qr: Boolean(update.qr) }));
@@ -65,14 +230,26 @@ async function startAegisWhatsApp() {
         }
         if (connection === 'connecting') setState({ status: 'connecting', qr: null });
         if (connection === 'open') {
-          setState({ status: 'online', qr: null, user: sock?.user ?? null, lastError: null });
+          setState({ status: 'online', qr: null, user: sock?.user ?? null, lastError: null, historySyncStatus: 'syncing' });
         }
         if (connection === 'close') {
           const code = lastDisconnect?.error?.output?.statusCode ?? lastDisconnect?.error?.code;
           const reason = DisconnectReason[code] ?? String(code ?? 'unknown');
           sock = null;
           if (code === DisconnectReason.loggedOut) {
-            setState({ status: 'offline', qr: null, user: null, lastError: `Logged out (${reason})` });
+            try {
+              fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+            } catch (error) {
+              setState({
+                status: 'error',
+                qr: null,
+                user: null,
+                lastError: `WhatsApp logged out (${reason}); could not clear the expired local session: ${error instanceof Error ? error.message : String(error)}`,
+              });
+              return;
+            }
+            setState({ status: 'reconnecting', qr: null, user: null, lastError: 'The previous WhatsApp link expired. Preparing a fresh QR code.' });
+            setTimeout(() => void startAegisWhatsApp(), 500);
           } else {
             setState({ status: 'reconnecting', qr: null, lastError: `Disconnected (${reason}) — restarting` });
             setTimeout(() => void startAegisWhatsApp().catch(() => undefined), 3000);
@@ -80,25 +257,18 @@ async function startAegisWhatsApp() {
         }
       });
 
-      sock.ev.on('messages.upsert', ({ messages }) => {
-        for (const message of messages) {
-          const key = message.key;
-          if (!key || key.remoteJid === 'status@broadcast') continue;
-          const text = message.message?.conversation
-            || message.message?.extendedTextMessage?.text
-            || message.message?.imageMessage?.caption
-            || message.message?.videoMessage?.caption
-            || '';
-          messageLog.unshift({
-            jid: key.remoteJid,
-            fromMe: Boolean(key.fromMe),
-            text,
-            pushName: message.pushName ?? '',
-            at: new Date(Number(message.messageTimestamp) * 1000).toISOString(),
+      sock.ev.on('messages.upsert', ({ messages = [] }) => {
+        try {
+          const store = getWhatsAppStore();
+          const saveMessages = getDb().transaction(() => {
+            for (const message of messages) persistMessage(message, store);
           });
+          saveMessages();
+          broadcast('messages', { jid: messages[0]?.key?.remoteJid, count: messages.length });
+        } catch (error) {
+          console.error('[aegis-whatsapp] message persistence failed:', error);
+          setState({ lastError: `Could not save WhatsApp messages: ${error instanceof Error ? error.message : String(error)}` });
         }
-        messageLog = messageLog.slice(0, 500);
-        broadcast('messages', { jid: messages[0]?.key?.remoteJid, count: messages.length });
       });
       setState({ status: 'connecting', qr: null, lastError: null });
       console.log('[aegis-whatsapp] socket wired, auth dir:', AUTH_DIR);
@@ -117,10 +287,10 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
 
   app.get('/api/whatsapp/status', (_req, res) => res.json(connectionState));
 
-  app.post('/api/whatsapp/start', (_req, res) => {
+  app.post('/api/whatsapp/start', async (_req, res) => {
     if (connectionState.status === 'online') return res.json(connectionState);
-    void startAegisWhatsApp();
-    res.json({ started: true, ...connectionState });
+    await startAegisWhatsApp();
+    res.json(connectionState);
   });
 
   app.get('/api/whatsapp/qr', (_req, res) => {
@@ -131,35 +301,79 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
     void wait.then(() => res.json({ qr: connectionState.qr, status: connectionState.status, user: connectionState.user }));
   });
 
-  app.get('/api/whatsapp/chats', async (_req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
-    const store = sock.chats ?? new Map();
-    const chats = [...store.entries()].map(([jid, chat]) => ({
-      jid,
-      name: chat?.name ?? jid.split('@')[0],
-      lastMessageAt: chat?.lastMessageRecvTimestamp ?? null,
-    }));
-    res.json({ chats, source: 'baileys-session-store' });
+  app.get('/api/whatsapp/chats', (_req, res) => {
+    try {
+      const chats = getDb().prepare(`
+        SELECT chats.jid,
+          COALESCE(NULLIF(chats.name, ''), NULLIF(contacts.name, ''),
+            CASE WHEN instr(chats.jid, '@') > 0 THEN substr(chats.jid, 1, instr(chats.jid, '@') - 1) ELSE chats.jid END) AS name,
+          chats.last_message AS lastMessage,
+          chats.last_message_at AS lastMessageAt
+        FROM whatsapp_chats AS chats
+        LEFT JOIN whatsapp_contacts AS contacts ON contacts.jid = chats.jid
+        ORDER BY COALESCE(chats.last_message_at, chats.updated_at) DESC, name COLLATE NOCASE
+        LIMIT 500
+      `).all();
+      res.json({ chats, source: 'local-sqlite', connected: connectionState.status === 'online' });
+    } catch (error) {
+      res.status(500).json({ error: `Could not load stored WhatsApp chats: ${error instanceof Error ? error.message : String(error)}` });
+    }
   });
 
   app.get('/api/whatsapp/messages/:jid', (req, res) => {
-    const { jid } = req.params;
-    res.json({ jid, messages: messageLog.filter((item) => item.jid === jid) });
+    try {
+      const limitValue = Number(req.query.limit);
+      const limit = Number.isInteger(limitValue) && limitValue > 0 ? Math.min(limitValue, 500) : 200;
+      const before = typeof req.query.before === 'string' ? req.query.before : null;
+      const beforeId = typeof req.query.beforeId === 'string' ? req.query.beforeId : null;
+      const messages = getDb().prepare(`
+        SELECT message_id AS id, jid, sender, from_me AS fromMe, text, message_type AS type, timestamp AS at, rowid
+        FROM whatsapp_messages
+        WHERE jid = ? AND (
+          ? IS NULL OR timestamp < ? OR (timestamp = ? AND rowid < (
+            SELECT rowid FROM whatsapp_messages WHERE jid = ? AND message_id = ?
+          ))
+        )
+        ORDER BY timestamp DESC, rowid DESC
+        LIMIT ?
+      `).all(String(req.params.jid), before, before, before, String(req.params.jid), beforeId, limit).reverse();
+      res.json({
+        jid: req.params.jid,
+        messages: messages.map(({ rowid, ...message }) => ({ ...message, fromMe: Boolean(message.fromMe) })),
+        hasOlder: messages.length === limit,
+      });
+    } catch (error) {
+      res.status(500).json({ error: `Could not load stored WhatsApp messages: ${error instanceof Error ? error.message : String(error)}` });
+    }
   });
 
   app.post('/api/whatsapp/send', async (req, res) => {
     if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
     const { jid, text } = req.body ?? {};
     if (!jid || !text) return res.status(400).json({ error: 'jid and text are required.' });
+    const body = String(text).slice(0, 4096);
+    let result;
     try {
-      const result = await sock.sendMessage(jid, { text: String(text).slice(0, 4096) });
-      res.json({ sent: true, id: result?.key?.id ?? null });
+      result = await sock.sendMessage(jid, { text: body });
     } catch (error) {
       res.status(502).json({ error: error instanceof Error ? error.message : String(error) });
+      return;
+    }
+    try {
+      persistMessage({
+        key: { ...result?.key, remoteJid: result?.key?.remoteJid ?? jid, fromMe: true },
+        message: { conversation: body },
+        messageTimestamp: Math.floor(Date.now() / 1000),
+      });
+      res.json({ sent: true, id: result?.key?.id ?? null });
+    } catch (error) {
+      console.error('[aegis-whatsapp] sent message could not be saved:', error);
+      res.status(500).json({ error: `Message sent, but local storage failed: ${error instanceof Error ? error.message : String(error)}` });
     }
   });
 
   app.post('/api/whatsapp/pairing-code', async (req, res) => {
+    if (!sock) await startAegisWhatsApp();
     if (!sock) return res.status(409).json({ error: 'Start a session first.' });
     const { phoneNumber } = req.body ?? {};
     const digits = String(phoneNumber ?? '').replace(/\D/g, '');
