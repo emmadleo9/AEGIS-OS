@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./console/public/aegis-official.png" alt="AEGIS-OS official shield logo" width="160" />
+<img src="./console/public/aegis-official.png" alt="AEGIS-OS official shield logo" width="240" />
 
 <img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1000&color=8AF8FF&center=true&width=600&lines=AEGIS-OS+%2F%2F+TACTICAL+COMMAND;Local-first+AI+OS;One+OS+to+control+all+devices" alt="AEGIS-OS // TACTICAL COMMAND — Local-first AI OS — One OS to control all devices" />
 
