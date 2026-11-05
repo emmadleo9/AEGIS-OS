@@ -46,6 +46,33 @@ const allowedOrigins = new Set([
   `http://localhost:${consolePort}`,
   `http://127.0.0.1:${consolePort}`,
 ]);
+// Env-configured origins (CORS_ORIGINS), so deployments like Tailscale access can be extended
+// without code changes. Bare-host entries are expanded to every origin shape for the console port.
+for (const raw of String(process.env.CORS_ORIGINS || '').split(',')) {
+  const entry = raw.trim();
+  if (!entry || entry === '*') continue;
+  allowedOrigins.add(entry);
+  try {
+    const url = new URL(entry);
+    if (!url.pathname || url.pathname === '/') {
+      allowedOrigins.add(`${url.protocol}//${url.host}`);
+      allowedOrigins.add(`${url.protocol}//${url.hostname}:${consolePort}`);
+    }
+  } catch { }
+}
+// Tailscale access (phone/browser over tailnet): accept both http and https for the machine's
+// MagicDNS name, whatever the deployment sets it to.
+for (const host of [process.env.AEGIS_TAILSCALE_HOST, os.hostname().toLowerCase()]) {
+  if (!host) continue;
+  for (const candidate of [`${host}.ts.net`, host]) {
+    if (candidate.includes('.')) {
+      allowedOrigins.add(`https://${candidate}`);
+      allowedOrigins.add(`http://${candidate}`);
+      allowedOrigins.add(`https://${candidate}:${consolePort}`);
+      allowedOrigins.add(`http://${candidate}:${consolePort}`);
+    }
+  }
+}
 const logs = [];
 
 function log(message) {
