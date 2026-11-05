@@ -1,5 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $runtime = Join-Path $env:LOCALAPPDATA 'AEGIS-OS\runtime'
+
+# --- Stop launcher-owned processes -------------------------------------------
 $specifications = @(
     @{ Name = 'singularity'; Entry = 'start-singularity.js' },
     @{ Name = 'ollama'; Entry = 'ollama serve' },
@@ -47,6 +49,7 @@ foreach ($specification in $specifications) {
     Write-Host "[AEGIS-OS] Stopped launcher-owned $($specification.Name) process tree."
 }
 
+# --- Clear stale master startup lock -----------------------------------------
 $lockPath = Join-Path $runtime 'master-start-v04.lock'
 if (Test-Path -LiteralPath $lockPath) {
     $lockOwner = 0
@@ -56,3 +59,5 @@ if (Test-Path -LiteralPath $lockPath) {
         Write-Host '[AEGIS-OS] Cleared stale master startup lock.'
     }
 }
+
+Write-Host '[AEGIS-OS] Stop complete.'

@@ -37,6 +37,7 @@ const children = new Set();
 let stopping = false;
 let coordinatorLock;
 const coordinatorLockFile = path.join(runtimeDir, 'master-start-v04.lock');
+const coordinatorPidFile = path.join(runtimeDir, 'singularity.pid');
 const providerSecretEnvKeys = [
   'NV_API_KEY',
   'NVIDIA_API_KEY',
@@ -53,7 +54,6 @@ const providerSecretEnvKeys = [
 ];
 
 fs.mkdirSync(runtimeDir, { recursive: true });
-const coordinatorPidFile = path.join(runtimeDir, 'singularity.pid');
 
 function isProcessRunning(pid) {
   if (!Number.isSafeInteger(pid) || pid <= 0) return false;
