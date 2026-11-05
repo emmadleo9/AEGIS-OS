@@ -168,14 +168,14 @@ async function startOllamaWhenAvailable() {
   try {
     const response = await fetch(ollamaHealthUrl, { signal: AbortSignal.timeout(1500) });
     if (response.ok) {
-      console.log(`[AGUS] Local AI service is already available at ${new URL(ollamaHealthUrl).origin}.`);
+      console.log(`[AEGIS-OS] Local AI service is already available at ${new URL(ollamaHealthUrl).origin}.`);
       return;
     }
   } catch { }
 
   const ollamaUrl = new URL(ollamaBaseUrl);
   if (!['localhost', '127.0.0.1', '::1'].includes(ollamaUrl.hostname)) {
-    console.warn(`[AGUS] Optional Ollama service is unavailable at ${ollamaUrl.origin}; continuing without local AI.`);
+    console.warn(`[AEGIS-OS] Optional Ollama service is unavailable at ${ollamaUrl.origin}; continuing without local AI.`);
     return;
   }
 
@@ -183,15 +183,15 @@ async function startOllamaWhenAvailable() {
   try {
     execFileSync(locator, ['ollama'], { stdio: 'ignore' });
   } catch {
-    console.warn('[AGUS] Ollama is not installed or not on PATH; continuing without local AI.');
+    console.warn('[AEGIS-OS] Ollama is not installed or not on PATH; continuing without local AI.');
     return;
   }
 
   const host = `${ollamaUrl.hostname}:${ollamaUrl.port || '11434'}`;
   const ollama = startChild('Ollama', 'ollama', ['serve'], root, { ...process.env, OLLAMA_HOST: host });
-  console.log('[AGUS] Starting Ollama local AI service...');
+  console.log('[AEGIS-OS] Starting Ollama local AI service...');
   await waitForEndpoint(ollamaHealthUrl, 'Ollama local AI service', ollama, 60_000);
-  console.log(`[AGUS] Local AI service is ready at ${ollamaUrl.origin}.`);
+  console.log(`[AEGIS-OS] Local AI service is ready at ${ollamaUrl.origin}.`);
 }
 
 function stopChildren() {
@@ -207,7 +207,7 @@ function removePidFile(pidFile, pid) {
   try {
     if (Number(fs.readFileSync(pidFile, 'utf8')) === pid) fs.unlinkSync(pidFile);
   } catch (error) {
-    if (error.code !== 'ENOENT') console.error(`[AGUS] Could not clear ${pidFile}: ${error.message}`);
+    if (error.code !== 'ENOENT') console.error(`[AEGIS-OS] Could not clear ${pidFile}: ${error.message}`);
   }
 }
 
@@ -232,7 +232,7 @@ function startChild(label, executable, args, cwd, env = process.env) {
   }
   child.once('error', (error) => {
     removePidFile(pidFile, child.pid);
-    console.error(`[AGUS] Could not start ${label}: ${error.message}`);
+    console.error(`[AEGIS-OS] Could not start ${label}: ${error.message}`);
     process.exitCode = 1;
     stopChildren();
   });
@@ -240,7 +240,7 @@ function startChild(label, executable, args, cwd, env = process.env) {
     removePidFile(pidFile, child.pid);
     children.delete(child);
     if (stopping) return;
-    console.error(`[AGUS] ${label} exited${signal ? ` from signal ${signal}` : ` with code ${code}`}.`);
+    console.error(`[AEGIS-OS] ${label} exited${signal ? ` from signal ${signal}` : ` with code ${code}`}.`);
     process.exitCode = code ?? 1;
     stopChildren();
   });
@@ -256,8 +256,8 @@ async function main() {
   if (existingCoordinator !== process.pid && isProcessRunning(existingCoordinator)) {
     if (await getHealth(gatewayHealthUrl, '/api/whatsapp/status')
       && await getHealth(consoleHealthUrl)) {
-      console.log(`[AGUS] AEGIS is already running (launcher PID ${existingCoordinator}).`);
-      console.log(`[AGUS] Console: http://localhost:${consolePort} | Gateway: http://127.0.0.1:${gatewayPort}`);
+      console.log(`[AEGIS-OS] AEGIS is already running (launcher PID ${existingCoordinator}).`);
+      console.log(`[AEGIS-OS] Console: http://localhost:${consolePort} | Gateway: http://127.0.0.1:${gatewayPort}`);
       return;
     }
     throw new Error(`Launcher PID ${existingCoordinator} exists but the full AEGIS stack is not healthy. Use STOP-AEGIS.bat before restarting.`);
@@ -302,10 +302,10 @@ async function main() {
     await waitForHealth(consoleHealthUrl, 'Console proxy', consoleServer);
   }
 
-  console.log('[AGUS] AEGIS-OS v0.4 startup complete.');
-  console.log(`[AGUS] Console: http://localhost:${consolePort}`);
-  console.log(`[AGUS] Local gateway: http://127.0.0.1:${gatewayPort} (proxied via /api)`);
-  console.log('[AGUS] WhatsApp, World View feeds, and AI routes are ready through the local gateway.');
+  console.log('[AEGIS-OS] AEGIS-OS v0.4 startup complete.');
+  console.log(`[AEGIS-OS] Console: http://localhost:${consolePort}`);
+  console.log(`[AEGIS-OS] Local gateway: http://127.0.0.1:${gatewayPort} (proxied via /api)`);
+  console.log('[AEGIS-OS] WhatsApp, World View feeds, and AI routes are ready through the local gateway.');
 
   process.once('SIGINT', () => {
     process.exitCode = 130;
@@ -315,7 +315,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`[AGUS] Startup failed: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(`[AEGIS-OS] Startup failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
   stopChildren();
 });

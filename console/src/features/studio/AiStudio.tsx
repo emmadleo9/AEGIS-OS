@@ -541,8 +541,8 @@ export function AiStudio() {
           </HudFrame>
         )}
         <HudFrame title="SYSTEM STORAGE" className="studio-storage-panel">
-          <strong>20 GB Allocated - For Complete AGUS System (Not only AI)</strong>
-          <span id="quota-bar" className="quota-bar" title="20 GB Allocated - For Complete AGUS System (Not only AI)" role="progressbar" aria-valuemin={0} aria-valuemax={100}>{quotaText}</span>
+          <strong>20 GB Allocated - For Complete AEGIS-OS System (Not only AI)</strong>
+          <span id="quota-bar" className="quota-bar" title="20 GB Allocated - For Complete AEGIS-OS System (Not only AI)" role="progressbar" aria-valuemin={0} aria-valuemax={100}>{quotaText}</span>
         </HudFrame>
           </div>
         </details>

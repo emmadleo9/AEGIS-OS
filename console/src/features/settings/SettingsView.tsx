@@ -181,23 +181,23 @@ export function SettingsView() {
         </div>
       </HudFrame>
 
-      <HudFrame title="20 GB ALLOCATED - FOR COMPLETE AGUS SYSTEM (NOT ONLY AI)">
+      <HudFrame title="20 GB ALLOCATED - FOR COMPLETE AEGIS-OS SYSTEM (NOT ONLY AI)">
         <p className="credential-notice">
-          20 GB Allocated - For Complete AGUS System (Not only AI). Chats, logs, and memory use quota-checked IndexedDB and are mirrored to the selected folder when browser folder access is available. Choose the folder named <strong>AEGIS-OS-DATA</strong> on D:. The browser cannot confirm a drive letter or expose the full path.
+          20 GB Allocated - For Complete AEGIS-OS System (Not only AI). Chats, logs, and memory use quota-checked IndexedDB and are mirrored to the selected folder when browser folder access is available. Choose the folder named <strong>AEGIS-OS-DATA</strong> on D:. The browser cannot confirm a drive letter or expose the full path.
         </p>
         <div className="storage-status-grid">
           <div className="settings-key-head">
             <span className={`status-dot${storageStatus.directorySelected ? '' : ' status-dot-offline'}`} />
             <strong>{storageStatus.directoryStatus}</strong>
           </div>
-          <div id="quota-bar" className="quota-bar" role="progressbar" aria-label="20 GB Allocated - For Complete AGUS System (Not only AI)" aria-valuemin={0} aria-valuemax={100}>{quotaText}</div>
+          <div id="quota-bar" className="quota-bar" role="progressbar" aria-label="20 GB Allocated - For Complete AEGIS-OS System (Not only AI)" aria-valuemin={0} aria-valuemax={100}>{quotaText}</div>
           <small className="settings-key-scope">
             {storageStatus.persistentStorageGranted ? 'Browser durable storage granted' : 'Browser durable storage not granted'}
           </small>
           {storageStatus.warnings.map((warning) => <p className="inline-status" role="status" key={warning}>{warning}</p>)}
           <div className="storage-actions">
             <button type="button" className="hud-button" disabled={storageBusy} onClick={() => void selectDataFolder()}>
-              SELECT D DRIVE FOLDER (20 GB FOR COMPLETE AGUS SYSTEM)
+              SELECT D DRIVE FOLDER (20 GB FOR COMPLETE AEGIS-OS SYSTEM)
             </button>
             <button type="button" className="hud-button" disabled={storageBusy} onClick={() => void exportMemory()}>
               EXPORT ALL MEMORY JSON
