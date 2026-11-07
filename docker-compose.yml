@@ -1,4 +1,4 @@
-# AEGIS-OS — Monorepo Docker Compose
+# Krynara-OS — Monorepo Docker Compose
 # WhatsApp -> OpenWA (gateway:2785) -> Webhook -> OpenJarvis (core:8000) -> LLM -> OpenWA SDK reply -> Console
 #
 # Hardware target: i7-7500U, 16GB RAM, 2GB GPU -> tiny models (qwen2.5:3b), SQLite for OpenWA
@@ -11,7 +11,7 @@ services:
     build:
       context: ./core
       dockerfile: Dockerfile
-    container_name: aegis-core
+    container_name: krynara-core
     restart: unless-stopped
     ports:
       - "127.0.0.1:8000:8000"
@@ -21,11 +21,11 @@ services:
       - MODEL=qwen2.5:3b
       - OPENJARVIS_MODEL=qwen2.5:3b
       - OLLAMA_HOST=http://ollama:11434
-      - WHATSAPP_VERIFY_TOKEN=aegis_verify_token
-      - WHATSAPP_APP_SECRET=aegis_app_secret
-      - AEGIS_GATEWAY_URL=http://gateway:2785
-      - AEGIS_API_KEY=aegis_master_key
-      - AEGIS_SESSION_ID=aegis-whatsapp-session
+      - WHATSAPP_VERIFY_TOKEN=krynara_verify_token
+      - WHATSAPP_APP_SECRET=krynara_app_secret
+      - KRYNARA_GATEWAY_URL=http://gateway:2785
+      - KRYNARA_API_KEY=krynara_master_key
+      - KRYNARA_SESSION_ID=krynara-whatsapp-session
       - OPENJARVIS_CORS_ORIGINS=http://console:3000,http://localhost:3000
       - LOG_LEVEL=info
     volumes:
@@ -34,14 +34,14 @@ services:
       ollama:
         condition: service_healthy
     networks:
-      - aegis
+      - krynara
 
   # ===== GATEWAY: OpenWA =====
   gateway:
     build:
       context: ./gateway
       dockerfile: Dockerfile
-    container_name: aegis-gateway
+    container_name: krynara-gateway
     restart: unless-stopped
     stop_grace_period: 75s
     ports:
@@ -59,7 +59,7 @@ services:
       - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu
       - WEBHOOK_URL=http://core:8000/webhooks/whatsapp
       - SSRF_ALLOWED_HOSTS=core
-      - API_MASTER_KEY=aegis_master_key
+      - API_MASTER_KEY=krynara_master_key
       - CORS_ORIGINS=http://console:3000,http://localhost:3000
       - OPENWA_MEM_LIMIT=2g
       - OPENWA_PIDS_LIMIT=2048
@@ -72,14 +72,14 @@ services:
     depends_on:
       - core
     networks:
-      - aegis
+      - krynara
 
-  # ===== CONSOLE: AEGIS (rebranded open-bsp-ui) =====
+  # ===== CONSOLE: KRYNARA (rebranded open-bsp-ui) =====
   console:
     build:
       context: ./console
       dockerfile: Dockerfile
-    container_name: aegis-console
+    container_name: krynara-console
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:3000"
@@ -88,18 +88,18 @@ services:
     environment:
       - VITE_GATEWAY_URL=http://gateway:2785
       - VITE_BRAIN_URL=http://core:8000
-      - VITE_APP_NAME=AEGIS
+      - VITE_APP_NAME=KRYNARA
       - NODE_ENV=production
     depends_on:
       - gateway
       - core
     networks:
-      - aegis
+      - krynara
 
   # ===== OLLAMA: Local LLM (qwen2.5:3b) =====
   ollama:
     image: ollama/ollama:latest
-    container_name: aegis-ollama
+    container_name: krynara-ollama
     restart: unless-stopped
     expose:
       - "11434"
@@ -108,7 +108,7 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
     networks:
-      - aegis
+      - krynara
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 15s
@@ -119,23 +119,23 @@ services:
   # ===== DB: Postgres 15 for OpenBSP triggers =====
   db:
     image: postgres:15-alpine
-    container_name: aegis-db
+    container_name: krynara-db
     restart: unless-stopped
     expose:
       - "5432"
     environment:
-      - POSTGRES_USER=aegis
-      - POSTGRES_PASSWORD=aegis_password
-      - POSTGRES_DB=aegis_console
+      - POSTGRES_USER=krynara
+      - POSTGRES_PASSWORD=krynara_password
+      - POSTGRES_DB=krynara_console
     volumes:
       - ./data/db:/var/lib/postgresql/data
     networks:
-      - aegis
+      - krynara
 
   # ===== Redis (if needed by OpenWA / rate limits) =====
   redis:
     image: redis:7-alpine
-    container_name: aegis-redis
+    container_name: krynara-redis
     restart: unless-stopped
     expose:
       - "6379"
@@ -143,7 +143,7 @@ services:
     volumes:
       - ./data/redis:/data
     networks:
-      - aegis
+      - krynara
 
 volumes:
   core-data:
@@ -153,6 +153,6 @@ volumes:
   redis-data:
 
 networks:
-  aegis:
-    name: aegis-network
+  krynara:
+    name: krynara-network
     driver: bridge

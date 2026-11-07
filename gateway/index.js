@@ -22,7 +22,7 @@ for (const envFile of [
 
 const { createServer } = require('node:http');
 const memoryDb = require('./routes/memory');
-const whatsapp = require('./routes/aegis-whatsapp');
+const whatsapp = require('./routes/krynara-whatsapp');
 const satellitesRoute = require('./routes/satellites');
 const gdeltSearch = require('./routes/gdelt-search');
 const firesRoute = require('./routes/fires');
@@ -40,7 +40,7 @@ const app = express();
 const server = createServer(app);
 server.requestTimeout = 12 * 60 * 60 * 1000;
 server.timeout = 0;
-const port = Number(process.env.GATEWAY_PORT || process.env.AEGIS_PORT || 2785);
+const port = Number(process.env.GATEWAY_PORT || process.env.KRYNARA_PORT || 2785);
 const consolePort = Number(process.env.CONSOLE_PORT || 5173);
 const allowedOrigins = new Set([
   `http://localhost:${consolePort}`,
@@ -62,7 +62,7 @@ for (const raw of String(process.env.CORS_ORIGINS || '').split(',')) {
 }
 // Tailscale access (phone/browser over tailnet): accept both http and https for the machine's
 // MagicDNS name, whatever the deployment sets it to.
-for (const host of [process.env.AEGIS_TAILSCALE_HOST, os.hostname().toLowerCase()]) {
+for (const host of [process.env.KRYNARA_TAILSCALE_HOST, os.hostname().toLowerCase()]) {
   if (!host) continue;
   for (const candidate of [`${host}.ts.net`, host]) {
     if (candidate.includes('.')) {
@@ -99,7 +99,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const healthResponse = (_req, res) => res.json({ status: 'online', service: 'aegis-local-gateway', timestamp: new Date().toISOString() });
+const healthResponse = (_req, res) => res.json({ status: 'online', service: 'krynara-local-gateway', timestamp: new Date().toISOString() });
 app.get(['/api/health', '/gateway/health'], healthResponse);
 
 memoryDb.registerMemoryRoutes(app);
@@ -115,7 +115,7 @@ keysRoute.register(app);
 localAiRoute.register(app, novaRoute.IMAGE_MODELS);
 onlineAiRoute.register(app);
 novaRoute.register(app);
-whatsapp.registerAegisWhatsApp(app);
+whatsapp.registerKrynaraWhatsApp(app);
 
 app.get('/api/weather', async (req, res) => {
   const latitude = Number(req.query.latitude);
@@ -361,14 +361,14 @@ app.post('/api/restart', (req, res) => {
   const address = req.socket.remoteAddress || '';
   const isLoopback = address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
   if (!isLoopback || (origin && !allowedOrigins.has(origin))) {
-    return res.status(403).json({ error: 'Restart is available only to the local AEGIS console.' });
+    return res.status(403).json({ error: 'Restart is available only to the local KRYNARA console.' });
   }
   log('local gateway restart requested');
   res.status(202).json({ message: 'Gateway restarting; it will be available again shortly.' });
   setTimeout(() => {
     const child = spawn(process.execPath, [__filename], {
       cwd: process.cwd(),
-      env: { ...process.env, AEGIS_RESTART_DELAY_MS: '1000' },
+      env: { ...process.env, KRYNARA_RESTART_DELAY_MS: '1000' },
       detached: true,
       stdio: 'ignore',
       windowsHide: true,
@@ -386,11 +386,11 @@ app.use((error, _req, res, _next) => {
 });
 
 let serverRef;
-const restartDelay = Number(process.env.AEGIS_RESTART_DELAY_MS || 0);
+const restartDelay = Number(process.env.KRYNARA_RESTART_DELAY_MS || 0);
 const startGateway = () => {
   log(`API Keys loaded: nvidia ${Boolean(keysRoute.getApiKey('NV_API_KEY'))}, openrouter ${Boolean(keysRoute.getApiKey('OPENROUTER_API_KEY'))}, tavily ${Boolean(keysRoute.getApiKey('TAVILY_API_KEY'))}`);
-  serverRef = server.listen(port, '127.0.0.1', () => log(`AEGIS local gateway listening on http://127.0.0.1:${port}`));
-  whatsapp.attachAegisWhatsAppWs(serverRef);
+  serverRef = server.listen(port, '127.0.0.1', () => log(`KRYNARA local gateway listening on http://127.0.0.1:${port}`));
+  whatsapp.attachKrynaraWhatsAppWs(serverRef);
   serverRef.on('error', (error) => {
     log(`gateway startup failed: ${error.message}`);
     process.exitCode = 1;

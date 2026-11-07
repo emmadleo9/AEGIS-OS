@@ -1,10 +1,10 @@
 export type ModelProvider = 'nvidia' | 'groq' | 'openrouter' | 'tavily';
 
 const STORAGE_KEYS: Record<ModelProvider, string> = {
-  nvidia: 'aegis_nvidia_key',
-  groq: 'aegis_groq_key',
-  openrouter: 'aegis_openrouter_key',
-  tavily: 'aegis_tavily_key',
+  nvidia: 'krynara_nvidia_key',
+  groq: 'krynara_groq_key',
+  openrouter: 'krynara_openrouter_key',
+  tavily: 'krynara_tavily_key',
 };
 
 export function getKey(provider: ModelProvider): string | null {

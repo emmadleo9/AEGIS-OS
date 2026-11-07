@@ -74,7 +74,7 @@ export function TaskControlCenter() {
   };
 
   return (
-    <HudFrame title="AEGIS TASK CONTROL CENTER">
+    <HudFrame title="KRYNARA TASK CONTROL CENTER">
       <div className="task-toolbar">
         {(['LAPTOP', 'PHONE'] as const).map((item) => (
           <button type="button" key={item} className={tab === item ? 'device-tab active' : 'device-tab'} onClick={() => setTab(item)}>{item}</button>

@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="./console/public/aegis-official.png" alt="AEGIS-OS official shield logo" width="240" />
+<img src="./console/public/krynara-official.png" alt="Krynara-OS official shield logo" width="240" />
 
-<img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1000&color=8AF8FF&center=true&width=600&lines=AEGIS-OS+%2F%2F+TACTICAL+COMMAND;Local-first+AI+OS;One+OS+to+control+all+devices" alt="AEGIS-OS // TACTICAL COMMAND — Local-first AI OS — One OS to control all devices" />
+<img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1000&color=8AF8FF&center=true&width=600&lines=Krynara-OS+%2F%2F+TACTICAL+COMMAND;Local-first+AI+OS;One+OS+to+control+all+devices" alt="Krynara-OS // TACTICAL COMMAND — Local-first AI OS — One OS to control all devices" />
 
-<h1>AEGIS-OS</h1>
+<h1>Krynara-OS</h1>
 
 <p><b>One OS to control WhatsApp, Instagram, Telegram, Discord — all devices.</b></p>
 <p><i>Local-first AI operating system with an obsidian glass shield core.</i></p>
@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/license-MIT-00C853?style=for-the-badge" alt="License: MIT" />
   <img src="https://img.shields.io/badge/core-OpenJarvis-2962FF?style=for-the-badge" alt="Core: OpenJarvis" />
   <img src="https://img.shields.io/badge/gateway-OpenWA-546E7A?style=for-the-badge" alt="Gateway: OpenWA" />
-  <img src="https://img.shields.io/badge/console-AEGIS-212121?style=for-the-badge" alt="Console: AEGIS" />
+  <img src="https://img.shields.io/badge/console-KRYNARA-212121?style=for-the-badge" alt="Console: KRYNARA" />
   <img src="https://img.shields.io/badge/model-qwen2.5:3b-AA00FF?style=for-the-badge" alt="Model: qwen2.5:3b" />
   <img src="https://img.shields.io/badge/hud-v4.0-8AF8FF?style=for-the-badge" alt="HUD: v4.0" />
   <img src="https://img.shields.io/badge/offline--first-212121?style=for-the-badge" alt="Offline-first" />
@@ -24,24 +24,24 @@
 
 ---
 
-## ⚡ What is AEGIS-OS?
+## ⚡ What is Krynara-OS?
 
-AEGIS-OS is a **local-first AI operating system** that turns a modest machine into a tactical command console: messaging across WhatsApp, Telegram, Instagram and Discord, a live OSINT world map, and a self-hosted AI core — all running on your own hardware, no cloud required.
+Krynara-OS is a **local-first AI operating system** that turns a modest machine into a tactical command console: messaging across WhatsApp, Telegram, Instagram and Discord, a live OSINT world map, and a self-hosted AI core — all running on your own hardware, no cloud required.
 
 | ⚡ Feature | 🛡️ Capability |
 |-----------|---------------|
 | 🧠 **Core (OpenJarvis)** | Local AI framework with 5 primitives — Intelligence, Engine, Agents, Tools, Memory. Serves a local LLM (`qwen2.5:3b` via Ollama). |
 | 📡 **Gateway (OpenWA)** | WhatsApp API gateway — REST API + dashboard, multi-session, SQLite mode, QR pairing, local telemetry and feed proxies. |
-| 🖥️ **Console (AEGIS)** | Dark OLED HUD (`#050A0E` / cyan `#8AF8FF`), glassmasonry panels, animated tactical UI. System Monitor v4.0. |
+| 🖥️ **Console (KRYNARA)** | Dark OLED HUD (`#050A0E` / cyan `#8AF8FF`), glassmasonry panels, animated tactical UI. System Monitor v4.0. |
 | 🌍 **World View** | Searchable 2D / 3D / satellite map with saved layers, GeoJSON drawing/export, OSRM driving directions, terrain relief, public GTFS-RT transit in supported regions, Open-Meteo wind vectors, NOAA satellite cloud and water-vapor imagery, RainViewer radar frames, solar day/night shading, 3D buildings, and live ADS-B, USGS, satellite, NASA fire, GDELT, weather and NOAA weather-alert overlays. |
-| 💬 **Social Hub** | **AEGIS WhatsApp** embedded — scan a QR, chat in the HUD. Plus Telegram / Instagram / Discord connectors. |
+| 💬 **Social Hub** | **KRYNARA WhatsApp** embedded — scan a QR, chat in the HUD. Plus Telegram / Instagram / Discord connectors. |
 | 🗞️ **News & Conflict** | GDELT global events with country search, recommendations and a live mini-map. |
 | 🔋 **Memory** | Persistent everywhere — IndexedDB in the console, SQLite in the gateway. Sessions survive restarts. |
 | ✈️ **Offline-first** | Feeds degrade gracefully; the console keeps running without internet. |
 
-### AEGIS WhatsApp
+### KRYNARA WhatsApp
 
-The WhatsApp panel uses the linked WhatsApp session and local AEGIS SQLite/media storage. It supports chat and message search, direct/group/channel filters, text replies, forwarding, reactions and deletion, attachment sending and downloads, group creation, typing indicators, and WhatsApp voice/video call links. Uploads are streamed to disk and support files up to 2 GB.
+The WhatsApp panel uses the linked WhatsApp session and local KRYNARA SQLite/media storage. It supports chat and message search, direct/group/channel filters, text replies, forwarding, reactions and deletion, attachment sending and downloads, group creation, typing indicators, and WhatsApp voice/video call links. Uploads are streamed to disk and support files up to 2 GB.
 
 Direct WhatsApp voice/video calling and Status-story creation are not exposed by the current linked-device adapter; call links can be generated and shared instead. Availability of synced history and media depends on what WhatsApp provides to the linked session.
 
@@ -55,7 +55,7 @@ AI Studio keeps its local Ollama models available and adds optional NVIDIA NIM, 
 
 ```mermaid
 flowchart LR
-    U[User Devices] --> C[Console / AEGIS HUD]
+    U[User Devices] --> C[Console / KRYNARA HUD]
     C --> G[Gateway / OpenWA]
     C --> K[Core / OpenJarvis]
     G --> WA[WhatsApp]
@@ -89,13 +89,13 @@ flowchart LR
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/emmadleo9/AEGIS-OS.git
-cd AEGIS-OS
+git clone https://github.com/emmadleo9/Krynara-OS.git
+cd Krynara-OS
 npm run start        # one coordinator boots gateway (2785) + console (5173)
-# Windows: run "MASTER START AEGIS-OS V.04.bat"
+# Windows: run "MASTER START Krynara-OS V.04.bat"
 ```
 
-Then open **http://localhost:5173** — the AEGIS HUD. The master launcher checks Node.js and dependencies, reuses Ollama if running (or starts it when installed), starts the gateway first, waits for its WhatsApp/API health checks, then starts the Vite console and verifies its gateway proxy. Repeated starts reuse the existing healthy stack rather than creating duplicate servers. Use [STOP-AEGIS.bat](./STOP-AEGIS.bat) to stop launcher-owned processes. The gateway stays on its internal port and the Vite server proxies `/api`, `/gateway`, and `/v1` through the console origin. Pair AEGIS WhatsApp from the Social Hub by scanning the QR with your phone.
+Then open **http://localhost:5173** — the KRYNARA HUD. The master launcher checks Node.js and dependencies, reuses Ollama if running (or starts it when installed), starts the gateway first, waits for its WhatsApp/API health checks, then starts the Vite console and verifies its gateway proxy. Repeated starts reuse the existing healthy stack rather than creating duplicate servers. Use [STOP-KRYNARA.bat](./STOP-KRYNARA.bat) to stop launcher-owned processes. The gateway stays on its internal port and the Vite server proxies `/api`, `/gateway`, and `/v1` through the console origin. Pair KRYNARA WhatsApp from the Social Hub by scanning the QR with your phone.
 
 The Windows master launcher and `npm run start` use the same local gateway + console stack. Do not start the Docker Compose stack at the same time: it publishes conflicting gateway/console ports and is a separate deployment configuration.
 
@@ -104,17 +104,17 @@ The Windows master launcher and `npm run start` use the same local gateway + con
 ## 📁 Repo Layout
 
 ```
-AEGIS-OS/
+Krynara-OS/
 ├── /core       OpenJarvis — local-first AI core
-├── /gateway     OpenWA + AEGIS feeds — local API gateway
-├── /console     AEGIS — dark OLED HUD console
+├── /gateway     OpenWA + KRYNARA feeds — local API gateway
+├── /console     KRYNARA — dark OLED HUD console
 ├── /_ref_map    OSIRIS reference — map and public-feed patterns (not runtime)
 ├── /_refs       Vendored open-source references (jarvis, openwa, bspui, map)
 ├── /scripts     Startup and utility scripts
 └── README.md
 ```
 
-Console routes (`/` Dashboard, `/world` World View, `/weather` Weather Intel, `/feeds` News & Conflict, `/social` Social Hub, `/whatsapp` AEGIS WhatsApp, `/scopes` Scopes & Radars, `/devices` My Devices, `/time` World Clock, `/ai-studio` AI Studio, `/settings` Settings, `/diagnostics` Diagnostics).
+Console routes (`/` Dashboard, `/world` World View, `/weather` Weather Intel, `/feeds` News & Conflict, `/social` Social Hub, `/whatsapp` KRYNARA WhatsApp, `/scopes` Scopes & Radars, `/devices` My Devices, `/time` World Clock, `/ai-studio` AI Studio, `/settings` Settings, `/diagnostics` Diagnostics).
 
 ---
 
@@ -129,6 +129,6 @@ Built with open-source. See CREDITS.md for licenses.
 ---
 
 <div align="center">
-<i>AEGIS-OS · obsidian glass shield core · status: ONLINE</i><br/>
-<img src="https://img.shields.io/badge/AEGIS-TACTICAL%20COMMAND-8AF8FF?style=for-the-badge" alt="AEGIS Tactical Command" />
+<i>Krynara-OS · obsidian glass shield core · status: ONLINE</i><br/>
+<img src="https://img.shields.io/badge/KRYNARA-TACTICAL%20COMMAND-8AF8FF?style=for-the-badge" alt="KRYNARA Tactical Command" />
 </div>

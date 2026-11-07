@@ -41,10 +41,10 @@ export function WhatsAppCenter() {
     setLoading(true);
     setMessage(null);
     try {
-      const res = await api.post('/api/sessions', { name: 'AEGIS Session' });
+      const res = await api.post('/api/sessions', { name: 'KRYNARA Session' });
       if (res.data?.qrCode) {
         setQrCode(res.data.qrCode);
-        setSession({ id: res.data.id, name: 'AEGIS Session', status: 'connecting' });
+        setSession({ id: res.data.id, name: 'KRYNARA Session', status: 'connecting' });
         pollForConnection(res.data.id);
       }
       setMessage('QR generated - scan with WhatsApp');
@@ -280,7 +280,7 @@ export function WhatsAppCenter() {
           }}>
             <div style={{ display: 'flex', gap: '12px', color: 'var(--text-dim)' }}>
               <span>[SYSTEM]</span>
-              <span>AEGIS-OS Console initialized</span>
+              <span>Krynara-OS Console initialized</span>
             </div>
             <div style={{ display: 'flex', gap: '12px', color: 'var(--green-dot)' }}>
               <span>[WHATSAPP]</span>
@@ -292,7 +292,7 @@ export function WhatsAppCenter() {
             </div>
             <div style={{ display: 'flex', gap: '12px', color: 'var(--text-dim)' }}>
               <span>[HUD]</span>
-              <span>Theme loaded: aegis-hud.css v1.0</span>
+              <span>Theme loaded: krynara-hud.css v1.0</span>
             </div>
           </div>
         </HudFrame>

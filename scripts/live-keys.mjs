@@ -8,7 +8,7 @@ const require2 = createRequire('c:/Users/User/.vscode/extensions/danielsanmedium
 const { chromium } = require2('patchright');
 
 const mode = process.argv[2] ?? 'status';
-const STORE = 'D:/AEGIS-OS-STORAGE/config/harvested-keys.json';
+const STORE = 'D:/Krynara-OS-STORAGE/config/harvested-keys.json';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const browser = await chromium.connectOverCDP('http://127.0.0.1:9222');
@@ -24,7 +24,7 @@ async function goto(url, { wait = 6000 } = {}) {
 }
 const emails = () => page.evaluate(() => [...new Set((document.body?.innerText || '').match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) ?? [])]).catch(() => []);
 const load = () => existsSync(STORE) ? JSON.parse(readFileSync(STORE, 'utf8')) : {};
-const save = (patch) => { const data = { ...load(), ...patch }; mkdirSync('D:/AEGIS-OS-STORAGE/config', { recursive: true }); writeFileSync(STORE, JSON.stringify(data, null, 2)); };
+const save = (patch) => { const data = { ...load(), ...patch }; mkdirSync('D:/Krynara-OS-STORAGE/config', { recursive: true }); writeFileSync(STORE, JSON.stringify(data, null, 2)); };
 
 if (mode === 'status') {
   console.log('page:', page.url());

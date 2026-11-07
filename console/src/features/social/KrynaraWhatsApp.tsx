@@ -98,7 +98,7 @@ function renderMedia(
   );
 }
 
-export function AegisWhatsApp() {
+export function KrynaraWhatsApp() {
   const [status, setStatus] = useState<WaStatus>({ status: 'offline', qr: null, user: null, lastError: null, pairingCode: null });
   const [chats, setChats] = useState<ChatEntry[]>([]);
   const [activeJid, setActiveJid] = useState('');
@@ -393,7 +393,7 @@ export function AegisWhatsApp() {
   const deleteMessage = async (message: ChatMessage, scope: 'local' | 'everyone') => {
     const confirmation = scope === 'everyone'
       ? 'Delete this message for everyone? WhatsApp may restrict this by message age.'
-      : 'Delete this message from the AEGIS local archive only?';
+      : 'Delete this message from the KRYNARA local archive only?';
     if (!window.confirm(confirmation)) return;
     try {
       await api.post('/whatsapp/delete', { jid: activeJid, messageId: message.id, scope });
@@ -472,7 +472,7 @@ export function AegisWhatsApp() {
 
   return (
     <div className="social-workspace wa-page">
-      <HudFrame title="AEGIS WHATSAPP // CHATS" className="social-chat-list">
+      <HudFrame title="KRYNARA WHATSAPP // CHATS" className="social-chat-list">
         <div className="wa-status">
           <span className={`status-dot${online ? ' online' : ''}`} />
           {STATUS_LABEL[status.status]}
@@ -510,11 +510,11 @@ export function AegisWhatsApp() {
             </button>
           ))}
           {online && visibleChats.length === 0 && <p className="inline-status">No chats match this filter.</p>}
-          {!online && <p className="inline-status">Pair AEGIS WhatsApp to see your chats.</p>}
+          {!online && <p className="inline-status">Pair KRYNARA WhatsApp to see your chats.</p>}
         </div>
       </HudFrame>
 
-      <HudFrame title={activeJid ? formatJid(activeJid) : 'AEGIS WHATSAPP'} className="social-chat wa-center">
+      <HudFrame title={activeJid ? formatJid(activeJid) : 'KRYNARA WHATSAPP'} className="social-chat wa-center">
         {!online && (!activeJid || showPairing) && (
           <div className="wa-qr-panel">
             <div className="wa-link-tabs" role="tablist">
@@ -524,7 +524,7 @@ export function AegisWhatsApp() {
             {linkTab === 'qr' && (
               <div className="wa-qr-box">
                 {status.qr
-                  ? <img src={status.qr} alt="AEGIS WhatsApp pairing QR" />
+                  ? <img src={status.qr} alt="KRYNARA WhatsApp pairing QR" />
                   : <div className="wa-qr-waiting"><span className="status-dot" />{STATUS_LABEL[status.status]} — requesting QR…</div>}
               </div>
             )}
@@ -605,7 +605,7 @@ export function AegisWhatsApp() {
         )}
       </HudFrame>
 
-      <HudFrame title="AEGIS WHATSAPP // SESSION" className="social-settings">
+      <HudFrame title="KRYNARA WHATSAPP // SESSION" className="social-settings">
         <div className="wa-status">
           <span className={`status-dot${online ? ' online' : ''}`} />
           {STATUS_LABEL[status.status]}
@@ -640,7 +640,7 @@ export function AegisWhatsApp() {
         </div>
         {status.historySyncStatus === 'syncing' && <p className="credential-notice">Syncing WhatsApp chat history…</p>}
         {status.historySyncStatus === 'complete' && <p className="credential-notice">WhatsApp history sync complete. Messages are stored locally.</p>}
-        <p className="credential-notice">WhatsApp chat history and available media are stored locally in the AEGIS database and remain after logout.</p>
+        <p className="credential-notice">WhatsApp chat history and available media are stored locally in the KRYNARA database and remain after logout.</p>
       </HudFrame>
     </div>
   );

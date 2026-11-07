@@ -1,5 +1,5 @@
 /**
- * AEGIS gateway memory — SQLite persistence (better-sqlite3).
+ * KRYNARA gateway memory — SQLite persistence (better-sqlite3).
  * Stores messages, devices, logs, sessions, WhatsApp history, telegram_session, system_stats.
  */
 const fs = require('node:fs');
@@ -12,7 +12,7 @@ function getDb() {
   const Database = require('better-sqlite3');
   const dataDir = path.join(__dirname, '..', 'data');
   fs.mkdirSync(dataDir, { recursive: true });
-  db = new Database(path.join(dataDir, 'aegis.db'));
+  db = new Database(path.join(dataDir, 'krynara.db'));
   db.pragma('journal_mode = WAL');
   db.exec(`
     CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT, sender TEXT, text TEXT, outgoing INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));

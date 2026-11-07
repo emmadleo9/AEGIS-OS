@@ -23,38 +23,38 @@ html[lang='ar'] {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* AEGIS-OS theme: obsidian #050A0E, cyan #8AF8FF */
-  --aegis-bg: #050A0E;
-  --aegis-panel: rgba(8, 24, 30, 0.88);
-  --aegis-cyan: #8AF8FF;
-  --aegis-cyan-dim: rgba(138, 248, 255, 0.18);
-  --aegis-border: rgba(138, 248, 255, 0.38);
-  --aegis-text: #D4F1F3;
-  --aegis-muted: rgba(212, 241, 243, 0.54);
-  --aegis-green: #00FF9C;
-  --aegis-amber: #FFC857;
-  --aegis-red: #FF5F6D;
-  --aegis-glow: 0 0 15px rgba(138, 248, 255, 0.82), 0 0 30px rgba(138, 248, 255, 0.22);
+  /* Krynara-OS theme: obsidian #050A0E, cyan #8AF8FF */
+  --krynara-bg: #050A0E;
+  --krynara-panel: rgba(8, 24, 30, 0.88);
+  --krynara-cyan: #8AF8FF;
+  --krynara-cyan-dim: rgba(138, 248, 255, 0.18);
+  --krynara-border: rgba(138, 248, 255, 0.38);
+  --krynara-text: #D4F1F3;
+  --krynara-muted: rgba(212, 241, 243, 0.54);
+  --krynara-green: #00FF9C;
+  --krynara-amber: #FFC857;
+  --krynara-red: #FF5F6D;
+  --krynara-glow: 0 0 15px rgba(138, 248, 255, 0.82), 0 0 30px rgba(138, 248, 255, 0.22);
 
-  --bg-light: var(--aegis-bg);
+  --bg-light: var(--krynara-bg);
   --bg-white: rgba(8, 24, 30, 0.9);
-  --bg-card: var(--aegis-panel);
-  --text-primary: var(--aegis-text);
+  --bg-card: var(--krynara-panel);
+  --text-primary: var(--krynara-text);
   --text-secondary: rgba(212, 241, 243, 0.75);
-  --text-muted: var(--aegis-muted);
-  --border: var(--aegis-border);
-  --primary: var(--aegis-cyan);
-  --primary-text: var(--aegis-cyan);
+  --text-muted: var(--krynara-muted);
+  --border: var(--krynara-border);
+  --primary: var(--krynara-cyan);
+  --primary-text: var(--krynara-cyan);
   --primary-hover: #aefbff;
-  --primary-soft: var(--aegis-cyan-dim);
-  --focus-ring: var(--aegis-cyan);
-  --error: var(--aegis-red);
-  --error-text: var(--aegis-red);
-  --success: var(--aegis-green);
-  --success-text: var(--aegis-green);
-  --warning: var(--aegis-amber);
-  --warning-text: var(--aegis-amber);
-  --info: var(--aegis-cyan);
+  --primary-soft: var(--krynara-cyan-dim);
+  --focus-ring: var(--krynara-cyan);
+  --error: var(--krynara-red);
+  --error-text: var(--krynara-red);
+  --success: var(--krynara-green);
+  --success-text: var(--krynara-green);
+  --warning: var(--krynara-amber);
+  --warning-text: var(--krynara-amber);
+  --info: var(--krynara-cyan);
   --shadow-sm: 0 0 15px rgba(138, 248, 255, 0.4);
   --shadow-md: 0 0 25px rgba(138, 248, 255, 0.5);
   --shadow-lg: 0 0 40px rgba(138, 248, 255, 0.6);
@@ -64,7 +64,7 @@ html[lang='ar'] {
 a {
   font-weight: 500;
   text-decoration: inherit;
-  color: var(--aegis-cyan);
+  color: var(--krynara-cyan);
 }
 
 body {
@@ -115,9 +115,9 @@ button {
   font-family: inherit;
   cursor: pointer;
   transition: border-color 0.25s;
-  background: var(--aegis-panel);
+  background: var(--krynara-panel);
   color: var(--text-primary);
-  border-color: var(--aegis-border);
+  border-color: var(--krynara-border);
 }
 
 button:focus-visible,
@@ -160,7 +160,7 @@ select {
 }
 
 select:hover {
-  border-color: var(--aegis-cyan);
+  border-color: var(--krynara-cyan);
 }
 
 select:focus {
@@ -319,12 +319,12 @@ input[type='radio']:not(.toggle-switch input):focus-visible {
 
 .btn-icon:hover {
   background: rgba(138, 248, 255, 0.12);
-  border-color: var(--aegis-cyan);
-  color: var(--aegis-cyan);
+  border-color: var(--krynara-cyan);
+  color: var(--krynara-cyan);
 }
 
 .btn-icon:hover svg {
-  stroke: var(--aegis-cyan);
+  stroke: var(--krynara-cyan);
 }
 
 .btn-secondary {

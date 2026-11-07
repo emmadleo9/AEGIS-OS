@@ -1,5 +1,5 @@
 /**
- * AEGIS Task Control Center — running processes + hardware stats + ADB phone devices.
+ * KRYNARA Task Control Center — running processes + hardware stats + ADB phone devices.
  */
 const { execFile } = require('node:child_process');
 const si = require('systeminformation');

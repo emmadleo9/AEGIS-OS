@@ -4,7 +4,7 @@
  */
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 
-const STORE = 'D:/AEGIS-OS-STORAGE/config/harvested-keys.json';
+const STORE = 'D:/Krynara-OS-STORAGE/config/harvested-keys.json';
 const data = existsSync(STORE) ? JSON.parse(readFileSync(STORE, 'utf8')) : {};
 console.log('held keys:', Object.keys(data).filter((k) => !k.endsWith('LoggedIn')).join(', ') || '(none captured)');
 
@@ -18,7 +18,7 @@ const entries = [
   ['elevenlabs_key', data.elevenLabsKey],
 ];
 
-const lines = ['# AEGIS console env — generated from YOUR chrome profile 16 accounts', '# Missing keys are OFFLINE-MODE placeholders: UI shows cached-data badge, never crashes.'];
+const lines = ['# KRYNARA console env — generated from YOUR chrome profile 16 accounts', '# Missing keys are OFFLINE-MODE placeholders: UI shows cached-data badge, never crashes.'];
 const offline = [];
 for (const [name, value] of entries) {
   if (value) lines.push(`${name}=${value}`);
@@ -27,14 +27,14 @@ for (const [name, value] of entries) {
 console.log('offline-mode placeholders:', offline.join(', ') || '(none — all keys present!)');
 
 // console/.env.local (used by vite dev + build) — never committed (gitignored)
-mkdirSync('D:/AEGIS-OS/console', { recursive: true });
-writeFileSync('D:/AEGIS-OS/console/.env.local', lines.join('\n'));
+mkdirSync('D:/Krynara-OS/console', { recursive: true });
+writeFileSync('D:/Krynara-OS/console/.env.local', lines.join('\n'));
 
 // gateway mirror so server-side proxies (NVIDIA relay, OWM tiles) can use the keys too
 const gwLines = entries
   .filter(([, value]) => value)
   .map(([name, value]) => `${name.toUpperCase()}=${value}`);
-writeFileSync('D:/AEGIS-OS/gateway/.env.local', ['# gateway env mirror — same rule, never committed', ...gwLines].join('\n'));
+writeFileSync('D:/Krynara-OS/gateway/.env.local', ['# gateway env mirror — same rule, never committed', ...gwLines].join('\n'));
 
 // nvidia.config.ts service file the task asked for
 const ts = `/** NVIDIA NIM client config — key injected from YOUR account via .env.local (offline-mode fallback built in). */
@@ -59,6 +59,6 @@ export async function nimChat(model: string, messages: Array<{ role: string; con
   return data.reply ?? '';
 }
 `;
-mkdirSync('D:/AEGIS-OS/console/src/services/ai', { recursive: true });
-writeFileSync('D:/AEGIS-OS/console/src/services/ai/nvidia.config.ts', ts);
+mkdirSync('D:/Krynara-OS/console/src/services/ai', { recursive: true });
+writeFileSync('D:/Krynara-OS/console/src/services/ai/nvidia.config.ts', ts);
 console.log('written: console/.env.local, gateway/.env.local, console/src/services/ai/nvidia.config.ts');

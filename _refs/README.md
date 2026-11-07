@@ -7,7 +7,7 @@ They are vendored here so we can **COPY + EDIT** instead of **GENERATE** from sc
 When building World Map, Globe, Satellite, WhatsApp, Chat UI, or Voice features:
 1. Read the file from `_refs/_ref_*-full/src/`
 2. Copy it into the correct `console/src/` location
-3. Edit CSS colors to match the AEGIS cyan HUD theme
+3. Edit CSS colors to match the KRYNARA cyan HUD theme
 4. Paste into `console/src/`
 
 Do NOT generate these from zero ever again.

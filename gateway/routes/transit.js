@@ -1,7 +1,7 @@
 const FEEDS = [
   { id: 'mta-new-york', name: 'MTA New York City buses', bounds: [-74.3, 40.48, -73.68, 40.95], url: 'https://gtfsrt.prod.obanyc.com/vehiclePositions', mode: 'bus' },
   { id: 'septa-philadelphia', name: 'SEPTA Philadelphia', bounds: [-75.8347, 39.8123, -74.7542, 40.334], url: 'https://www3.septa.org/gtfsrt/septa-pa-us/Vehicle/rtVehiclePosition.pb', mode: 'bus' },
-  { id: 'entur-norway', name: 'Entur Norway', bounds: [4.5, 57.9, 31.2, 71.2], url: 'https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions', mode: 'transit', headers: { 'ET-Client-Name': 'aegis-os-world-view' } },
+  { id: 'entur-norway', name: 'Entur Norway', bounds: [4.5, 57.9, 31.2, 71.2], url: 'https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions', mode: 'transit', headers: { 'ET-Client-Name': 'krynara-os-world-view' } },
   { id: 'hsl-helsinki', name: 'HSL Helsinki region', bounds: [24.0181, 59.9875, 26.705, 60.9763], url: 'https://realtime.hsl.fi/realtime/vehicle-positions/v2/hsl', mode: 'transit' },
   { id: 'sofia-traffic', name: 'Sofia Traffic', bounds: [23.138, 42.5379, 23.546, 42.8688], url: 'https://gtfs.sofiatraffic.bg/api/v1/vehicle-positions', mode: 'transit' },
   { id: 'rome-mobility', name: 'Roma Mobilità', bounds: [12.1078, 41.6486, 12.7892, 42.4415], url: 'https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb', mode: 'transit' },
@@ -159,7 +159,7 @@ async function loadFeed(feed) {
   if (!request) {
     request = (async () => {
       const response = await fetch(feed.url, {
-        headers: { 'User-Agent': 'AEGIS-OS World View', ...(feed.headers ?? {}) },
+        headers: { 'User-Agent': 'Krynara-OS World View', ...(feed.headers ?? {}) },
         signal: AbortSignal.timeout(12_000),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

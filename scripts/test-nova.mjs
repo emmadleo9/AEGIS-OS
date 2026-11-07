@@ -23,8 +23,8 @@ const envFiles = [
   path.join(process.cwd(), 'console', '.env.local'),
 ];
 const keyFiles = [
-  'D:/AEGIS-OS-STORAGE/config/keys.json',
-  'D:/AEGIS-OS-STORAGE/config/harvested-keys.json',
+  'D:/Krynara-OS-STORAGE/config/keys.json',
+  'D:/Krynara-OS-STORAGE/config/harvested-keys.json',
 ];
 const openRouterNames = ['OPENROUTER_KEY', 'OPENROUTER_API_KEY', 'openrouterKey', 'openrouterApiKey'];
 const nvidiaNames = ['NV_API_KEY', 'NVIDIA_NIM_API_KEY', 'VITE_NVIDIA_NIM_API_KEY', 'NVIDIA_API_KEY', 'nvidiaApiKey'];

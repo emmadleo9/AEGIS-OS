@@ -4,10 +4,10 @@ import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 const require2 = createRequire('c:/Users/User/.vscode/extensions/danielsanmedium.dscodegpt-3.24.81/standalone/');
 const { chromium } = require2('patchright');
 
-const STORE = 'D:/AEGIS-OS-STORAGE/config/harvested-keys.json';
-const CREDS = 'D:/AEGIS-OS-STORAGE/config/credentials.json';
+const STORE = 'D:/Krynara-OS-STORAGE/config/harvested-keys.json';
+const CREDS = 'D:/Krynara-OS-STORAGE/config/credentials.json';
 const load = () => existsSync(STORE) ? JSON.parse(readFileSync(STORE, 'utf8')) : {};
-const save = (patch) => { mkdirSync('D:/AEGIS-OS-STORAGE/config', { recursive: true }); writeFileSync(STORE, JSON.stringify({ ...load(), ...patch }, null, 2)); };
+const save = (patch) => { mkdirSync('D:/Krynara-OS-STORAGE/config', { recursive: true }); writeFileSync(STORE, JSON.stringify({ ...load(), ...patch }, null, 2)); };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // password source: env var NVIDIA_PASSWORD first, else credentials.json { nvidiaPassword }
@@ -16,7 +16,7 @@ if (!password && existsSync(CREDS)) {
   try { password = JSON.parse(readFileSync(CREDS, 'utf8')).nvidiaPassword ?? ''; } catch { }
 }
 if (!password) {
-  console.log('NO PASSWORD SOURCE. Create D:/AEGIS-OS-STORAGE/config/credentials.json:');
+  console.log('NO PASSWORD SOURCE. Create D:/Krynara-OS-STORAGE/config/credentials.json:');
   console.log('  { "nvidiaPassword": "your-nvidia-password" }');
   console.log('or set env NVIDIA_PASSWORD. Then rerun this script. (File stays on Disk D, gitignored.)');
   process.exit(1);

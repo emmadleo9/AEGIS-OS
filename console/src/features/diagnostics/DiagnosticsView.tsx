@@ -38,7 +38,7 @@ const checks: Array<Pick<ApiCheck, 'name' | 'url' | 'tokenKey' | 'userIdKey' | '
   { name: 'LOCAL AI / OLLAMA', url: '/api/nova/models', availabilityField: 'available' },
   { name: 'TELEGRAM', tokenKey: 'telegram_bot_token' },
   { name: 'DISCORD', tokenKey: 'discord_bot_token' },
-  { name: 'AEGIS WHATSAPP', url: '/api/whatsapp/status', statusField: 'status' },
+  { name: 'KRYNARA WHATSAPP', url: '/api/whatsapp/status', statusField: 'status' },
   { name: 'INSTAGRAM', tokenKey: 'instagram_token', userIdKey: 'instagram_user_id' },
 ];
 
@@ -235,7 +235,7 @@ export function DiagnosticsView() {
 
   return (
     <div className="diagnostics-page">
-      <div className="aegis-grid aegis-grid-3">
+      <div className="krynara-grid krynara-grid-3">
         <StatusCard label="API SERVICES ONLINE" value={`${onlineCount} / ${apiChecks.length}`} sub="LIVE PUBLIC ENDPOINT CHECKS" status={onlineCount ? 'online' : 'warning'} />
         <StatusCard label="MEAN API LATENCY" value={averageLatency === null ? '--' : `${averageLatency}ms`} sub="SUCCESSFUL + FAILED CHECKS" status={averageLatency === null ? 'warning' : averageLatency > 500 ? 'offline' : averageLatency > 200 ? 'warning' : 'online'} />
         <StatusCard label="LAST CHECK" value={new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(now)} sub="API CHECK 60S // HOST SAMPLE 2S" />
@@ -249,7 +249,7 @@ export function DiagnosticsView() {
                 <span className={`diagnostics-indicator ${check.status}`}><span className="status-dot" /></span>
                 <strong>{check.name}</strong>
                 <span className="diagnostics-detail">{check.detail}</span>
-                <span className="diagnostics-latency" style={{ color: check.latency === null ? undefined : check.latency < 200 ? 'var(--aegis-green)' : check.latency <= 500 ? 'var(--aegis-amber)' : 'var(--aegis-red)' }}>{check.latency === null ? '—' : `${check.latency} ms`}</span>
+                <span className="diagnostics-latency" style={{ color: check.latency === null ? undefined : check.latency < 200 ? 'var(--krynara-green)' : check.latency <= 500 ? 'var(--krynara-amber)' : 'var(--krynara-red)' }}>{check.latency === null ? '—' : `${check.latency} ms`}</span>
                 <time>{check.lastChecked}</time>
               </div>
             ))}

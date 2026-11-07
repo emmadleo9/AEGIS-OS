@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$runtime = Join-Path $env:LOCALAPPDATA 'AEGIS-OS\runtime'
+$runtime = Join-Path $env:LOCALAPPDATA 'Krynara-OS\runtime'
 
 # --- Stop launcher-owned processes -------------------------------------------
 $specifications = @(
@@ -12,7 +12,7 @@ $specifications = @(
 foreach ($specification in $specifications) {
     $pidPath = Join-Path $runtime "$($specification.Name).pid"
     if (-not (Test-Path -LiteralPath $pidPath)) {
-        Write-Host "[AEGIS-OS] No launcher-owned $($specification.Name) process recorded; leaving running processes untouched."
+        Write-Host "[Krynara-OS] No launcher-owned $($specification.Name) process recorded; leaving running processes untouched."
         continue
     }
 
@@ -21,12 +21,12 @@ foreach ($specification in $specifications) {
     $rootProcess = $processes | Where-Object { $_.ProcessId -eq $rootId } | Select-Object -First 1
     if (-not $rootProcess) {
         Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
-        Write-Host "[AEGIS-OS] Cleared stale $($specification.Name) PID record."
+        Write-Host "[Krynara-OS] Cleared stale $($specification.Name) PID record."
         continue
     }
 
     if (-not $rootProcess.CommandLine -or $rootProcess.CommandLine.IndexOf($specification.Entry, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
-        Write-Host "[AEGIS-OS] PID $rootId no longer matches the recorded $($specification.Name) command; leaving it untouched."
+        Write-Host "[Krynara-OS] PID $rootId no longer matches the recorded $($specification.Name) command; leaving it untouched."
         Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
         continue
     }
@@ -46,7 +46,7 @@ foreach ($specification in $specifications) {
         Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
     }
     Remove-Item -LiteralPath $pidPath -Force
-    Write-Host "[AEGIS-OS] Stopped launcher-owned $($specification.Name) process tree."
+    Write-Host "[Krynara-OS] Stopped launcher-owned $($specification.Name) process tree."
 }
 
 # --- Clear stale master startup lock -----------------------------------------
@@ -56,8 +56,8 @@ if (Test-Path -LiteralPath $lockPath) {
     [void][int]::TryParse((Get-Content -LiteralPath $lockPath -Raw), [ref]$lockOwner)
     if ($lockOwner -le 0 -or -not (Get-Process -Id $lockOwner -ErrorAction SilentlyContinue)) {
         Remove-Item -LiteralPath $lockPath -Force
-        Write-Host '[AEGIS-OS] Cleared stale master startup lock.'
+        Write-Host '[Krynara-OS] Cleared stale master startup lock.'
     }
 }
 
-Write-Host '[AEGIS-OS] Stop complete.'
+Write-Host '[Krynara-OS] Stop complete.'

@@ -2,7 +2,7 @@ import { studioRequest } from '@/services/studioRequest';
 
 function readTavilyKey() {
   try {
-    return window.localStorage.getItem('aegis_tavily_key')?.trim() || null;
+    return window.localStorage.getItem('krynara_tavily_key')?.trim() || null;
   } catch {
     return null;
   }

@@ -1,17 +1,17 @@
-# AEGIS HUD Design System
+# KRYNARA HUD Design System
 
-**SINGLE SOURCE OF TRUTH** for all AEGIS-OS frontends and future gateways.
+**SINGLE SOURCE OF TRUTH** for all Krynara-OS frontends and future gateways.
 
 ## Usage
 
 ```tsx
-import '@/styles/aegis-hud.css';
+import '@/styles/krynara-hud.css';
 import { HudFrame, GaugeCircle, StatusCard } from '@/components/hud';
 ```
 
 ## Rules
 
-1. **ALL future gateways MUST import `@/styles/aegis-hud.css`**
+1. **ALL future gateways MUST import `@/styles/krynara-hud.css`**
 2. **Use only these components**: `HudFrame`, `GaugeCircle`, `StatusCard`
 3. **No custom CSS allowed** - this is the single source of truth
 4. **Feature folders**: `src/features/[gateway]/components`
@@ -42,4 +42,4 @@ import { HudFrame, GaugeCircle, StatusCard } from '@/components/hud';
 - `GaugeCircle` - SVG circular progress with glow
 - `StatusCard` - Compact status display with dot indicator
 
-**NO OTHER CSS ALLOWED.** This file is the single source of truth for all AEGIS-OS gateways.
+**NO OTHER CSS ALLOWED.** This file is the single source of truth for all Krynara-OS gateways.

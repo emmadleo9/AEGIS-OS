@@ -31,7 +31,7 @@ function register(app) {
     try {
       const url = `${ROUTE_URL}/${key}?overview=full&geometries=geojson&steps=true`;
       const response = await fetch(url, {
-        headers: { 'User-Agent': 'AEGIS-OS World View' },
+        headers: { 'User-Agent': 'Krynara-OS World View' },
         signal: AbortSignal.timeout(20_000),
       });
       if (!response.ok) throw new Error(`OSRM returned HTTP ${response.status}`);

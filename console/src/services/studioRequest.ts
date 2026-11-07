@@ -22,10 +22,10 @@ export async function studioRequest<T>(path: string, init?: RequestInit, timeout
       response = await fetch(path, { ...init, signal: controller.signal });
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
-        throw new Error('The local AEGIS gateway request timed out. Check that the gateway is running at localhost:2785.');
+        throw new Error('The local KRYNARA gateway request timed out. Check that the gateway is running at localhost:2785.');
       }
       if (error instanceof TypeError && /fetch|network/i.test(error.message)) {
-        throw new Error('Cannot reach the AEGIS gateway. Start or restart the local gateway at localhost:2785, then try again.');
+        throw new Error('Cannot reach the KRYNARA gateway. Start or restart the local gateway at localhost:2785, then try again.');
       }
       throw error;
     }
@@ -36,7 +36,7 @@ export async function studioRequest<T>(path: string, init?: RequestInit, timeout
       data = JSON.parse(body);
     } catch {
       const detail = body.trimStart().startsWith('<')
-        ? 'The gateway returned an HTML page instead of its API response. Restart the AEGIS gateway and retry.'
+        ? 'The gateway returned an HTML page instead of its API response. Restart the KRYNARA gateway and retry.'
         : 'The gateway returned an invalid response body.';
       throw new Error(`${detail} (HTTP ${response.status}).`);
     }

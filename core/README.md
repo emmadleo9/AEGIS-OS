@@ -1,8 +1,8 @@
 <div align="center">
-  <img alt="AEGIS shield — local-first AI" src="assets/aegis-shield.png" width="190">
+  <img alt="KRYNARA shield — local-first AI" src="assets/krynara-shield.png" width="190">
 
-  <h1>AEGIS BRAIN</h1>
-  <p><b>The local-first intelligence core of <a href="../README.md">AEGIS-OS</a>.</b></p>
+  <h1>KRYNARA BRAIN</h1>
+  <p><b>The local-first intelligence core of <a href="../README.md">Krynara-OS</a>.</b></p>
   <p><i>Private by design. Powerful on your own hardware.</i></p>
 
   <img
@@ -11,7 +11,7 @@
   >
 
   <p>
-    <a href="../README.md"><img src="https://img.shields.io/badge/AEGIS--OS-local--first-9FE8FF?style=for-the-badge&logo=github&logoColor=white" alt="AEGIS-OS"></a>
+    <a href="../README.md"><img src="https://img.shields.io/badge/KRYNARA--OS-local--first-9FE8FF?style=for-the-badge&logo=github&logoColor=white" alt="Krynara-OS"></a>
     <img src="https://img.shields.io/badge/AI-OpenJarvis-7897FF?style=for-the-badge" alt="OpenJarvis AI">
     <img src="https://img.shields.io/badge/Python-%3E%3D3.10-7BC8A4?style=for-the-badge&logo=python&logoColor=white" alt="Python">
     <img src="https://img.shields.io/badge/License-Apache%202.0-C9A7FF?style=for-the-badge" alt="License: Apache 2.0">

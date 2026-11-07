@@ -10,8 +10,8 @@ export type StudioTask = {
 export type StudioError = { at: string; message: string };
 export type StudioActivity = { tasks: StudioTask[]; errors: StudioError[] };
 
-const STORAGE_KEY = 'aegis_studio_activity';
-const CHANGE_EVENT = 'aegis:studio-activity-change';
+const STORAGE_KEY = 'krynara_studio_activity';
+const CHANGE_EVENT = 'krynara:studio-activity-change';
 const emptyActivity = (): StudioActivity => ({ tasks: [], errors: [] });
 
 export function getStudioActivity(): StudioActivity {

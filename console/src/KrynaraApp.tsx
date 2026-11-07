@@ -12,8 +12,8 @@ import { WorldView } from '@/features/world/WorldView';
 import { NovaAssistant } from '@/features/nova/NovaAssistant';
 import { AiStudio } from '@/features/studio/AiStudio';
 import { SettingsView } from '@/features/settings/SettingsView';
-import { AegisWhatsApp } from '@/features/social/AegisWhatsApp';
-import { initAegisStorage } from '@/services/persistentStorage';
+import { KrynaraWhatsApp } from '@/features/social/KrynaraWhatsApp';
+import { initKrynaraStorage } from '@/services/persistentStorage';
 
 const links = [
   ['/', '◈', 'DASHBOARD'],
@@ -21,7 +21,7 @@ const links = [
   ['/weather', '☼', 'WEATHER INTEL'],
   ['/feeds', '▤', 'NEWS & CONFLICT'],
   ['/social', '◌', 'SOCIAL HUB'],
-  ['/whatsapp', '💬', 'AEGIS WHATSAPP'],
+  ['/whatsapp', '💬', 'KRYNARA WHATSAPP'],
   ['/scopes', '⌁', 'SCOPES & RADARS'],
   ['/devices', '▣', 'MY DEVICES'],
   ['/time', '◷', 'WORLD CLOCK'],
@@ -35,10 +35,10 @@ function Shell({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(() => new Date());
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [websiteScrollLock, setWebsiteScrollLock] = useState(
-    () => localStorage.getItem('aegis_website_scroll_lock') !== 'false',
+    () => localStorage.getItem('krynara_website_scroll_lock') !== 'false',
   );
   const [memorySaver, setMemorySaver] = useState(
-    () => localStorage.getItem('aegis_memory_saver') !== 'false',
+    () => localStorage.getItem('krynara_memory_saver') !== 'false',
   );
   const titles: Record<string, string> = {
     '/': 'COMMAND DASHBOARD',
@@ -46,7 +46,7 @@ function Shell({ children }: { children: ReactNode }) {
     '/weather': 'WEATHER INTEL',
     '/feeds': 'NEWS & CONFLICT FEED',
     '/social': 'SOCIAL HUB',
-    '/whatsapp': 'AEGIS WHATSAPP',
+    '/whatsapp': 'KRYNARA WHATSAPP',
     '/scopes': 'SCOPES & RADARS',
     '/devices': 'MY DEVICES',
     '/time': 'WORLD CLOCK & TIME INTEL',
@@ -65,37 +65,37 @@ function Shell({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
-    void initAegisStorage().catch((reason: unknown) => {
-      console.error('AEGIS persistent storage initialization failed:', reason);
+    void initKrynaraStorage().catch((reason: unknown) => {
+      console.error('KRYNARA persistent storage initialization failed:', reason);
     });
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('aegis-scroll-locked', websiteScrollLock);
-    localStorage.setItem('aegis_website_scroll_lock', String(websiteScrollLock));
+    document.documentElement.classList.toggle('krynara-scroll-locked', websiteScrollLock);
+    localStorage.setItem('krynara_website_scroll_lock', String(websiteScrollLock));
   }, [websiteScrollLock]);
 
   useEffect(() => {
-    localStorage.setItem('aegis_memory_saver', String(memorySaver));
-    window.dispatchEvent(new CustomEvent('aegis:memory-saver-change', { detail: memorySaver }));
+    localStorage.setItem('krynara_memory_saver', String(memorySaver));
+    window.dispatchEvent(new CustomEvent('krynara:memory-saver-change', { detail: memorySaver }));
   }, [memorySaver]);
 
   return (
-    <div className="aegis-app">
+    <div className="krynara-app">
       {mobileNavOpen && <button type="button" className="mobile-nav-backdrop" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
       <button type="button" className="mobile-nav-toggle" aria-label={mobileNavOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen((open) => !open)}>
         {mobileNavOpen ? '×' : '☰'}
       </button>
-      <aside className={`aegis-sidebar${mobileNavOpen ? ' mobile-open' : ''}`}>
-        <div className="aegis-brand">
-          <img className="aegis-brand-logo" src="/aegis-official.png" alt="AEGIS-OS official shield logo" />
-          <span>AEGIS-OS</span>
+      <aside className={`krynara-sidebar${mobileNavOpen ? ' mobile-open' : ''}`}>
+        <div className="krynara-brand">
+          <img className="krynara-brand-logo" src="/krynara-official.png" alt="Krynara-OS official shield logo" />
+          <span>Krynara-OS</span>
           <small>PUBLIC DATA CONSOLE // 04.0</small>
         </div>
-        <nav className="aegis-nav" aria-label="Main navigation">
+        <nav className="krynara-nav" aria-label="Main navigation">
           {links.map(([to, icon, label]) => (
             <NavLink key={to} to={to} end={to === '/'} onClick={() => setMobileNavOpen(false)}>
-              <span className="aegis-nav-icon" aria-hidden="true">{icon}</span>
+              <span className="krynara-nav-icon" aria-hidden="true">{icon}</span>
               <span>{label}</span>
             </NavLink>
           ))}
@@ -105,14 +105,14 @@ function Shell({ children }: { children: ReactNode }) {
           <div className="sidebar-status-value"><span className="status-dot" /> NOMINAL</div>
         </div>
       </aside>
-      <main className="aegis-main">
-        <header className="aegis-topline">
+      <main className="krynara-main">
+        <header className="krynara-topline">
           <div>
-            <div className="aegis-kicker">SYSTEM MONITOR v4.0 // AEGIS-OS ONLINE</div>
-            <h1 className="aegis-heading">{titles[pathname] ?? 'AEGIS CONSOLE'}</h1>
+            <div className="krynara-kicker">SYSTEM MONITOR v4.0 // Krynara-OS ONLINE</div>
+            <h1 className="krynara-heading">{titles[pathname] ?? 'KRYNARA CONSOLE'}</h1>
           </div>
-          <div className="aegis-clock">
-            <div className="aegis-header-toggles">
+          <div className="krynara-clock">
+            <div className="krynara-header-toggles">
               <button
                 type="button"
                 className={`device-tab${websiteScrollLock ? ' active' : ''}`}
@@ -135,7 +135,7 @@ function Shell({ children }: { children: ReactNode }) {
             <span>{now.toISOString().replace('T', ' ').slice(0, 19)}Z</span>
           </div>
         </header>
-        <div key={pathname} className="aegis-page">{children}</div>
+        <div key={pathname} className="krynara-page">{children}</div>
         <NovaAssistant />
       </main>
     </div>
@@ -144,7 +144,7 @@ function Shell({ children }: { children: ReactNode }) {
 
 function ScopesView() {
   return (
-    <div className="aegis-grid aegis-grid-3">
+    <div className="krynara-grid krynara-grid-3">
       <HudFrame title="AVIATION SCOPE"><p className="scope-copy">Public ADS-B aircraft reports are refreshed every 15 seconds in World View.</p><NavLink className="hud-link" to="/world">OPEN LIVE MAP →</NavLink></HudFrame>
       <HudFrame title="SEISMIC SCOPE"><p className="scope-copy">USGS all-day earthquake reports are refreshed every 60 seconds.</p><NavLink className="hud-link" to="/world">OPEN LIVE MAP →</NavLink></HudFrame>
       <HudFrame title="WEATHER SCOPE"><p className="scope-copy">Open-Meteo current conditions and forecasts update once per minute.</p><NavLink className="hud-link" to="/weather">OPEN WEATHER →</NavLink></HudFrame>
@@ -156,7 +156,7 @@ function NotFound() {
   return <HudFrame title="ROUTE ERROR"><div className="hud-value not-found-title">INVALID URL</div><NavLink className="hud-link" to="/">RETURN TO DASHBOARD →</NavLink></HudFrame>;
 }
 
-export default function AegisApp() {
+export default function KrynaraApp() {
   return (
     <BrowserRouter>
       <Shell>
@@ -166,7 +166,7 @@ export default function AegisApp() {
           <Route path="/weather" element={<WeatherView />} />
           <Route path="/feeds" element={<NewsConflictView />} />
           <Route path="/social" element={<SocialHub />} />
-          <Route path="/whatsapp" element={<AegisWhatsApp />} />
+          <Route path="/whatsapp" element={<KrynaraWhatsApp />} />
           <Route path="/scopes" element={<ScopesView />} />
           <Route path="/devices" element={<DevicesView />} />
           <Route path="/time" element={<TimeView />} />

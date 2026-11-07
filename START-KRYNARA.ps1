@@ -1,11 +1,11 @@
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
-$runtime = Join-Path $env:LOCALAPPDATA 'AEGIS-OS\runtime'
+$runtime = Join-Path $env:LOCALAPPDATA 'Krynara-OS\runtime'
 New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 
 # --- Prerequisites -----------------------------------------------------------
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-    throw 'Node.js is required. Install Node.js (>=22.19), then run MASTER START AEGIS-OS V.04.bat again.'
+    throw 'Node.js is required. Install Node.js (>=22.19), then run MASTER START Krynara-OS V.04.bat again.'
 }
 if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
     throw 'npm.cmd was not found. Repair the Node.js installation and try again.'
@@ -26,7 +26,7 @@ foreach ($directory in @('gateway', 'console')) {
     $project = Join-Path $root $directory
     $modules = Join-Path $project 'node_modules'
     if (-not (Test-Path $modules)) {
-        Write-Host "[AEGIS-OS] Installing missing $directory dependencies..."
+        Write-Host "[Krynara-OS] Installing missing $directory dependencies..."
         Push-Location $project
         try {
             & npm.cmd ci --no-audit --no-fund
@@ -43,7 +43,7 @@ foreach ($directory in @('gateway', 'console')) {
 $gatewayDir = Join-Path $root 'gateway'
 $openwaMain = Join-Path $gatewayDir 'dist\main.js'
 if (-not (Test-Path -LiteralPath $openwaMain)) {
-    Write-Host '[AEGIS-OS] Building OpenWA gateway...'
+    Write-Host '[Krynara-OS] Building OpenWA gateway...'
     Push-Location $gatewayDir
     try {
         & npm.cmd run build --silent
@@ -57,12 +57,12 @@ if (-not (Test-Path -LiteralPath $openwaMain)) {
 
 # --- Start the coordinator launcher ------------------------------------------
 $launcher = Join-Path $root 'scripts\start-singularity.js'
-Write-Host '[AEGIS-OS] Starting the gateway first, then waiting for its API health check before starting the console.'
+Write-Host '[Krynara-OS] Starting the gateway first, then waiting for its API health check before starting the console.'
 & node $launcher
 if ($LASTEXITCODE -ne 0) {
-    throw "AEGIS master startup failed (exit $LASTEXITCODE). Check the error above and verify ports 2785 and 5173."
+    throw "KRYNARA master startup failed (exit $LASTEXITCODE). Check the error above and verify ports 2785 and 5173."
 }
 
-Write-Host '[AEGIS-OS] Startup complete.'
-Write-Host '[AEGIS-OS] Console: http://localhost:5173'
-Write-Host '[AEGIS-OS] Gateway: http://127.0.0.1:2785'
+Write-Host '[Krynara-OS] Startup complete.'
+Write-Host '[Krynara-OS] Console: http://localhost:5173'
+Write-Host '[Krynara-OS] Gateway: http://127.0.0.1:2785'

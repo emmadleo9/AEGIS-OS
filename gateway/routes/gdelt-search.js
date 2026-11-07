@@ -1,5 +1,5 @@
 /**
- * AEGIS GDELT DOC 2.0 search — powers the News & Conflict search bar.
+ * KRYNARA GDELT DOC 2.0 search — powers the News & Conflict search bar.
  */
 let lastQuery = '';
 let lastResult = null;

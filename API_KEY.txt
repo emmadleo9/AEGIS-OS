@@ -1,4 +1,4 @@
-AEGIS-OS OpenWA WhatsApp API Gateway - API Key
+Krynara-OS OpenWA WhatsApp API Gateway - API Key
 ================================================
 
 API KEY:

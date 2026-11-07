@@ -115,8 +115,8 @@ if (safe.openWeatherKey) safe.openWeatherKey = safe.openWeatherKey.slice(0, 8) +
 if (safe.elevenLabsKey) safe.elevenLabsKey = safe.elevenLabsKey.slice(0, 8) + '…';
 console.log(JSON.stringify(safe, null, 1));
 
-mkdirSync('D:/AEGIS-OS-STORAGE/config', { recursive: true });
-writeFileSync('D:/AEGIS-OS-STORAGE/config/harvested-keys.json', JSON.stringify(results, null, 2));
-console.log('FULL KEYS → D:/AEGIS-OS-STORAGE/config/harvested-keys.json');
+mkdirSync('D:/Krynara-OS-STORAGE/config', { recursive: true });
+writeFileSync('D:/Krynara-OS-STORAGE/config/harvested-keys.json', JSON.stringify(results, null, 2));
+console.log('FULL KEYS → D:/Krynara-OS-STORAGE/config/harvested-keys.json');
 await browser.close();
 process.exit(0);

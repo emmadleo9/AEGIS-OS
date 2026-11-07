@@ -13,7 +13,7 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 w-20 bg-[#050A0E] border-r border-[#8AF8FF]24 flex flex-col py-4 px-2 text-[#D4F1F3]">
-      <div className="hud-label mb-4 ml-2">AEGIS</div>
+      <div className="hud-label mb-4 ml-2">KRYNARA</div>
       {links.map((link) => (
         <NavLink
           key={link.to}

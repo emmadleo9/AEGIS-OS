@@ -1,12 +1,12 @@
 /**
- * AEGIS persistent memory — IndexedDB (idb-keyval stores) with localStorage fallback.
+ * KRYNARA persistent memory — IndexedDB (idb-keyval stores) with localStorage fallback.
  * Restores chats, devices, logs, stats, world filters, search history on load.
  */
 import { createStore, get } from 'idb-keyval';
 import { canWrite } from '@/services/quotaManager';
-import { getAegisItem, setAegisItem } from '@/services/persistentStorage';
+import { getKrynaraItem, setKrynaraItem } from '@/services/persistentStorage';
 
-const DB_NAME = 'aegis-os-db';
+const DB_NAME = 'krynara-os-db';
 const STORE_NAME = 'keyval-store';
 export type MemoryKey =
   | 'chats' | 'messages' | 'devices' | 'logs' | 'stats'
@@ -14,7 +14,7 @@ export type MemoryKey =
 
 const store = createStore(DB_NAME, STORE_NAME);
 
-const lsKey = (key: MemoryKey) => `aegis-mem:${key}`;
+const lsKey = (key: MemoryKey) => `krynara-mem:${key}`;
 
 function memoryAvailable(): boolean {
   try {
@@ -33,24 +33,24 @@ export async function initDB(): Promise<void> {
 
 export async function saveMemory(key: MemoryKey, value: unknown): Promise<void> {
   if (hasIdb) {
-    await setAegisItem('memory', key, value);
+    await setKrynaraItem('memory', key, value);
     return;
   }
 
   const serialized = JSON.stringify(value);
   if (!await canWrite(new Blob([serialized]).size)) {
-    throw new Error('AEGIS storage is at its 20GB limit. Export or move data before saving more.');
+    throw new Error('KRYNARA storage is at its 20GB limit. Export or move data before saving more.');
   }
   localStorage.setItem(lsKey(key), serialized);
 }
 
 export async function loadMemory<T>(key: MemoryKey, fallback: T): Promise<T> {
   if (hasIdb) {
-    const value = await getAegisItem<T | undefined>('memory', key, undefined);
+    const value = await getKrynaraItem<T | undefined>('memory', key, undefined);
     if (value !== undefined) return value;
     const legacyValue = await get<T | undefined>(key, store);
     if (legacyValue !== undefined) {
-      await setAegisItem('memory', key, legacyValue);
+      await setKrynaraItem('memory', key, legacyValue);
       return legacyValue;
     }
   }
@@ -59,9 +59,9 @@ export async function loadMemory<T>(key: MemoryKey, fallback: T): Promise<T> {
 }
 
 export async function saveLog(entry: string): Promise<void> {
-  const logs = await getAegisItem<string[]>('logs', 'entries', []);
+  const logs = await getKrynaraItem<string[]>('logs', 'entries', []);
   logs.unshift(`[${new Date().toISOString()}] ${entry}`);
-  await setAegisItem('logs', 'entries', logs.slice(0, 200));
+  await setKrynaraItem('logs', 'entries', logs.slice(0, 200));
 }
 
 export async function saveStatsPoint(point: Record<string, number>): Promise<void> {

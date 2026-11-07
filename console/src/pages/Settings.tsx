@@ -7,12 +7,12 @@ export function Settings() {
   const [saved, setSaved] = React.useState(false);
 
   React.useEffect(() => {
-    const stored = localStorage.getItem('aegis-api-key');
+    const stored = localStorage.getItem('krynara-api-key');
     if (stored) setApiKey(stored);
   }, []);
 
   const handleSave = () => {
-    localStorage.setItem('aegis-api-key', apiKey);
+    localStorage.setItem('krynara-api-key', apiKey);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -38,7 +38,7 @@ export function Settings() {
       </div>
 
       <HudFrame title="API CONFIGURATION" style={{ minHeight: '200px' }}>
-        <div className="hud-label">AEGIS API KEY</div>
+        <div className="hud-label">KRYNARA API KEY</div>
         <div style={{ display: 'flex', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
           <input
             type="password"
@@ -93,7 +93,7 @@ export function Settings() {
       </HudFrame>
 
       <HudFrame title="HUD THEME" style={{ minHeight: '180px' }}>
-        <div className="hud-label">THEME: AEGIS HUD v1.0</div>
+        <div className="hud-label">THEME: KRYNARA HUD v1.0</div>
         <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-dim)', lineHeight: 1.8 }}>
           <div>Primary: <span style={{ color: 'var(--cyan)' }}>#8AF8FF</span> (Cyan)</div>
           <div>Background: <span style={{ color: 'var(--cyan)' }}>#050A0E</span> (Deep Space)</div>
@@ -106,7 +106,7 @@ export function Settings() {
       <HudFrame title="EXTENSIBILITY" style={{ minHeight: '180px' }}>
         <div className="hud-label">FUTURE GATEWAYS</div>
         <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-dim)', lineHeight: 2 }}>
-          <div>→ All new gateways MUST import <span style={{ color: 'var(--cyan)' }}>@/styles/aegis-hud.css</span></div>
+          <div>→ All new gateways MUST import <span style={{ color: 'var(--cyan)' }}>@/styles/krynara-hud.css</span></div>
           <div>→ Use <span style={{ color: 'var(--cyan)' }}>HudFrame</span>, <span style={{ color: 'var(--cyan)' }}>GaugeCircle</span>, <span style={{ color: 'var(--cyan)' }}>StatusCard</span></div>
           <div>→ No custom CSS allowed - single source of truth</div>
           <div>→ Feature folders in <span style={{ color: 'var(--cyan)' }}>src/features/[gateway]/</span></div>

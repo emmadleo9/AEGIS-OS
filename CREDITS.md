@@ -1,6 +1,6 @@
 # Credits - Open Source Acknowledgements
 
-AEGIS-OS is my original operating system built from scratch. The core vision, NOVA AI, World View, and HUD design are my own.
+Krynara-OS is my original operating system built from scratch. The core vision, NOVA AI, World View, and HUD design are my own.
 
 This project uses open-source libraries as inspiration and engine parts in the background, vendored in _refs/ for backup and token-saving reuse.
 
@@ -13,4 +13,4 @@ This project uses open-source libraries as inspiration and engine parts in the b
 
 Full original LICENSE files are preserved inside each _refs/_ref_*-full/LICENSE file.
 
-See main README.md for AEGIS-OS itself.
+See main README.md for Krynara-OS itself.

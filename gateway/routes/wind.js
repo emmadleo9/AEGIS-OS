@@ -46,7 +46,7 @@ async function loadWind(bounds) {
   });
   const response = await fetch(`${OPEN_METEO_URL}?${params}`, {
     signal: AbortSignal.timeout(15_000),
-    headers: { 'User-Agent': 'AEGIS-OS World View' },
+    headers: { 'User-Agent': 'Krynara-OS World View' },
   });
   if (!response.ok) throw new Error(`Open-Meteo wind returned HTTP ${response.status}`);
   const result = await response.json();

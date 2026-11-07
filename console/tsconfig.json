@@ -23,5 +23,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/main.tsx", "src/AegisApp.tsx"]
+  "include": ["src/main.tsx", "src/KrynaraApp.tsx"]
 }

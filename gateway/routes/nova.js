@@ -7,7 +7,7 @@ const path = require('node:path');
 const keys = require('./keys');
 
 const MAX_QUOTA_BYTES = 20 * 1024 * 1024 * 1024;
-const AEGIS_STORAGE_ROOT = 'D:/AEGIS-OS-STORAGE';
+const KRYNARA_STORAGE_ROOT = 'D:/Krynara-OS-STORAGE';
 const NIM_BASE = 'https://integrate.api.nvidia.com/v1';
 const NIM_IMAGE_BASE = 'https://ai.api.nvidia.com/v1/genai';
 
@@ -140,18 +140,18 @@ module.exports = {
       if (!match) return res.status(400).json({ error: 'dataUrl must be a base64 data URL.' });
       const [, mime, base64] = match;
       const payload = Buffer.from(base64, 'base64');
-      if (payload.length > MAX_QUOTA_BYTES) return res.status(413).json({ error: 'Generated file exceeds AEGIS-OS 20GB storage quota.' });
+      if (payload.length > MAX_QUOTA_BYTES) return res.status(413).json({ error: 'Generated file exceeds Krynara-OS 20GB storage quota.' });
       const ext = mime.split('/')[1]?.split('+')[0] || 'bin';
-      const dir = path.join(AEGIS_STORAGE_ROOT, 'generations', kind);
+      const dir = path.join(KRYNARA_STORAGE_ROOT, 'generations', kind);
       const metadata = JSON.stringify(meta ?? {}, null, 2);
       const requiredBytes = payload.length + Buffer.byteLength(metadata);
       try {
-        const usedBytes = directoryBytes(AEGIS_STORAGE_ROOT);
+        const usedBytes = directoryBytes(KRYNARA_STORAGE_ROOT);
         if (usedBytes + requiredBytes >= MAX_QUOTA_BYTES) {
-          return res.status(507).json({ error: 'AEGIS-OS D: storage has reached its 20GB quota. Export or move data before saving more.' });
+          return res.status(507).json({ error: 'Krynara-OS D: storage has reached its 20GB quota. Export or move data before saving more.' });
         }
       } catch (error) {
-        return res.status(500).json({ error: `Could not verify AEGIS-OS storage usage: ${error instanceof Error ? error.message : String(error)}` });
+        return res.status(500).json({ error: `Could not verify Krynara-OS storage usage: ${error instanceof Error ? error.message : String(error)}` });
       }
       fs.mkdirSync(dir, { recursive: true });
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -165,7 +165,7 @@ module.exports = {
       const kind = req.params.kind;
       if (!['images', 'videos', 'audio', 'files'].includes(kind)) return res.status(400).json({ error: 'bad kind' });
       const fs = require('node:fs');
-      const dir = `D:/AEGIS-OS-STORAGE/generations/${kind}`;
+      const dir = `D:/Krynara-OS-STORAGE/generations/${kind}`;
       try {
         const files = fs.readdirSync(dir).filter((file) => !file.endsWith('.json')).slice(-60).reverse();
         res.json({ kind, files });
@@ -187,7 +187,7 @@ module.exports = {
     app.get('/generations/:kind/:file', (req, res) => {
       const { kind, file } = req.params;
       if (!['images', 'videos', 'audio', 'files'].includes(kind) || file.includes('..')) return res.status(400).end();
-      res.sendFile(path.join('D:', 'AEGIS-OS-STORAGE', 'generations', kind, file));
+      res.sendFile(path.join('D:', 'Krynara-OS-STORAGE', 'generations', kind, file));
     });
   },
 };

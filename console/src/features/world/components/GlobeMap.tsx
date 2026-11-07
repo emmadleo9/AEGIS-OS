@@ -116,14 +116,14 @@ const STYLES: Record<Exclude<MapMode, 'satellite'>, string> = {
 const SATELLITE_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
-    'aegis-satellite-base': {
+    'krynara-satellite-base': {
       type: 'raster',
       tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
       tileSize: 256,
       attribution: 'Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     },
   },
-  layers: [{ id: 'aegis-satellite-base', type: 'raster', source: 'aegis-satellite-base' }],
+  layers: [{ id: 'krynara-satellite-base', type: 'raster', source: 'krynara-satellite-base' }],
 };
 
 export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function GlobeMap(
@@ -217,8 +217,8 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
       const source = map.getSource(id) as maplibregl.GeoJSONSource | undefined;
       if (source) void source.setData(data as never);
     };
-    setSource('aegis-flights', { type: 'FeatureCollection', features: clusterPoints as PointFeatureCollection['features'] });
-    setSource('aegis-quakes', {
+    setSource('krynara-flights', { type: 'FeatureCollection', features: clusterPoints as PointFeatureCollection['features'] });
+    setSource('krynara-quakes', {
       type: 'FeatureCollection',
       features: current.quakes.map((quake) => ({
         type: 'Feature' as const,
@@ -226,16 +226,16 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
         properties: { magnitude: quake.magnitude, place: quake.place },
       })),
     });
-    setSource('aegis-satellites', current.satellites);
-    setSource('aegis-weather', current.weather);
-    setSource('aegis-conflict', current.conflict);
-    setSource('aegis-fires', current.fires);
-    setSource('aegis-weather-alerts', current.weatherAlerts);
-    setSource('aegis-day-night', current.dayNight);
-    setSource('aegis-transit', current.transit);
-    setSource('aegis-wind', current.wind);
-    setSource('aegis-drawings', drawingsRef.current);
-    setSource('aegis-route', routeRef.current);
+    setSource('krynara-satellites', current.satellites);
+    setSource('krynara-weather', current.weather);
+    setSource('krynara-conflict', current.conflict);
+    setSource('krynara-fires', current.fires);
+    setSource('krynara-weather-alerts', current.weatherAlerts);
+    setSource('krynara-day-night', current.dayNight);
+    setSource('krynara-transit', current.transit);
+    setSource('krynara-wind', current.wind);
+    setSource('krynara-drawings', drawingsRef.current);
+    setSource('krynara-route', routeRef.current);
     onCountsRef.current({
       aircraft: current.flights.length,
       quakes: current.quakes.length,
@@ -246,33 +246,33 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
       transit: current.transit.features.length,
     });
     const visibility: Record<string, boolean> = {
-      'aegis-flights-layer': visibilityRef.current.flights,
-      'aegis-flights-glow': visibilityRef.current.flights,
-      'aegis-quakes-layer': visibilityRef.current.earthquakes,
-      'aegis-quake-pulse': visibilityRef.current.earthquakes,
-      'aegis-satellites-layer': visibilityRef.current.satellites,
-      'aegis-satellite-trails': visibilityRef.current.satellites,
-      'aegis-weather-layer': visibilityRef.current.weather,
-      'aegis-weather-alert-fill': visibilityRef.current.weatherAlerts,
-      'aegis-weather-alert-line': visibilityRef.current.weatherAlerts,
-      'aegis-rain-radar-layer': visibilityRef.current.rainRadar,
-      'aegis-satellite-clouds-layer': visibilityRef.current.satelliteClouds,
-      'aegis-water-vapor-layer': visibilityRef.current.waterVapor,
-      'aegis-transit-layer': visibilityRef.current.transit,
-      'aegis-transit-labels': visibilityRef.current.transit,
-      'aegis-wind-layer': visibilityRef.current.wind,
-      'aegis-day-night-layer': visibilityRef.current.dayNight,
-      'aegis-3d-buildings': visibilityRef.current.buildings3d,
-      'aegis-conflict-layer': visibilityRef.current.conflict,
-      'aegis-fires-layer': visibilityRef.current.fires,
-      'aegis-marine-layer': visibilityRef.current.marine,
-      'aegis-marine-labels': visibilityRef.current.marine,
+      'krynara-flights-layer': visibilityRef.current.flights,
+      'krynara-flights-glow': visibilityRef.current.flights,
+      'krynara-quakes-layer': visibilityRef.current.earthquakes,
+      'krynara-quake-pulse': visibilityRef.current.earthquakes,
+      'krynara-satellites-layer': visibilityRef.current.satellites,
+      'krynara-satellite-trails': visibilityRef.current.satellites,
+      'krynara-weather-layer': visibilityRef.current.weather,
+      'krynara-weather-alert-fill': visibilityRef.current.weatherAlerts,
+      'krynara-weather-alert-line': visibilityRef.current.weatherAlerts,
+      'krynara-rain-radar-layer': visibilityRef.current.rainRadar,
+      'krynara-satellite-clouds-layer': visibilityRef.current.satelliteClouds,
+      'krynara-water-vapor-layer': visibilityRef.current.waterVapor,
+      'krynara-transit-layer': visibilityRef.current.transit,
+      'krynara-transit-labels': visibilityRef.current.transit,
+      'krynara-wind-layer': visibilityRef.current.wind,
+      'krynara-day-night-layer': visibilityRef.current.dayNight,
+      'krynara-3d-buildings': visibilityRef.current.buildings3d,
+      'krynara-conflict-layer': visibilityRef.current.conflict,
+      'krynara-fires-layer': visibilityRef.current.fires,
+      'krynara-marine-layer': visibilityRef.current.marine,
+      'krynara-marine-labels': visibilityRef.current.marine,
     };
     for (const [layer, enabled] of Object.entries(visibility)) {
       if (map.getLayer(layer)) map.setLayoutProperty(layer, 'visibility', enabled ? 'visible' : 'none');
     }
-    if (map.getSource('aegis-terrain')) {
-      map.setTerrain(visibilityRef.current.terrain ? { source: 'aegis-terrain', exaggeration: 1.15 } : null);
+    if (map.getSource('krynara-terrain')) {
+      map.setTerrain(visibilityRef.current.terrain ? { source: 'krynara-terrain', exaggeration: 1.15 } : null);
     }
   };
 
@@ -292,7 +292,7 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
       } else {
         map.setProjection({ type: 'mercator' });
       }
-      map.addSource('aegis-terrain', {
+      map.addSource('krynara-terrain', {
         type: 'raster-dem',
         tiles: ['https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png'],
         tileSize: 256,
@@ -303,10 +303,10 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
       const initialView = { center: [0, 20] as [number, number], zoom: mode === '3d' ? 2.8 : 2, duration: 2000, essential: true };
       if (mode === '3d') map.easeTo(initialView);
       else map.flyTo(initialView);
-      map.addSource('aegis-flights', { type: 'geojson', data: empty as never });
-      map.addLayer({ id: 'aegis-flights-glow', type: 'circle', source: 'aegis-flights', paint: { 'circle-radius': 14, 'circle-color': '#8AF8FF', 'circle-opacity': .08, 'circle-blur': .6 } });
+      map.addSource('krynara-flights', { type: 'geojson', data: empty as never });
+      map.addLayer({ id: 'krynara-flights-glow', type: 'circle', source: 'krynara-flights', paint: { 'circle-radius': 14, 'circle-color': '#8AF8FF', 'circle-opacity': .08, 'circle-blur': .6 } });
       map.addLayer({
-        id: 'aegis-flights-layer', type: 'symbol', source: 'aegis-flights',
+        id: 'krynara-flights-layer', type: 'symbol', source: 'krynara-flights',
         layout: {
           'text-field': ['case', ['has', 'point_count'], ['get', 'point_count_abbreviated'], '▲'],
           'text-size': ['case', ['has', 'point_count'], 11, 14],
@@ -316,24 +316,24 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
         },
         paint: { 'text-color': '#8AF8FF', 'text-halo-color': '#050A0E', 'text-halo-width': 1.4 },
       });
-      map.addSource('aegis-quakes', { type: 'geojson', data: empty as never });
-      map.addLayer({ id: 'aegis-quake-pulse', type: 'circle', source: 'aegis-quakes', paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 0, 7, 6, 20], 'circle-color': '#FF5F6D', 'circle-opacity': .18 } });
-      map.addLayer({ id: 'aegis-quakes-layer', type: 'circle', source: 'aegis-quakes', paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 0, 3, 6, 10], 'circle-color': ['interpolate', ['linear'], ['get', 'magnitude'], 0, '#FFC857', 3, '#FF8B45', 5, '#FF5F6D'], 'circle-opacity': .9, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
-      map.addSource('aegis-marine', { type: 'geojson', data: marineLanes as never });
-      map.addLayer({ id: 'aegis-marine-layer', type: 'line', source: 'aegis-marine', layout: { 'line-join': 'round' }, paint: { 'line-color': '#4FC3F7', 'line-width': 1.4, 'line-opacity': .45, 'line-dasharray': [2, 2] } });
-      map.addLayer({ id: 'aegis-marine-labels', type: 'symbol', source: 'aegis-marine', layout: { 'symbol-placement': 'line', 'text-field': ['get', 'name'], 'text-size': 9 }, paint: { 'text-color': '#4FC3F7', 'text-halo-color': '#050A0E', 'text-halo-width': 1 } });
-      map.addSource('aegis-satellites', { type: 'geojson', data: empty as never });
-      map.addLayer({ id: 'aegis-satellite-trails', type: 'circle', source: 'aegis-satellites', paint: { 'circle-radius': 11, 'circle-color': '#FFFFFF', 'circle-opacity': .1, 'circle-blur': .8 } });
-      map.addLayer({ id: 'aegis-satellites-layer', type: 'circle', source: 'aegis-satellites', paint: { 'circle-radius': 5, 'circle-color': '#FFFFFF', 'circle-opacity': .95, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
+      map.addSource('krynara-quakes', { type: 'geojson', data: empty as never });
+      map.addLayer({ id: 'krynara-quake-pulse', type: 'circle', source: 'krynara-quakes', paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 0, 7, 6, 20], 'circle-color': '#FF5F6D', 'circle-opacity': .18 } });
+      map.addLayer({ id: 'krynara-quakes-layer', type: 'circle', source: 'krynara-quakes', paint: { 'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 0, 3, 6, 10], 'circle-color': ['interpolate', ['linear'], ['get', 'magnitude'], 0, '#FFC857', 3, '#FF8B45', 5, '#FF5F6D'], 'circle-opacity': .9, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
+      map.addSource('krynara-marine', { type: 'geojson', data: marineLanes as never });
+      map.addLayer({ id: 'krynara-marine-layer', type: 'line', source: 'krynara-marine', layout: { 'line-join': 'round' }, paint: { 'line-color': '#4FC3F7', 'line-width': 1.4, 'line-opacity': .45, 'line-dasharray': [2, 2] } });
+      map.addLayer({ id: 'krynara-marine-labels', type: 'symbol', source: 'krynara-marine', layout: { 'symbol-placement': 'line', 'text-field': ['get', 'name'], 'text-size': 9 }, paint: { 'text-color': '#4FC3F7', 'text-halo-color': '#050A0E', 'text-halo-width': 1 } });
+      map.addSource('krynara-satellites', { type: 'geojson', data: empty as never });
+      map.addLayer({ id: 'krynara-satellite-trails', type: 'circle', source: 'krynara-satellites', paint: { 'circle-radius': 11, 'circle-color': '#FFFFFF', 'circle-opacity': .1, 'circle-blur': .8 } });
+      map.addLayer({ id: 'krynara-satellites-layer', type: 'circle', source: 'krynara-satellites', paint: { 'circle-radius': 5, 'circle-color': '#FFFFFF', 'circle-opacity': .95, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
       for (const [id, color, radius] of [['weather', '#65D6A8', 5], ['conflict', '#FF9F45', 6], ['fires', '#FF3D00', 5]] as const) {
-        map.addSource(`aegis-${id}`, { type: 'geojson', data: empty as never });
-        map.addLayer({ id: `aegis-${id}-layer`, type: 'circle', source: `aegis-${id}`, paint: { 'circle-radius': radius, 'circle-color': color, 'circle-opacity': .85, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
+        map.addSource(`krynara-${id}`, { type: 'geojson', data: empty as never });
+        map.addLayer({ id: `krynara-${id}-layer`, type: 'circle', source: `krynara-${id}`, paint: { 'circle-radius': radius, 'circle-color': color, 'circle-opacity': .85, 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1 } });
       }
-      map.addSource('aegis-transit', { type: 'geojson', data: empty as never });
+      map.addSource('krynara-transit', { type: 'geojson', data: empty as never });
       map.addLayer({
-        id: 'aegis-transit-layer',
+        id: 'krynara-transit-layer',
         type: 'circle',
-        source: 'aegis-transit',
+        source: 'krynara-transit',
         paint: {
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 3, 11, 6],
           'circle-color': ['match', ['get', 'mode'], 'bus', '#5EEAD4', 'rail', '#C4B5FD', 'metro', '#F87171', 'tram', '#FBBF24', '#7DD3FC'],
@@ -343,18 +343,18 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
         },
       });
       map.addLayer({
-        id: 'aegis-transit-labels',
+        id: 'krynara-transit-labels',
         type: 'symbol',
-        source: 'aegis-transit',
+        source: 'krynara-transit',
         minzoom: 10,
         layout: { 'text-field': ['coalesce', ['get', 'route'], ['get', 'label'], ''], 'text-size': 9, 'text-offset': [0, 1.2], 'text-allow-overlap': false },
         paint: { 'text-color': '#5EEAD4', 'text-halo-color': '#07151B', 'text-halo-width': 1.2 },
       });
-      map.addSource('aegis-wind', { type: 'geojson', data: empty as never });
+      map.addSource('krynara-wind', { type: 'geojson', data: empty as never });
       map.addLayer({
-        id: 'aegis-wind-layer',
+        id: 'krynara-wind-layer',
         type: 'symbol',
-        source: 'aegis-wind',
+        source: 'krynara-wind',
         layout: {
           'text-field': '▲',
           'text-size': ['interpolate', ['linear'], ['zoom'], 2, 12, 8, 18],
@@ -368,35 +368,35 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
           'text-halo-width': 1,
         },
       });
-      map.addSource('aegis-weather-alerts', { type: 'geojson', data: emptyAlerts as never });
+      map.addSource('krynara-weather-alerts', { type: 'geojson', data: emptyAlerts as never });
       map.addLayer({
-        id: 'aegis-weather-alert-fill',
+        id: 'krynara-weather-alert-fill',
         type: 'fill',
-        source: 'aegis-weather-alerts',
+        source: 'krynara-weather-alerts',
         paint: {
           'fill-color': ['match', ['get', 'severity'], 'Extreme', '#FF3D00', 'Severe', '#FF5F6D', 'Moderate', '#FFC857', '#8AF8FF'],
           'fill-opacity': 0.16,
         },
       });
       map.addLayer({
-        id: 'aegis-weather-alert-line',
+        id: 'krynara-weather-alert-line',
         type: 'line',
-        source: 'aegis-weather-alerts',
+        source: 'krynara-weather-alerts',
         paint: {
           'line-color': ['match', ['get', 'severity'], 'Extreme', '#FF3D00', 'Severe', '#FF5F6D', 'Moderate', '#FFC857', '#8AF8FF'],
           'line-width': 1.5,
           'line-opacity': 0.8,
         },
       });
-      map.addSource('aegis-day-night', { type: 'geojson', data: emptyNightMask as never });
+      map.addSource('krynara-day-night', { type: 'geojson', data: emptyNightMask as never });
       map.addLayer({
-        id: 'aegis-day-night-layer',
+        id: 'krynara-day-night-layer',
         type: 'fill',
-        source: 'aegis-day-night',
+        source: 'krynara-day-night',
         paint: { 'fill-color': '#080E2A', 'fill-opacity': 0.3 },
-      }, 'aegis-flights-glow');
+      }, 'krynara-flights-glow');
       const satelliteWms = (layer: string) => `https://nowcoast.noaa.gov/geoserver/observations/satellite/wms?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=${layer}&STYLES=&FORMAT=image%2Fpng&TRANSPARENT=true&SRS=EPSG%3A3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256`;
-      map.addSource('aegis-satellite-clouds', {
+      map.addSource('krynara-satellite-clouds', {
         type: 'raster',
         tiles: [satelliteWms('global_longwave_imagery_mosaic')],
         tileSize: 256,
@@ -404,13 +404,13 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
         attribution: 'Cloud imagery © NOAA/NESDIS GMGSI',
       });
       map.addLayer({
-        id: 'aegis-satellite-clouds-layer',
+        id: 'krynara-satellite-clouds-layer',
         type: 'raster',
-        source: 'aegis-satellite-clouds',
+        source: 'krynara-satellite-clouds',
         layout: { visibility: 'none' },
         paint: { 'raster-opacity': 0.62 },
-      }, 'aegis-day-night-layer');
-      map.addSource('aegis-water-vapor', {
+      }, 'krynara-day-night-layer');
+      map.addSource('krynara-water-vapor', {
         type: 'raster',
         tiles: [satelliteWms('global_water_vapor_imagery_mosaic')],
         tileSize: 256,
@@ -418,15 +418,15 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
         attribution: 'Water vapor imagery © NOAA/NESDIS GMGSI',
       });
       map.addLayer({
-        id: 'aegis-water-vapor-layer',
+        id: 'krynara-water-vapor-layer',
         type: 'raster',
-        source: 'aegis-water-vapor',
+        source: 'krynara-water-vapor',
         layout: { visibility: 'none' },
         paint: { 'raster-opacity': 0.48 },
-      }, 'aegis-day-night-layer');
+      }, 'krynara-day-night-layer');
       if (map.getSource('protomaps')) {
         map.addLayer({
-          id: 'aegis-3d-buildings',
+          id: 'krynara-3d-buildings',
           type: 'fill-extrusion',
           source: 'protomaps',
           'source-layer': 'buildings',
@@ -438,61 +438,61 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
             'fill-extrusion-base': ['coalesce', ['to-number', ['get', 'render_min_height']], ['to-number', ['get', 'min_height']], 0],
             'fill-extrusion-opacity': 0.65,
           },
-        }, 'aegis-flights-glow');
+        }, 'krynara-flights-glow');
       }
-      map.addSource('aegis-measure', { type: 'geojson', data: emptyMeasure });
+      map.addSource('krynara-measure', { type: 'geojson', data: emptyMeasure });
       map.addLayer({
-        id: 'aegis-measure-line',
+        id: 'krynara-measure-line',
         type: 'line',
-        source: 'aegis-measure',
+        source: 'krynara-measure',
         filter: ['==', ['geometry-type'], 'LineString'],
         paint: { 'line-color': '#8AF8FF', 'line-width': 2, 'line-dasharray': [2, 1] },
       });
       map.addLayer({
-        id: 'aegis-measure-points',
+        id: 'krynara-measure-points',
         type: 'circle',
-        source: 'aegis-measure',
+        source: 'krynara-measure',
         filter: ['==', ['geometry-type'], 'Point'],
         paint: { 'circle-radius': 5, 'circle-color': '#8AF8FF', 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 2 },
       });
-      map.addSource('aegis-drawings', { type: 'geojson', data: emptyDrawings as never });
+      map.addSource('krynara-drawings', { type: 'geojson', data: emptyDrawings as never });
       map.addLayer({
-        id: 'aegis-drawing-fill',
+        id: 'krynara-drawing-fill',
         type: 'fill',
-        source: 'aegis-drawings',
+        source: 'krynara-drawings',
         filter: ['==', ['geometry-type'], 'Polygon'],
         paint: { 'fill-color': ['coalesce', ['get', 'color'], '#8AF8FF'], 'fill-opacity': 0.16 },
       });
       map.addLayer({
-        id: 'aegis-drawing-line',
+        id: 'krynara-drawing-line',
         type: 'line',
-        source: 'aegis-drawings',
+        source: 'krynara-drawings',
         filter: ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]],
         paint: { 'line-color': ['coalesce', ['get', 'color'], '#8AF8FF'], 'line-width': 2, 'line-dasharray': [2, 1] },
       });
       map.addLayer({
-        id: 'aegis-drawing-points',
+        id: 'krynara-drawing-points',
         type: 'circle',
-        source: 'aegis-drawings',
+        source: 'krynara-drawings',
         filter: ['==', ['geometry-type'], 'Point'],
         paint: { 'circle-radius': 5, 'circle-color': ['coalesce', ['get', 'color'], '#8AF8FF'], 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 1.5 },
       });
-      map.addSource('aegis-route', { type: 'geojson', data: emptyRoute as never });
+      map.addSource('krynara-route', { type: 'geojson', data: emptyRoute as never });
       map.addLayer({
-        id: 'aegis-route-line',
+        id: 'krynara-route-line',
         type: 'line',
-        source: 'aegis-route',
+        source: 'krynara-route',
         filter: ['==', ['geometry-type'], 'LineString'],
         paint: { 'line-color': '#FFC857', 'line-width': 4, 'line-opacity': 0.95 },
       });
       map.addLayer({
-        id: 'aegis-route-points',
+        id: 'krynara-route-points',
         type: 'circle',
-        source: 'aegis-route',
+        source: 'krynara-route',
         filter: ['==', ['geometry-type'], 'Point'],
         paint: { 'circle-radius': 7, 'circle-color': '#FFC857', 'circle-stroke-color': '#050A0E', 'circle-stroke-width': 2 },
       });
-      const popup = new maplibregl.Popup({ closeButton: false, className: 'aegis-popup' });
+      const popup = new maplibregl.Popup({ closeButton: false, className: 'krynara-popup' });
       const escapeHtml = (value: unknown) => {
         const text = typeof value === 'string' || typeof value === 'number' ? String(value) : '';
         return text.replace(/[&<>"']/g, (character) => ({
@@ -535,17 +535,17 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
         }
       };
       for (const layerId of [
-        'aegis-flights-layer',
-        'aegis-quakes-layer',
-        'aegis-satellites-layer',
-        'aegis-conflict-layer',
-        'aegis-fires-layer',
-        'aegis-weather-layer',
-        'aegis-marine-layer',
-        'aegis-weather-alert-fill',
-        'aegis-weather-alert-line',
-        'aegis-transit-layer',
-        'aegis-wind-layer',
+        'krynara-flights-layer',
+        'krynara-quakes-layer',
+        'krynara-satellites-layer',
+        'krynara-conflict-layer',
+        'krynara-fires-layer',
+        'krynara-weather-layer',
+        'krynara-marine-layer',
+        'krynara-weather-alert-fill',
+        'krynara-weather-alert-line',
+        'krynara-transit-layer',
+        'krynara-wind-layer',
       ]) {
         map.on('click', layerId, clickHandler);
         map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -572,7 +572,7 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
 
   useEffect(() => {
     const map = mapRef.current;
-    const source = map?.getSource('aegis-measure') as maplibregl.GeoJSONSource | undefined;
+    const source = map?.getSource('krynara-measure') as maplibregl.GeoJSONSource | undefined;
     if (!ready || !map || !source || !measureActive) {
       measurePointsRef.current = [];
       if (source) void source.setData(emptyMeasure as never);
@@ -661,9 +661,9 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
         onRainFramesRef.current(sortedFrames);
         const selectedFrame = sortedFrames.find((frame) => frame.time === selectedRainTimeRef.current)
           ?? sortedFrames[sortedFrames.length - 1]!;
-        if (map.getLayer('aegis-rain-radar-layer')) map.removeLayer('aegis-rain-radar-layer');
-        if (map.getSource('aegis-rain-radar')) map.removeSource('aegis-rain-radar');
-        map.addSource('aegis-rain-radar', {
+        if (map.getLayer('krynara-rain-radar-layer')) map.removeLayer('krynara-rain-radar-layer');
+        if (map.getSource('krynara-rain-radar')) map.removeSource('krynara-rain-radar');
+        map.addSource('krynara-rain-radar', {
           type: 'raster',
           tiles: [selectedFrame.tileUrl],
           tileSize: 256,
@@ -671,12 +671,12 @@ export const GlobeMap = forwardRef<WorldMapHandle, GlobeMapProps>(function Globe
           attribution: 'RainViewer precipitation radar',
         });
         map.addLayer({
-          id: 'aegis-rain-radar-layer',
+          id: 'krynara-rain-radar-layer',
           type: 'raster',
-          source: 'aegis-rain-radar',
+          source: 'krynara-rain-radar',
           layout: { visibility: visibilityRef.current.rainRadar ? 'visible' : 'none' },
           paint: { 'raster-opacity': 0.65 },
-        }, map.getLayer('aegis-day-night-layer') ? 'aegis-day-night-layer' : undefined);
+        }, map.getLayer('krynara-day-night-layer') ? 'krynara-day-night-layer' : undefined);
         onRainRadarError(response.headers.get('warning') ? 'RainViewer unavailable; showing its cached radar frame.' : '');
       } catch (error) {
         if (active && !requestController.signal.aborted) {
@@ -941,7 +941,7 @@ function ModeButton({ mode, value, label }: { mode: MapMode; value: MapMode; lab
     <button
       type="button"
       className={mode === value ? 'active' : ''}
-      onClick={() => window.dispatchEvent(new CustomEvent('aegis-map-mode', { detail: value }))}
+      onClick={() => window.dispatchEvent(new CustomEvent('krynara-map-mode', { detail: value }))}
     >
       {label}
     </button>

@@ -7,9 +7,9 @@ interface StatusCardProps {
 }
 
 const statusColors = {
-  online: 'var(--aegis-green)',
-  warning: 'var(--aegis-amber)',
-  offline: 'var(--aegis-red)',
+  online: 'var(--krynara-green)',
+  warning: 'var(--krynara-amber)',
+  offline: 'var(--krynara-red)',
 };
 
 export function StatusCard({ label, value, sub, status = 'online', className = '' }: StatusCardProps) {

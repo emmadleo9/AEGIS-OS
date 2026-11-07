@@ -10,8 +10,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const gatewayDir = path.join(root, 'gateway');
 const consoleDir = path.join(root, 'console');
 const runtimeDir = process.env.LOCALAPPDATA
-  ? path.join(process.env.LOCALAPPDATA, 'AEGIS-OS', 'runtime')
-  : path.join(os.homedir(), '.aegis-os', 'runtime');
+  ? path.join(process.env.LOCALAPPDATA, 'Krynara-OS', 'runtime')
+  : path.join(os.homedir(), '.krynara-os', 'runtime');
 const gatewayRequire = createRequire(path.join(gatewayDir, 'package.json'));
 const gatewayEntry = path.join(gatewayDir, 'index.js');
 const dotenv = gatewayRequire('dotenv');
@@ -27,11 +27,11 @@ for (const envFile of [
   if (result.error) throw result.error;
 }
 
-const gatewayPort = Number(process.env.GATEWAY_PORT || process.env.AEGIS_PORT || 2785);
+const gatewayPort = Number(process.env.GATEWAY_PORT || process.env.KRYNARA_PORT || 2785);
 const consolePort = Number(process.env.CONSOLE_PORT || 5173);
 const gatewayHealthUrl = `http://127.0.0.1:${gatewayPort}/api/health`;
 const consoleHealthUrl = `http://127.0.0.1:${consolePort}/api/health`;
-const ollamaBaseUrl = process.env.AEGIS_OLLAMA_URL || 'http://127.0.0.1:11434';
+const ollamaBaseUrl = process.env.KRYNARA_OLLAMA_URL || 'http://127.0.0.1:11434';
 const ollamaHealthUrl = new URL('/api/tags', ollamaBaseUrl).toString();
 const children = new Set();
 let stopping = false;
@@ -86,15 +86,15 @@ function acquireCoordinatorLock() {
       if (error.code !== 'EEXIST') throw error;
       const owner = readPidFile(coordinatorLockFile);
       if (isProcessRunning(owner)) {
-        throw new Error(`Another AEGIS master launcher is already running (PID ${owner}).`);
+        throw new Error(`Another KRYNARA master launcher is already running (PID ${owner}).`);
       }
       if (Date.now() - fs.statSync(coordinatorLockFile).mtimeMs < 5000) {
-        throw new Error('Another AEGIS master launcher is acquiring the startup lock. Retry in a few seconds.');
+        throw new Error('Another KRYNARA master launcher is acquiring the startup lock. Retry in a few seconds.');
       }
       fs.unlinkSync(coordinatorLockFile);
     }
   }
-  throw new Error('Could not acquire the AEGIS startup lock. Retry after checking the runtime folder.');
+  throw new Error('Could not acquire the KRYNARA startup lock. Retry after checking the runtime folder.');
 }
 
 function releaseCoordinatorLock() {
@@ -168,14 +168,14 @@ async function startOllamaWhenAvailable() {
   try {
     const response = await fetch(ollamaHealthUrl, { signal: AbortSignal.timeout(1500) });
     if (response.ok) {
-      console.log(`[AEGIS-OS] Local AI service is already available at ${new URL(ollamaHealthUrl).origin}.`);
+      console.log(`[Krynara-OS] Local AI service is already available at ${new URL(ollamaHealthUrl).origin}.`);
       return;
     }
   } catch { }
 
   const ollamaUrl = new URL(ollamaBaseUrl);
   if (!['localhost', '127.0.0.1', '::1'].includes(ollamaUrl.hostname)) {
-    console.warn(`[AEGIS-OS] Optional Ollama service is unavailable at ${ollamaUrl.origin}; continuing without local AI.`);
+    console.warn(`[Krynara-OS] Optional Ollama service is unavailable at ${ollamaUrl.origin}; continuing without local AI.`);
     return;
   }
 
@@ -183,15 +183,15 @@ async function startOllamaWhenAvailable() {
   try {
     execFileSync(locator, ['ollama'], { stdio: 'ignore' });
   } catch {
-    console.warn('[AEGIS-OS] Ollama is not installed or not on PATH; continuing without local AI.');
+    console.warn('[Krynara-OS] Ollama is not installed or not on PATH; continuing without local AI.');
     return;
   }
 
   const host = `${ollamaUrl.hostname}:${ollamaUrl.port || '11434'}`;
   const ollama = startChild('Ollama', 'ollama', ['serve'], root, { ...process.env, OLLAMA_HOST: host });
-  console.log('[AEGIS-OS] Starting Ollama local AI service...');
+  console.log('[Krynara-OS] Starting Ollama local AI service...');
   await waitForEndpoint(ollamaHealthUrl, 'Ollama local AI service', ollama, 60_000);
-  console.log(`[AEGIS-OS] Local AI service is ready at ${ollamaUrl.origin}.`);
+  console.log(`[Krynara-OS] Local AI service is ready at ${ollamaUrl.origin}.`);
 }
 
 function stopChildren() {
@@ -207,7 +207,7 @@ function removePidFile(pidFile, pid) {
   try {
     if (Number(fs.readFileSync(pidFile, 'utf8')) === pid) fs.unlinkSync(pidFile);
   } catch (error) {
-    if (error.code !== 'ENOENT') console.error(`[AEGIS-OS] Could not clear ${pidFile}: ${error.message}`);
+    if (error.code !== 'ENOENT') console.error(`[Krynara-OS] Could not clear ${pidFile}: ${error.message}`);
   }
 }
 
@@ -227,12 +227,12 @@ function startChild(label, executable, args, cwd, env = process.env) {
       fs.writeFileSync(pidFile, String(child.pid), 'utf8');
     } catch (error) {
       child.kill();
-      throw new Error(`Could not record the ${label} process for STOP-AEGIS: ${error.message}`);
+      throw new Error(`Could not record the ${label} process for STOP-KRYNARA: ${error.message}`);
     }
   }
   child.once('error', (error) => {
     removePidFile(pidFile, child.pid);
-    console.error(`[AEGIS-OS] Could not start ${label}: ${error.message}`);
+    console.error(`[Krynara-OS] Could not start ${label}: ${error.message}`);
     process.exitCode = 1;
     stopChildren();
   });
@@ -240,7 +240,7 @@ function startChild(label, executable, args, cwd, env = process.env) {
     removePidFile(pidFile, child.pid);
     children.delete(child);
     if (stopping) return;
-    console.error(`[AEGIS-OS] ${label} exited${signal ? ` from signal ${signal}` : ` with code ${code}`}.`);
+    console.error(`[Krynara-OS] ${label} exited${signal ? ` from signal ${signal}` : ` with code ${code}`}.`);
     process.exitCode = code ?? 1;
     stopChildren();
   });
@@ -256,11 +256,11 @@ async function main() {
   if (existingCoordinator !== process.pid && isProcessRunning(existingCoordinator)) {
     if (await getHealth(gatewayHealthUrl, '/api/whatsapp/status')
       && await getHealth(consoleHealthUrl)) {
-      console.log(`[AEGIS-OS] AEGIS is already running (launcher PID ${existingCoordinator}).`);
-      console.log(`[AEGIS-OS] Console: http://localhost:${consolePort} | Gateway: http://127.0.0.1:${gatewayPort}`);
+      console.log(`[Krynara-OS] KRYNARA is already running (launcher PID ${existingCoordinator}).`);
+      console.log(`[Krynara-OS] Console: http://localhost:${consolePort} | Gateway: http://127.0.0.1:${gatewayPort}`);
       return;
     }
-    throw new Error(`Launcher PID ${existingCoordinator} exists but the full AEGIS stack is not healthy. Use STOP-AEGIS.bat before restarting.`);
+    throw new Error(`Launcher PID ${existingCoordinator} exists but the full KRYNARA stack is not healthy. Use STOP-KRYNARA.bat before restarting.`);
   }
 
   acquireCoordinatorLock();
@@ -270,16 +270,16 @@ async function main() {
   let gateway;
   if (!(await getHealth(gatewayHealthUrl, '/api/whatsapp/status'))) {
     if (await getHealth(gatewayHealthUrl)) {
-      throw new Error(`Port ${gatewayPort} is serving a different gateway. Stop it and restart AEGIS so WhatsApp can use the local API.`);
+      throw new Error(`Port ${gatewayPort} is serving a different gateway. Stop it and restart KRYNARA so WhatsApp can use the local API.`);
     }
     gateway = startChild(
       'Gateway',
       process.execPath,
       [gatewayEntry],
       gatewayDir,
-      { ...process.env, GATEWAY_PORT: String(gatewayPort), AEGIS_PORT: String(gatewayPort), PORT: String(gatewayPort) },
+      { ...process.env, GATEWAY_PORT: String(gatewayPort), KRYNARA_PORT: String(gatewayPort), PORT: String(gatewayPort) },
     );
-    await waitForHealth(gatewayHealthUrl, 'AEGIS local gateway', gateway, '/api/whatsapp/status');
+    await waitForHealth(gatewayHealthUrl, 'KRYNARA local gateway', gateway, '/api/whatsapp/status');
   }
 
   if (!(await getHealth(consoleHealthUrl))) {
@@ -287,7 +287,7 @@ async function main() {
     const consoleEnv = {
       ...process.env,
       GATEWAY_PORT: String(gatewayPort),
-      AEGIS_PORT: String(gatewayPort),
+      KRYNARA_PORT: String(gatewayPort),
       CONSOLE_PORT: String(consolePort),
       NODE_ENV: 'development',
     };
@@ -302,10 +302,10 @@ async function main() {
     await waitForHealth(consoleHealthUrl, 'Console proxy', consoleServer);
   }
 
-  console.log('[AEGIS-OS] AEGIS-OS v0.4 startup complete.');
-  console.log(`[AEGIS-OS] Console: http://localhost:${consolePort}`);
-  console.log(`[AEGIS-OS] Local gateway: http://127.0.0.1:${gatewayPort} (proxied via /api)`);
-  console.log('[AEGIS-OS] WhatsApp, World View feeds, and AI routes are ready through the local gateway.');
+  console.log('[Krynara-OS] Krynara-OS v0.4 startup complete.');
+  console.log(`[Krynara-OS] Console: http://localhost:${consolePort}`);
+  console.log(`[Krynara-OS] Local gateway: http://127.0.0.1:${gatewayPort} (proxied via /api)`);
+  console.log('[Krynara-OS] WhatsApp, World View feeds, and AI routes are ready through the local gateway.');
 
   process.once('SIGINT', () => {
     process.exitCode = 130;
@@ -315,7 +315,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(`[AEGIS-OS] Startup failed: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(`[Krynara-OS] Startup failed: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
   stopChildren();
 });

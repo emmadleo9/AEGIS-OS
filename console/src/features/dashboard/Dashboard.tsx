@@ -95,14 +95,14 @@ export function Dashboard() {
 
   return (
     <div className="dashboard-page">
-      <div className="aegis-grid aegis-grid-4">
+      <div className="krynara-grid krynara-grid-4">
         <StatusCard label="SYSTEM" value={stats ? 'ONLINE' : 'CONNECTING'} sub={apiError || (stats ? 'GATEWAY TELEMETRY LIVE' : 'WAITING FOR GATEWAY')} status={stats ? 'online' : apiError ? 'offline' : 'warning'} />
         <StatusCard label="ENTITIES TRACKED" value={String(entityCount)} sub={flightError || quakeError || `${flights.length} AIRCRAFT / ${quakes.length} QUAKES`} status={flightError || quakeError ? 'warning' : 'online'} />
         <StatusCard label="API LATENCY" value={latency === null ? '--' : `${latency}ms`} sub={apiError ? 'GATEWAY UNAVAILABLE' : 'MEASURED ROUND TRIP'} status={apiError ? 'offline' : 'online'} />
         <StatusCard label="BATTERY" value={batteryValue} sub={batterySub} status={battery && battery.percent < 15 && !battery.charging ? 'warning' : 'online'} />
       </div>
 
-      <div className="aegis-grid aegis-grid-3 aegis-section">
+      <div className="krynara-grid krynara-grid-3 krynara-section">
         <HudFrame title="PROCESSOR">
           <GaugeCircle label="CPU LOAD" value={stats ? `${stats.cpuLoad.toFixed(0)}%` : '--'} sub="SYSTEM-WIDE" percent={stats?.cpuLoad ?? 0} size={190} />
         </HudFrame>
@@ -118,11 +118,11 @@ export function Dashboard() {
         HOST METRICS REFRESH EVERY 3 SECONDS // PUBLIC FEED COUNTS REFRESH INDEPENDENTLY
       </div>
 
-      <div className="aegis-section">
+      <div className="krynara-section">
         <TaskControlCenter />
       </div>
 
-      <div className="aegis-section">
+      <div className="krynara-section">
         <StudioSystemConsole />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { HudFrame } from '@/components/hud';
-import { AegisWhatsApp } from '@/features/social/AegisWhatsApp';
+import { KrynaraWhatsApp } from '@/features/social/KrynaraWhatsApp';
 
 type Platform = 'WHATSAPP' | 'TELEGRAM' | 'INSTAGRAM' | 'DISCORD';
 type Message = { id: number; sender: string; text: string; time: string; outgoing?: boolean };
@@ -38,8 +38,8 @@ const seedChats: Record<Platform, Chat[]> = {
     { id: 'ig-2', name: 'Public page', preview: 'New comment received', unread: 3, messages: [{ id: 2, sender: 'Public page', text: 'New comment received.', time: '09:20' }] },
   ],
   DISCORD: [
-    { id: 'dc-1', name: 'aegis / general', preview: 'Welcome to the workspace', unread: 0, messages: [{ id: 1, sender: 'Moderator', text: 'Welcome to the workspace.', time: '10:51' }] },
-    { id: 'dc-2', name: 'aegis / research', preview: 'Links are in the thread', unread: 1, messages: [{ id: 2, sender: 'Research team', text: 'Links are in the thread.', time: '07:38' }] },
+    { id: 'dc-1', name: 'krynara / general', preview: 'Welcome to the workspace', unread: 0, messages: [{ id: 1, sender: 'Moderator', text: 'Welcome to the workspace.', time: '10:51' }] },
+    { id: 'dc-2', name: 'krynara / research', preview: 'Links are in the thread', unread: 1, messages: [{ id: 2, sender: 'Research team', text: 'Links are in the thread.', time: '07:38' }] },
   ],
 };
 
@@ -125,11 +125,11 @@ export function SocialHub() {
             if (item !== 'WHATSAPP') setChatId(seedChats[item][0].id);
             setTestMessage('');
           }}>
-            {item === 'WHATSAPP' ? 'AEGIS WHATSAPP' : item}
+            {item === 'WHATSAPP' ? 'KRYNARA WHATSAPP' : item}
           </button>
         ))}
       </div>
-      {platform === 'WHATSAPP' ? <AegisWhatsApp /> : <div className="social-workspace">
+      {platform === 'WHATSAPP' ? <KrynaraWhatsApp /> : <div className="social-workspace">
         <HudFrame title={`${platform} // CONVERSATIONS`} className="social-chat-list">
           {selectedChats.map((chat) => (
             <button type="button" className={chat.id === chatId ? 'chat-list-item selected' : 'chat-list-item'} key={chat.id} onClick={() => setChatId(chat.id)}>

@@ -1,4 +1,4 @@
-const OLLAMA_BASE = process.env.AEGIS_OLLAMA_URL || 'http://127.0.0.1:11434';
+const OLLAMA_BASE = process.env.KRYNARA_OLLAMA_URL || 'http://127.0.0.1:11434';
 const supportedModels = [
   { id: 'qwen2.5:3b', name: 'Qwen 2.5 3B' },
   { id: 'qwen2.5-coder:7b', name: 'Qwen 2.5 Coder 7B' },

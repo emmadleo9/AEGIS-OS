@@ -1,11 +1,11 @@
 /**
- * AEGIS key store — user's OWN API accounts (never fake keys).
- * Persisted to D:/AEGIS-OS-STORAGE/config/keys.json; never committed to git.
+ * KRYNARA key store — user's OWN API accounts (never fake keys).
+ * Persisted to D:/Krynara-OS-STORAGE/config/keys.json; never committed to git.
  */
 const fs = require('node:fs');
 const path = require('node:path');
 
-const KEY_DIR = 'D:/AEGIS-OS-STORAGE/config';
+const KEY_DIR = 'D:/Krynara-OS-STORAGE/config';
 const KEY_FILE = path.join(KEY_DIR, 'keys.json');
 const REPO_ROOT = path.join(__dirname, '..', '..');
 const ENV_FILES = [

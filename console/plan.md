@@ -1,4 +1,4 @@
-# AEGIS-OS Console rebuild
+# Krynara-OS Console rebuild
 
 ## Design
 The supplied SYSTEM MONITOR v3.2 HUD reference is the source of truth: a dark, cyan-glowing tactical monitor with Share Tech Mono typography, bracketed panels, circular gauges, and compact telemetry. The layout uses a persistent navigation rail plus dense operational panels rather than decorative imagery. Motion is restrained to status pulses and gauge transitions. The legal OSINT World view is the only map surface and uses public flight and earthquake feeds.

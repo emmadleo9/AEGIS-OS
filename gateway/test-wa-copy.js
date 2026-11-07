@@ -19,7 +19,7 @@ function setState(patch) {
   process.stdout.write(`[wa] setState -> ${connectionState.status}${connectionState.qr ? ' (qr)' : ''}\n`);
 }
 
-async function startAegisWhatsApp() {
+async function startKrynaraWhatsApp() {
   if (startingPromise) return startingPromise;
   startingPromise = (async () => {
     try {
@@ -30,7 +30,7 @@ async function startAegisWhatsApp() {
         version,
         auth: state,
         printQRInTerminal: false,
-        browser: ['AEGIS WhatsApp', 'Chrome', '1.0'],
+        browser: ['KRYNARA WhatsApp', 'Chrome', '1.0'],
         syncFullHistory: false,
       });
 
@@ -58,5 +58,5 @@ async function startAegisWhatsApp() {
   return startingPromise;
 }
 
-startAegisWhatsApp().then(() => { console.log('outer resolved'); });
+startKrynaraWhatsApp().then(() => { console.log('outer resolved'); });
 setTimeout(() => { console.log('FINAL', JSON.stringify({ status: connectionState.status, qrLen: connectionState.qr ? connectionState.qr.length : 0 })); process.exit(0); }, 15000);

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { HudFrame } from '@/components/hud';
-import { loadMemory, saveMemory, pushSearchHistory } from '@/lib/aegis-memory';
+import { loadMemory, saveMemory, pushSearchHistory } from '@/lib/krynara-memory';
 
 type Article = {
   title: string;
@@ -236,7 +236,7 @@ export function NewsConflictView() {
 
   return (
     <div
-      data-aegis-section="news-conflict"
+      data-krynara-section="news-conflict"
       data-section-loaded={eventsLoaded}
       data-searching={searching || debouncedQuery.trim() !== query.trim()}
       style={{ display: 'grid', gap: 16 }}
@@ -310,7 +310,7 @@ export function NewsConflictView() {
               : events
             ).map((item, index) => (
               <a
-                className="aegis-row feed-row"
+                className="krynara-row feed-row"
                 href={item.url || 'https://www.gdeltproject.org/'}
                 target="_blank"
                 rel="noreferrer"
@@ -330,7 +330,7 @@ export function NewsConflictView() {
           <HudFrame title="EVENT DETAIL">
             {selected ? (
               <div style={{ display: 'grid', gap: 10 }}>
-                <strong style={{ color: 'var(--aegis-cyan)' }}>{selected.title}</strong>
+                <strong style={{ color: 'var(--krynara-cyan)' }}>{selected.title}</strong>
                 <a className="hud-link" href={selected.url} target="_blank" rel="noreferrer">
                   OPEN SOURCE ARTICLE →
                 </a>

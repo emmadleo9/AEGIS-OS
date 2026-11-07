@@ -62,7 +62,7 @@ export async function checkLimit() {
   const element = typeof document === 'undefined' ? null : document.getElementById('quota-bar');
   if (element) {
     element.textContent = text;
-    element.setAttribute('aria-label', '20 GB Allocated - For Complete AEGIS-OS System (Not only AI)');
+    element.setAttribute('aria-label', '20 GB Allocated - For Complete Krynara-OS System (Not only AI)');
     element.setAttribute('aria-valuenow', String(percentage));
     element.setAttribute('aria-valuemax', '100');
   }

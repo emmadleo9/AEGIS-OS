@@ -1,5 +1,5 @@
 /**
- * AEGIS satellites route — proxies live satellite positions (where the ISS at API + Open Notify style).
+ * KRYNARA satellites route — proxies live satellite positions (where the ISS at API + Open Notify style).
  * Returns a normalized list the console renders as white dots with orbit trails.
  */
 const cache = new Map();

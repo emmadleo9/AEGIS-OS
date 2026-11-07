@@ -1,5 +1,5 @@
 /**
- * AEGIS WhatsApp — Baileys-powered WhatsApp integration for the AEGIS HUD.
+ * KRYNARA WhatsApp — Baileys-powered WhatsApp integration for the KRYNARA HUD.
  * Auth persists in gateway/data/baileys_auth so sessions survive restarts.
  */
 const fs = require('node:fs');
@@ -128,7 +128,7 @@ function messageContent(message) {
       return value;
     });
   } catch (error) {
-    console.error('[aegis-whatsapp] message content serialization failed:', error);
+    console.error('[krynara-whatsapp] message content serialization failed:', error);
     messageContent = null;
   }
   const mediaId = MEDIA_TYPES.has(messageType) ? crypto.randomUUID() : null;
@@ -209,7 +209,7 @@ function broadcast(event, payload) {
 function setState(patch) {
   connectionState = { ...connectionState, ...patch, updatedAt: new Date().toISOString() };
   broadcast('status', connectionState);
-  process.stdout.write(`[aegis-whatsapp] setState -> ${connectionState.status}${connectionState.qr ? ' (qr ready)' : ''}\n`);
+  process.stdout.write(`[krynara-whatsapp] setState -> ${connectionState.status}${connectionState.qr ? ' (qr ready)' : ''}\n`);
 }
 
 function scheduleReconnect(delay) {
@@ -218,8 +218,8 @@ function scheduleReconnect(delay) {
   reconnectAttempts = Math.min(reconnectAttempts + 1, 5);
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
-    void startAegisWhatsApp().catch((error) => {
-      console.error('[aegis-whatsapp] automatic reconnect failed:', error);
+    void startKrynaraWhatsApp().catch((error) => {
+      console.error('[krynara-whatsapp] automatic reconnect failed:', error);
       setState({ status: 'error', lastError: `WhatsApp reconnect failed: ${error instanceof Error ? error.message : String(error)}` });
     });
   }, retryDelay);
@@ -277,7 +277,7 @@ function normalizeStoredMediaExtensions() {
   for (const media of mediaRows) {
     const storedName = path.basename(media.mediaPath);
     if (storedName !== media.mediaPath || !storedName.startsWith(`${media.mediaId}.`)) {
-      console.error(`[aegis-whatsapp] invalid local media path for ${media.jid}/${media.messageId}`);
+      console.error(`[krynara-whatsapp] invalid local media path for ${media.jid}/${media.messageId}`);
       continue;
     }
     const extension = mediaExtension(media.mediaMimeType, media.mediaFileName);
@@ -289,7 +289,7 @@ function normalizeStoredMediaExtensions() {
       fs.renameSync(sourcePath, targetPath);
       updatePath.run(path.basename(targetPath), media.jid, media.messageId);
     } catch (error) {
-      console.error(`[aegis-whatsapp] could not normalize stored media filename ${storedName}:`, error);
+      console.error(`[krynara-whatsapp] could not normalize stored media filename ${storedName}:`, error);
     }
   }
 }
@@ -345,10 +345,10 @@ async function downloadMedia(message, socket) {
     broadcast('media', { jid, messageId, mediaId: media.mediaId });
   } catch (error) {
     if (temporaryPath) await fsPromises.rm(temporaryPath, { force: true }).catch((cleanupError) => {
-      console.error('[aegis-whatsapp] incomplete media cleanup failed:', cleanupError);
+      console.error('[krynara-whatsapp] incomplete media cleanup failed:', cleanupError);
     });
     const messageText = error instanceof Error ? error.message : String(error);
-    console.error(`[aegis-whatsapp] media download failed for ${jid}/${messageId}:`, error);
+    console.error(`[krynara-whatsapp] media download failed for ${jid}/${messageId}:`, error);
     if (mediaKeyFromMessage(message)) {
       const key = `${jid}\u0000${messageId}`;
       recoverableMediaMessages.delete(key);
@@ -425,7 +425,7 @@ function processMediaQueue() {
     const item = mediaQueue.shift();
     activeMediaDownloads += 1;
     void downloadMedia(item.message, item.socket)
-      .catch((error) => console.error('[aegis-whatsapp] media queue failed:', error))
+      .catch((error) => console.error('[krynara-whatsapp] media queue failed:', error))
       .finally(() => {
         activeMediaDownloads -= 1;
         mediaDownloadsInProgress.delete(item.key);
@@ -434,7 +434,7 @@ function processMediaQueue() {
   }
 }
 
-async function startAegisWhatsApp() {
+async function startKrynaraWhatsApp() {
   if (sock) return Promise.resolve();
   if (startingPromise) return startingPromise;
   intentionalLogout = false;
@@ -451,7 +451,7 @@ async function startAegisWhatsApp() {
         version,
         auth: state,
         printQRInTerminal: false,
-        browser: ['AEGIS WhatsApp', 'Chrome', '1.0'],
+        browser: ['KRYNARA WhatsApp', 'Chrome', '1.0'],
         syncFullHistory: true,
       });
       sock = socket;
@@ -473,9 +473,9 @@ async function startAegisWhatsApp() {
           for (const message of messages) enqueueMediaDownload(message, socket);
           setState({ historySyncStatus: 'syncing' });
           broadcast('history', { chats: chats.length, contacts: contacts.length, messages: messages.length });
-          console.log(`[aegis-whatsapp] saved history batch: ${chats.length} chats, ${contacts.length} contacts, ${messages.length} messages`);
+          console.log(`[krynara-whatsapp] saved history batch: ${chats.length} chats, ${contacts.length} contacts, ${messages.length} messages`);
         } catch (error) {
-          console.error('[aegis-whatsapp] history persistence failed:', error);
+          console.error('[krynara-whatsapp] history persistence failed:', error);
           setState({ historySyncStatus: 'error', lastError: `Could not save WhatsApp history: ${error instanceof Error ? error.message : String(error)}` });
         }
       });
@@ -495,7 +495,7 @@ async function startAegisWhatsApp() {
           saveChats();
           broadcast('chats', { count: chats.length });
         } catch (error) {
-          console.error('[aegis-whatsapp] chat persistence failed:', error);
+          console.error('[krynara-whatsapp] chat persistence failed:', error);
           setState({ lastError: `Could not save WhatsApp chats: ${error instanceof Error ? error.message : String(error)}` });
         }
       });
@@ -509,7 +509,7 @@ async function startAegisWhatsApp() {
           });
           saveChats();
         } catch (error) {
-          console.error('[aegis-whatsapp] chat update persistence failed:', error);
+          console.error('[krynara-whatsapp] chat update persistence failed:', error);
         }
       });
 
@@ -522,7 +522,7 @@ async function startAegisWhatsApp() {
           });
           saveContacts();
         } catch (error) {
-          console.error('[aegis-whatsapp] contact persistence failed:', error);
+          console.error('[krynara-whatsapp] contact persistence failed:', error);
         }
       });
 
@@ -535,7 +535,7 @@ async function startAegisWhatsApp() {
           });
           saveContacts();
         } catch (error) {
-          console.error('[aegis-whatsapp] contact update persistence failed:', error);
+          console.error('[krynara-whatsapp] contact update persistence failed:', error);
         }
       });
 
@@ -563,7 +563,7 @@ async function startAegisWhatsApp() {
 
       socket.ev.on('connection.update', (update) => {
         if (sock !== socket) return;
-        console.log('[aegis-whatsapp] connection.update:', JSON.stringify({ connection: update.connection, qr: Boolean(update.qr) }));
+        console.log('[krynara-whatsapp] connection.update:', JSON.stringify({ connection: update.connection, qr: Boolean(update.qr) }));
         const { connection, lastDisconnect, qr } = update;
         if (qr) {
           QRCode.toDataURL(qr, { margin: 1, width: 512, color: { dark: '#050A0E', light: '#E6FBFF' } })
@@ -608,7 +608,7 @@ async function startAegisWhatsApp() {
             setState({
               status: 'error',
               qr: null,
-              lastError: 'WhatsApp replaced this connection because another client is using the same linked-device session. Remove the old AEGIS entry from WhatsApp → Linked devices, then start again.',
+              lastError: 'WhatsApp replaced this connection because another client is using the same linked-device session. Remove the old KRYNARA entry from WhatsApp → Linked devices, then start again.',
             });
           } else {
             const retryDelay = scheduleReconnect();
@@ -628,16 +628,16 @@ async function startAegisWhatsApp() {
           for (const message of messages) enqueueMediaDownload(message, socket);
           broadcast('messages', { jid: messages[0]?.key?.remoteJid, count: messages.length });
         } catch (error) {
-          console.error('[aegis-whatsapp] message persistence failed:', error);
+          console.error('[krynara-whatsapp] message persistence failed:', error);
           setState({ lastError: `Could not save WhatsApp messages: ${error instanceof Error ? error.message : String(error)}` });
         }
       });
       setState({ status: 'connecting', qr: null, lastError: null });
-      console.log('[aegis-whatsapp] socket wired, auth dir:', AUTH_DIR);
+      console.log('[krynara-whatsapp] socket wired, auth dir:', AUTH_DIR);
     } catch (error) {
       sock = null;
       setState({ status: 'error', lastError: error instanceof Error ? error.message : String(error) });
-      console.error('[aegis-whatsapp] start failed:', error);
+      console.error('[krynara-whatsapp] start failed:', error);
     } finally {
       startingPromise = null;
     }
@@ -645,7 +645,7 @@ async function startAegisWhatsApp() {
   return startingPromise;
 }
 
-function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
+function registerKrynaraWhatsApp(app, { broadcastStatus } = {}) {
   if (broadcastStatus) wsBroadcaster = broadcastStatus;
   normalizeStoredMediaExtensions();
 
@@ -653,13 +653,13 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
 
   app.post('/api/whatsapp/start', async (_req, res) => {
     if (connectionState.status === 'online') return res.json(connectionState);
-    await startAegisWhatsApp();
+    await startKrynaraWhatsApp();
     res.json(connectionState);
   });
 
   app.get('/api/whatsapp/qr', (_req, res) => {
     if (connectionState.status === 'online') return res.json({ qr: null, status: connectionState.status, user: connectionState.user });
-    if (!sock) void startAegisWhatsApp();
+    if (!sock) void startKrynaraWhatsApp();
     // give the socket a moment to emit a QR if this is a cold start
     const wait = new Promise((resolve) => setTimeout(resolve, 2500));
     void wait.then(() => res.json({ qr: connectionState.qr, status: connectionState.status, user: connectionState.user }));
@@ -710,7 +710,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
       presenceSubscriptions.add(jid);
       void socket.presenceSubscribe(jid).catch((error) => {
         presenceSubscriptions.delete(jid);
-        console.error(`[aegis-whatsapp] presence subscription failed for ${jid}:`, error);
+        console.error(`[krynara-whatsapp] presence subscription failed for ${jid}:`, error);
       });
     }
     const now = Date.now();
@@ -724,7 +724,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   });
 
   app.post('/api/whatsapp/typing', async (req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     const { jid, typing } = req.body ?? {};
     if (typeof jid !== 'string' || !ALLOWED_CHAT_JID.test(jid) || typeof typing !== 'boolean') {
       return res.status(400).json({ error: 'A valid chat address and typing state are required.' });
@@ -740,7 +740,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   });
 
   app.post('/api/whatsapp/groups', async (req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
     const phoneNumbers = req.body?.phoneNumbers;
     if (!name || name.length > 100 || !Array.isArray(phoneNumbers) || phoneNumbers.length < 1 || phoneNumbers.length > 255) {
@@ -763,7 +763,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   });
 
   app.post('/api/whatsapp/call-link', async (req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     const type = req.body?.type;
     if (type !== 'audio' && type !== 'video') return res.status(400).json({ error: 'Call type must be audio or video.' });
     try {
@@ -776,7 +776,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   });
 
   app.post('/api/whatsapp/profile-status', async (req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     const text = typeof req.body?.text === 'string' ? req.body.text.trim() : null;
     if (text === null || text.length > 139) return res.status(400).json({ error: 'WhatsApp About text must be 139 characters or fewer.' });
     try {
@@ -785,6 +785,425 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
     } catch (error) {
       res.status(502).json({ error: `Could not update WhatsApp About: ${error instanceof Error ? error.message : String(error)}` });
     }
+  });
+
+  // ── Group administration ───────────────────────────────────────────────────
+  const GROUP_JID = /^\d+(-\d+)?@g\.us$/;
+  const PHONE_JID = /^\d{8,15}@s\.whatsapp\.net$/;
+
+  function normalizeParticipantJids(value) {
+    if (!Array.isArray(value)) return null;
+    const jids = [...new Set(value.map((entry) => {
+      const raw = String(entry).trim();
+      if (PHONE_JID.test(raw)) return raw;
+      const digits = raw.replace(/\D/g, '');
+      return digits.length >= 8 && digits.length <= 15 ? `${digits}@s.whatsapp.net` : null;
+    }).filter(Boolean))];
+    return jids.length ? jids : null;
+  }
+
+  async function withSocket(res, label, action) {
+    if (!sock || connectionState.status !== 'online') {
+      res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
+      return;
+    }
+    const socket = sock;
+    try {
+      const result = await action(socket);
+      if (sock !== socket) {
+        res.status(409).json({ error: 'WhatsApp disconnected during the operation.' });
+        return;
+      }
+      res.json(result === undefined ? { updated: true } : result);
+    } catch (error) {
+      res.status(502).json({ error: `Could not ${label}: ${error instanceof Error ? error.message : String(error)}` });
+    }
+  }
+
+  // Full metadata for one group: participants with admin flags, settings, invite code.
+  app.get('/api/whatsapp/groups/:jid/metadata', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    await withSocket(res, 'fetch group metadata', async (socket) => {
+      const metadata = await socket.groupMetadata(jid);
+      const participants = (metadata.participants || []).map((participant) => ({
+        jid: participant.id,
+        admin: participant.admin || null,
+        isAdmin: Boolean(participant.isAdmin),
+        isSuperAdmin: Boolean(participant.isSuperAdmin),
+      }));
+      return {
+        jid: metadata.id,
+        name: metadata.subject,
+        subjectOwner: metadata.subjectOwner ?? null,
+        description: metadata.desc ?? null,
+        creation: metadata.creation ?? null,
+        size: metadata.size ?? participants.length,
+        restrict: Boolean(metadata.restrict),
+        announce: Boolean(metadata.announce),
+        memberAddMode: Boolean(metadata.memberAddMode),
+        joinApprovalMode: Boolean(metadata.joinApprovalMode),
+        ephemeralDuration: metadata.ephemeralDuration ?? 0,
+        linkedParent: metadata.linkedParent ?? null,
+        isCommunity: Boolean(metadata.isCommunity),
+        owner: metadata.owner ?? null,
+        participants,
+      };
+    });
+  });
+
+  // List every group KRYNARA is participating in.
+  app.get('/api/whatsapp/groups', async (_req, res) => {
+    await withSocket(res, 'list groups', async (socket) => {
+      const { groups } = await socket.groupFetchAllParticipating();
+      const list = Object.values(groups || {}).map((group) => ({
+        jid: group.id,
+        name: group.subject,
+        size: group.size ?? (group.participants?.length ?? 0),
+        announce: Boolean(group.announce),
+        restrict: Boolean(group.restrict),
+      }));
+      return { groups: list, count: list.length };
+    });
+  });
+
+  // Add / remove / promote / demote participants.
+  app.post('/api/whatsapp/groups/:jid/participants', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    const action = String(req.body?.action || '');
+    if (!['add', 'remove', 'promote', 'demote'].includes(action)) {
+      return res.status(400).json({ error: 'Action must be add, remove, promote, or demote.' });
+    }
+    const participants = normalizeParticipantJids(req.body?.participants);
+    if (!participants) return res.status(400).json({ error: 'At least one valid participant phone number is required.' });
+    await withSocket(res, `${action} group participants`, async (socket) => {
+      const result = await socket.groupParticipantsUpdate(jid, participants, action);
+      const changes = (result || []).map((entry) => ({ jid: entry.jid, status: entry.status ?? null, error: entry.error ? String(entry.error) : null }));
+      broadcast('groups', { jid, action });
+      return { action, changed: changes, count: changes.length };
+    });
+  });
+
+  // Group settings: announcement-only, locked (admin-only edit), member add mode, join approval,
+  // and disappearing messages.
+  app.post('/api/whatsapp/groups/:jid/settings', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    const body = req.body ?? {};
+    await withSocket(res, 'update group settings', async (socket) => {
+      if (typeof body.announceOnly === 'boolean') {
+        await socket.groupSettingUpdate(jid, body.announceOnly ? 'announcement' : 'not_announcement');
+      }
+      if (typeof body.adminsOnlyEditInfo === 'boolean') {
+        await socket.groupSettingUpdate(jid, body.adminsOnlyEditInfo ? 'locked' : 'unlocked');
+      }
+      if (typeof body.membersCanAddOthers === 'boolean') {
+        await socket.groupMemberAddMode(jid, body.membersCanAddOthers ? 'all_member_add' : 'admin_add');
+      }
+      if (typeof body.joinApproval === 'boolean') {
+        await socket.groupJoinApprovalMode(jid, body.joinApproval ? 'on' : 'off');
+      }
+      if (body.disappearingMessages !== undefined) {
+        const duration = Number(body.disappearingMessages) || 0;
+        if (![0, 86400, 604800, 2592000].includes(duration)) {
+          return { error: 'Disappearing messages must be 0, 86400 (1 day), 604800 (1 week), or 2592000 (30 days).' };
+        }
+        await socket.groupToggleEphemeral(jid, duration);
+      }
+      broadcast('groups', { jid, settings: true });
+      return { updated: true };
+    });
+  });
+
+  // Rename a group / change its description.
+  app.post('/api/whatsapp/groups/:jid/info', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : null;
+    const description = typeof req.body?.description === 'string' ? req.body.description : undefined;
+    if (name === null && description === undefined) return res.status(400).json({ error: 'A new name or description is required.' });
+    if (name !== null && (name.length < 1 || name.length > 100)) return res.status(400).json({ error: 'Group name must be 1-100 characters.' });
+    await withSocket(res, 'update group info', async (socket) => {
+      if (name !== null) await socket.groupUpdateSubject(jid, name);
+      if (description !== undefined) await socket.groupUpdateDescription(jid, description || undefined);
+      persistChat({ id: jid, subject: name ?? undefined });
+      broadcast('chats', { count: 1 });
+      return { updated: true };
+    });
+  });
+
+  // Group photo: upload replaces it, remove deletes it.
+  app.post('/api/whatsapp/groups/:jid/photo', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    await withSocket(res, 'update the group photo', async (socket) => {
+      const remove = Boolean(req.body?.remove);
+      const dataUrl = typeof req.body?.image === 'string' ? req.body.image : '';
+      if (remove) {
+        await socket.removeProfilePicture(jid);
+        return { removed: true };
+      }
+      const match = /^data:(image\/(?:png|jpe?g|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+      if (!match) return { error: 'An image data URL (png, jpeg, or webp) is required to set the photo.' };
+      const buffer = Buffer.from(match[2], 'base64');
+      if (!buffer.length || buffer.length > 5 * 1024 * 1024) return { error: 'The photo must be 1 byte to 5 MB of image data.' };
+      await socket.updateProfilePicture(jid, { url: dataUrl });
+      return { updated: true };
+    });
+  });
+
+  // Invite code: read it, reset it, or preview a group from someone else's code.
+  app.get('/api/whatsapp/groups/:jid/invite', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    await withSocket(res, 'fetch the group invite code', async (socket) => {
+      const code = await socket.groupInviteCode(jid);
+      if (!code) return { error: 'WhatsApp did not return an invite code. You may not be an admin.' };
+      return { code, url: `https://chat.whatsapp.com/${code}` };
+    });
+  });
+
+  app.post('/api/whatsapp/groups/:jid/invite/reset', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    await withSocket(res, 'reset the group invite code', async (socket) => {
+      const code = await socket.groupRevokeInvite(jid);
+      if (!code) return { error: 'WhatsApp did not return a new invite code. You may not be an admin.' };
+      return { code, url: `https://chat.whatsapp.com/${code}`, revoked: true };
+    });
+  });
+
+  // Look up a group you are not in, from an invite code or full URL.
+  app.post('/api/whatsapp/groups/invite/inspect', async (req, res) => {
+    const raw = String(req.body?.code || '').trim();
+    const code = raw.includes('chat.whatsapp.com/') ? raw.split('chat.whatsapp.com/')[1].split(/[/?#]/)[0] : raw;
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(code)) return res.status(400).json({ error: 'A valid invite code or URL is required.' });
+    await withSocket(res, 'inspect the invite', async (socket) => {
+      const metadata = await socket.groupGetInviteInfo(code);
+      return {
+        jid: metadata.id,
+        name: metadata.subject,
+        size: metadata.size ?? (metadata.participants?.length ?? 0),
+        description: metadata.desc ?? null,
+      };
+    });
+  });
+
+  // Join a group from an invite code or URL.
+  app.post('/api/whatsapp/groups/invite/join', async (req, res) => {
+    const raw = String(req.body?.code || '').trim();
+    const code = raw.includes('chat.whatsapp.com/') ? raw.split('chat.whatsapp.com/')[1].split(/[/?#]/)[0] : raw;
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(code)) return res.status(400).json({ error: 'A valid invite code or URL is required.' });
+    await withSocket(res, 'join the group', async (socket) => {
+      const gid = await socket.groupAcceptInvite(code);
+      if (gid) persistChat({ id: gid });
+      broadcast('chats', { count: 1 });
+      return { joined: true, jid: gid ?? null };
+    });
+  });
+
+  // Join requests waiting for admin approval (groups with joinApprovalMode on).
+  app.get('/api/whatsapp/groups/:jid/join-requests', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    await withSocket(res, 'list join requests', async (socket) => {
+      const result = await socket.groupRequestParticipantsList(jid);
+      const requests = (result?.requestingParticipants || result || []).map((entry) => ({ jid: entry.jid ?? entry, requestedAt: entry.requested_at ?? null }));
+      return { requests, count: requests.length };
+    });
+  });
+
+  app.post('/api/whatsapp/groups/:jid/join-requests', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    const action = req.body?.action === 'reject' ? 'reject' : 'approve';
+    const participants = normalizeParticipantJids(req.body?.participants);
+    if (!participants) return res.status(400).json({ error: 'At least one valid participant phone number is required.' });
+    await withSocket(res, `${action} the join request`, async (socket) => {
+      const result = await socket.groupRequestParticipantsUpdate(jid, participants, action);
+      return { action, result: result ?? null };
+    });
+  });
+
+  // Leave (and optionally delete) a group.
+  app.post('/api/whatsapp/groups/:jid/leave', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid group address (…@g.us) is required.' });
+    await withSocket(res, 'leave the group', async (socket) => {
+      await socket.groupLeave(jid);
+      broadcast('chats', { count: -1 });
+      return { left: true, jid };
+    });
+  });
+
+  // ── Chat management (archive, pin, mute, star, read state, clear) ─────────
+  const VALID_MUTE_DURATIONS = [0, 28800, 604800, 2592000]; // off, 8 hours, 1 week, 30 days
+
+  app.post('/api/whatsapp/chats/:jid/settings', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!ALLOWED_CHAT_JID.test(jid) && !GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid chat or group address is required.' });
+    const body = req.body ?? {};
+    await withSocket(res, 'update chat settings', async (socket) => {
+      if (typeof body.archive === 'boolean') await socket.chatModify({ archive: body.archive, lastMessages: [] }, jid);
+      if (typeof body.pin === 'boolean') await socket.chatModify({ pin: body.pin }, jid);
+      if (body.mute !== undefined) {
+        if (body.mute === null || body.mute === false) {
+          await socket.chatModify({ mute: null }, jid);
+        } else {
+          const duration = Number(body.mute);
+          if (!VALID_MUTE_DURATIONS.includes(duration)) {
+            return { error: 'Mute must be null/false to unmute, or 28800 (8h), 604800 (1 week), or 2592000 (30 days).' };
+          }
+          await socket.chatModify({ mute: duration }, jid);
+        }
+      }
+      broadcast('chats', { jid, settings: true });
+      return { updated: true };
+    });
+  });
+
+  // Star or unstar specific messages in a chat.
+  app.post('/api/whatsapp/chats/:jid/star', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!ALLOWED_CHAT_JID.test(jid) && !GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid chat or group address is required.' });
+    const messages = Array.isArray(req.body?.messages) ? req.body.messages.map((entry) => ({ id: String(entry?.id || ''), fromMe: Boolean(entry?.fromMe) })).filter((entry) => entry.id) : [];
+    if (!messages.length) return res.status(400).json({ error: 'At least one message id is required.' });
+    const star = req.body?.star !== false;
+    await withSocket(res, `${star ? 'star' : 'unstar'} messages`, async (socket) => {
+      await socket.chatModify({ star: { messages, star } }, jid);
+      return { starred: star, count: messages.length };
+    });
+  });
+
+  // Mark a chat as read or unread (pass the newest message ids you know of).
+  app.post('/api/whatsapp/chats/:jid/read', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!ALLOWED_CHAT_JID.test(jid) && !GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid chat or group address is required.' });
+    const messageIds = Array.isArray(req.body?.messageIds) ? req.body.messageIds.map((id) => String(id)).filter(Boolean) : [];
+    if (!messageIds.length) return res.status(400).json({ error: 'At least one message id is required.' });
+    const read = req.body?.read !== false;
+    const rows = getDb().prepare(`
+      SELECT message_id AS id, participant, from_me AS fromMe FROM whatsapp_messages
+      WHERE jid = ? AND message_id IN (${messageIds.map(() => '?').join(',')})
+    `).get(jid, ...messageIds);
+    const target = rows?.id ? rows : { id: messageIds[0], participant: undefined, fromMe: false };
+    await withSocket(res, `mark the chat ${read ? 'read' : 'unread'}`, async (socket) => {
+      await socket.chatModify(
+        { markRead: read, lastMessages: [{ id: target.id, fromMe: Boolean(target.fromMe), participant: target.participant ? String(target.participant) : undefined }] },
+        jid,
+      );
+      return { read, count: messageIds.length };
+    });
+  });
+
+  // Clear a chat's history for KRYNARA only (does not delete on other devices).
+  app.post('/api/whatsapp/chats/:jid/clear', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!ALLOWED_CHAT_JID.test(jid) && !GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid chat or group address is required.' });
+    await withSocket(res, 'clear the chat', async (socket) => {
+      await socket.chatModify({ clear: true, lastMessages: [] }, jid);
+      getDb().prepare('DELETE FROM whatsapp_messages WHERE jid = ?').run(jid);
+      broadcast('messages', { jid, count: 0 });
+      return { cleared: true, jid };
+    });
+  });
+
+  // ── Privacy, profile, and blocking ──────────────────────────────────────────
+  app.get('/api/whatsapp/privacy', async (_req, res) => {
+    await withSocket(res, 'fetch privacy settings', async (socket) => socket.fetchPrivacySettings(true));
+  });
+
+  const PRIVACY_VALUES = new Set(['all', 'contacts', 'contact_blacklist', 'none']);
+  app.post('/api/whatsapp/privacy', async (req, res) => {
+    const body = req.body ?? {};
+    const setting = Object.keys(body)[0];
+    const value = body[setting];
+    const allowed = {
+      lastSeen: PRIVACY_VALUES,
+      profilePhoto: PRIVACY_VALUES,
+      status: PRIVACY_VALUES,
+      groupAdd: new Set(['all', 'contacts', 'contact_blacklist']),
+      readReceipts: new Set(['all', 'none']),
+      online: new Set(['all', 'match_last_seen']),
+      calls: new Set(['all', 'known']),
+      messages: new Set(['all', 'contacts']),
+    };
+    if (!setting || !allowed[setting] || !allowed[setting].has(value)) {
+      return res.status(400).json({ error: `Unknown privacy setting or value. Settings: ${Object.keys(allowed).join(', ')}.` });
+    }
+    await withSocket(res, `update the ${setting} privacy setting`, async (socket) => {
+      const updaters = {
+        lastSeen: (v) => socket.updateLastSeenPrivacy(v),
+        profilePhoto: (v) => socket.updateProfilePicturePrivacy(v),
+        status: (v) => socket.updateStatusPrivacy(v),
+        groupAdd: (v) => socket.updateGroupsAddPrivacy(v),
+        readReceipts: (v) => socket.updateReadReceiptsPrivacy(v),
+        online: (v) => socket.updateOnlinePrivacy(v),
+        calls: (v) => socket.updateCallPrivacy(v),
+        messages: (v) => socket.updateMessagesPrivacy(v),
+      };
+      await updaters[setting](value);
+      return { setting, value, updated: true };
+    });
+  });
+
+  app.get('/api/whatsapp/blocklist', async (_req, res) => {
+    await withSocket(res, 'fetch the blocklist', async (socket) => {
+      const list = await socket.fetchBlocklist();
+      return { blocked: list ?? [], count: (list ?? []).length };
+    });
+  });
+
+  app.post('/api/whatsapp/block', async (req, res) => {
+    const jid = String(req.body?.jid || '').trim();
+    if (!/^\d{8,15}@s\.whatsapp\.net$/.test(jid) && !ALLOWED_CHAT_JID.test(jid)) {
+      return res.status(400).json({ error: 'A valid contact phone number is required.' });
+    }
+    const action = req.body?.action === 'unblock' ? 'unblock' : 'block';
+    await withSocket(res, `${action} the contact`, async (socket) => {
+      await socket.updateBlockStatus(jid, action);
+      return { jid, action };
+    });
+  });
+
+  // Display name (the name others see for you).
+  app.post('/api/whatsapp/profile-name', async (req, res) => {
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    if (name.length < 1 || name.length > 30) return res.status(400).json({ error: 'A profile name of 1-30 characters is required.' });
+    await withSocket(res, 'update the profile name', async (socket) => {
+      await socket.updateProfileName(name);
+      return { updated: true, name };
+    });
+  });
+
+  // Own profile photo: upload a data URL, or remove it.
+  app.post('/api/whatsapp/profile-photo', async (req, res) => {
+    await withSocket(res, 'update the profile photo', async (socket) => {
+      if (req.body?.remove) {
+        await socket.removeProfilePicture(socket.user?.id);
+        return { removed: true };
+      }
+      const dataUrl = typeof req.body?.image === 'string' ? req.body.image : '';
+      const match = /^data:(image\/(?:png|jpe?g|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+      if (!match) return { error: 'An image data URL (png, jpeg, or webp) is required to set the photo.' };
+      const buffer = Buffer.from(match[2], 'base64');
+      if (!buffer.length || buffer.length > 5 * 1024 * 1024) return { error: 'The photo must be 1 byte to 5 MB of image data.' };
+      await socket.updateProfilePicture(socket.user?.id, { url: dataUrl });
+      return { updated: true };
+    });
+  });
+
+  // Fetch a contact's or group's picture URL (may be null if not public).
+  app.get('/api/whatsapp/profile-photo/:jid', async (req, res) => {
+    const jid = String(req.params.jid || '');
+    if (!ALLOWED_CHAT_JID.test(jid) && !GROUP_JID.test(jid)) return res.status(400).json({ error: 'A valid chat or group address is required.' });
+    await withSocket(res, 'fetch the profile photo', async (socket) => {
+      const url = await socket.profilePictureUrl(jid, 'image').catch(() => undefined);
+      const preview = url ? undefined : await socket.profilePictureUrl(jid, 'preview').catch(() => undefined);
+      const link = url ?? preview ?? null;
+      return { jid, url: link ? `https://pps.whatsapp.net${new URL(link).pathname}` : null };
+    });
   });
 
   app.get('/api/whatsapp/media/:mediaId', (req, res) => {
@@ -815,7 +1234,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
       res.setHeader('X-Content-Type-Options', 'nosniff');
       const fileStream = fs.createReadStream(filePath);
       fileStream.on('error', (error) => {
-        console.error('[aegis-whatsapp] media serving failed:', error);
+        console.error('[krynara-whatsapp] media serving failed:', error);
         if (res.headersSent) res.destroy(error);
         else res.status(404).json({ error: 'WhatsApp media could not be read from local storage.' });
       });
@@ -830,7 +1249,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
       return res.status(404).json({ error: 'WhatsApp media was not found.' });
     }
     if (!sock || connectionState.status !== 'online') {
-      return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+      return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     }
 
     const media = getDb().prepare(`
@@ -875,7 +1294,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
           });
         }
         return res.status(422).json({
-          error: 'WhatsApp returned this channel attachment without a media decryption key. AEGIS cannot decrypt it; ask the channel to repost the media.',
+          error: 'WhatsApp returned this channel attachment without a media decryption key. KRYNARA cannot decrypt it; ask the channel to repost the media.',
         });
       }
 
@@ -885,9 +1304,9 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
         fromMe: Boolean(media.fromMe),
         participant: media.participant || undefined,
       });
-      return res.status(202).json({ status: 'resend_requested', message: 'Requested the linked phone to resend this message. AEGIS will download the media if WhatsApp supplies its decryption key.' });
+      return res.status(202).json({ status: 'resend_requested', message: 'Requested the linked phone to resend this message. KRYNARA will download the media if WhatsApp supplies its decryption key.' });
     } catch (error) {
-      console.error(`[aegis-whatsapp] media recovery failed for ${media.jid}/${media.messageId}:`, error);
+      console.error(`[krynara-whatsapp] media recovery failed for ${media.jid}/${media.messageId}:`, error);
       return res.status(502).json({ error: `Could not recover WhatsApp media: ${error instanceof Error ? error.message : String(error)}` });
     }
   });
@@ -928,7 +1347,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   });
 
   app.post('/api/whatsapp/forward', async (req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     const { jid, messageId, toJid } = req.body ?? {};
     if (!jid || !messageId || !toJid) return res.status(400).json({ error: 'jid, messageId, and toJid are required.' });
     const destinationInput = String(toJid).trim();
@@ -951,7 +1370,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
       let payload;
       if (MEDIA_TYPES.has(message.type)) {
         if (message.mediaStatus !== 'downloaded' || !message.mediaPath) {
-          return res.status(409).json({ error: 'This attachment is not available in AEGIS storage to forward.' });
+          return res.status(409).json({ error: 'This attachment is not available in KRYNARA storage to forward.' });
         }
         const storedName = path.basename(message.mediaPath);
         const filePath = path.join(MEDIA_DIR, storedName);
@@ -993,7 +1412,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
             `).run(copiedName, destination, result.key.id);
           }
         } catch (error) {
-          console.error('[aegis-whatsapp] forwarded message could not be archived:', error);
+          console.error('[krynara-whatsapp] forwarded message could not be archived:', error);
           return res.status(500).json({ error: `Message forwarded, but local archive failed: ${error instanceof Error ? error.message : String(error)}` });
         }
       }
@@ -1004,7 +1423,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   });
 
   app.post('/api/whatsapp/react', async (req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     const { jid, messageId, reaction } = req.body ?? {};
     if (!jid || !messageId || typeof reaction !== 'string' || [...reaction].length > 8) {
       return res.status(400).json({ error: 'jid, messageId, and a valid reaction are required.' });
@@ -1038,7 +1457,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
     if (!message) return res.status(404).json({ error: 'The selected message is not in the local archive.' });
     if (scope === 'everyone') {
       if (!message.fromMe) return res.status(403).json({ error: 'Only messages sent from this account can be deleted for everyone.' });
-      if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+      if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
       try {
         await sock.sendMessage(message.jid, {
           delete: { remoteJid: message.jid, id: message.id, fromMe: true, ...(message.participant ? { participant: message.participant } : {}) },
@@ -1061,7 +1480,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
         try {
           await fsPromises.rm(path.join(MEDIA_DIR, storedName), { force: true });
         } catch (error) {
-          console.error('[aegis-whatsapp] deleted message media cleanup failed:', error);
+          console.error('[krynara-whatsapp] deleted message media cleanup failed:', error);
         }
       }
     }
@@ -1069,7 +1488,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   });
 
   app.post('/api/whatsapp/send', async (req, res) => {
-    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+    if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
     const socket = sock;
     const { jid, text, replyToMessageId } = req.body ?? {};
     if (typeof jid !== 'string' || !ALLOWED_CHAT_JID.test(jid) || typeof text !== 'string' || !text.trim()) {
@@ -1105,7 +1524,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
       });
       res.json({ sent: true, id: result?.key?.id ?? null });
     } catch (error) {
-      console.error('[aegis-whatsapp] sent message could not be saved:', error);
+      console.error('[krynara-whatsapp] sent message could not be saved:', error);
       res.status(500).json({ error: `Message sent, but local storage failed: ${error instanceof Error ? error.message : String(error)}` });
     }
   });
@@ -1113,7 +1532,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   app.post(
     '/api/whatsapp/send-media/:jid',
     async (req, res) => {
-      if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'AEGIS WhatsApp is not connected.' });
+      if (!sock || connectionState.status !== 'online') return res.status(409).json({ error: 'KRYNARA WhatsApp is not connected.' });
       const jid = String(req.params.jid);
       if (!ALLOWED_CHAT_JID.test(jid)) return res.status(400).json({ error: 'A valid WhatsApp chat address is required.' });
       const contentLength = req.get('content-length');
@@ -1150,9 +1569,9 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
         await pipeline(req, sizeGuard, fs.createWriteStream(temporaryPath, { flags: 'wx' }));
       } catch (error) {
         await fsPromises.rm(temporaryPath, { force: true }).catch((cleanupError) => {
-          console.error('[aegis-whatsapp] incomplete upload cleanup failed:', cleanupError);
+          console.error('[krynara-whatsapp] incomplete upload cleanup failed:', cleanupError);
         });
-        console.error('[aegis-whatsapp] media upload stream failed:', error);
+        console.error('[krynara-whatsapp] media upload stream failed:', error);
         return res.status(400).json({ error: `Could not receive the attachment: ${error instanceof Error ? error.message : String(error)}` });
       }
       if (uploadTooLarge) {
@@ -1180,7 +1599,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
         const socket = sock;
         if (!socket || connectionState.status !== 'online') {
           await fsPromises.rm(temporaryPath, { force: true });
-          return res.status(409).json({ error: 'AEGIS WhatsApp disconnected while receiving the attachment.' });
+          return res.status(409).json({ error: 'KRYNARA WhatsApp disconnected while receiving the attachment.' });
         }
         let options;
         if (replyToMessageId) {
@@ -1223,19 +1642,19 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
           }
         } catch (error) {
           await fsPromises.rm(temporaryPath, { force: true }).catch((cleanupError) => {
-            console.error('[aegis-whatsapp] sent media upload cleanup failed:', cleanupError);
+            console.error('[krynara-whatsapp] sent media upload cleanup failed:', cleanupError);
           });
           if (storedMediaPath) await fsPromises.rm(storedMediaPath, { force: true }).catch((cleanupError) => {
-            console.error('[aegis-whatsapp] sent media archive cleanup failed:', cleanupError);
+            console.error('[krynara-whatsapp] sent media archive cleanup failed:', cleanupError);
           });
-          console.error('[aegis-whatsapp] sent media could not be archived:', error);
+          console.error('[krynara-whatsapp] sent media could not be archived:', error);
           return res.status(500).json({ error: `Attachment sent, but local storage failed: ${error instanceof Error ? error.message : String(error)}` });
         }
         broadcast('messages', { jid, count: 1 });
         res.json({ sent: true, id: result.key.id, type: mediaType });
       } catch (error) {
         await fsPromises.rm(temporaryPath, { force: true }).catch((cleanupError) => {
-          console.error('[aegis-whatsapp] failed upload cleanup failed:', cleanupError);
+          console.error('[krynara-whatsapp] failed upload cleanup failed:', cleanupError);
         });
         res.status(502).json({ error: `Could not send WhatsApp media: ${error instanceof Error ? error.message : String(error)}` });
       }
@@ -1243,7 +1662,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   );
 
   app.post('/api/whatsapp/pairing-code', async (req, res) => {
-    if (!sock) await startAegisWhatsApp();
+    if (!sock) await startKrynaraWhatsApp();
     if (!sock) return res.status(409).json({ error: 'Start a session first.' });
     const { phoneNumber } = req.body ?? {};
     const digits = String(phoneNumber ?? '').replace(/\D/g, '');
@@ -1271,7 +1690,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
         try {
           await socket.logout();
         } catch (error) {
-          console.error('[aegis-whatsapp] logout request failed:', error);
+          console.error('[krynara-whatsapp] logout request failed:', error);
           if (sock === socket) sock = null;
         }
       }
@@ -1293,7 +1712,7 @@ function registerAegisWhatsApp(app, { broadcastStatus } = {}) {
   return { getState: () => connectionState, broadcast };
 }
 
-function attachAegisWhatsAppWs(server) {
+function attachKrynaraWhatsAppWs(server) {
   const { WebSocketServer } = require('ws');
   const wss = new WebSocketServer({ server, path: '/ws/whatsapp' });
   wss.on('connection', (client) => {
@@ -1304,4 +1723,4 @@ function attachAegisWhatsAppWs(server) {
   return wss;
 }
 
-module.exports = { registerAegisWhatsApp, attachAegisWhatsAppWs, startAegisWhatsApp, getWhatsAppState: () => connectionState };
+module.exports = { registerKrynaraWhatsApp, attachKrynaraWhatsAppWs, startKrynaraWhatsApp, getWhatsAppState: () => connectionState };

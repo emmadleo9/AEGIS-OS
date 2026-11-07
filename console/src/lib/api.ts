@@ -14,7 +14,7 @@ export const api = axios.create({
 
 // Add auth interceptor
 api.interceptors.request.use((config) => {
-  const apiKey = localStorage.getItem('aegis-api-key') || DEFAULT_API_KEY;
+  const apiKey = localStorage.getItem('krynara-api-key') || DEFAULT_API_KEY;
   if (apiKey) {
     config.headers['x-api-key'] = apiKey;
   }
@@ -25,7 +25,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('aegis-api-key');
+      localStorage.removeItem('krynara-api-key');
     }
     return Promise.reject(error);
   }

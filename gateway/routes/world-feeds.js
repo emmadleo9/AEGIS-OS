@@ -69,7 +69,7 @@ function register(app) {
     try {
       if (!request) {
         request = fetch(ALERTS_URL, {
-          headers: { 'User-Agent': 'AEGIS-OS World View' },
+          headers: { 'User-Agent': 'Krynara-OS World View' },
           signal: AbortSignal.timeout(12_000),
         }).then(async (response) => {
           if (!response.ok) throw new Error(`NOAA returned HTTP ${response.status}`);

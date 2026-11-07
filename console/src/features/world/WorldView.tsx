@@ -15,8 +15,8 @@ type DrawFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<
 type RouteProperties = { distance: number; duration: number; steps: { name: string; distance: number; duration: number; maneuver: string }[]; source: string };
 type RouteFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Geometry, Record<string, string | number>>;
 
-const LAYER_STORAGE_KEY = 'aegis.world.layers.v1';
-const DRAWING_STORAGE_KEY = 'aegis.world.drawings.v1';
+const LAYER_STORAGE_KEY = 'krynara.world.layers.v1';
+const DRAWING_STORAGE_KEY = 'krynara.world.drawings.v1';
 const INITIAL_LAYERS: LayerVisibility = {
   flights: true,
   satellites: true,
@@ -172,8 +172,8 @@ export function WorldView() {
       const requestedMode = (event as CustomEvent<unknown>).detail;
       if (requestedMode === '2d' || requestedMode === '3d' || requestedMode === 'satellite') setMode(requestedMode);
     };
-    window.addEventListener('aegis-map-mode', handler);
-    return () => window.removeEventListener('aegis-map-mode', handler);
+    window.addEventListener('krynara-map-mode', handler);
+    return () => window.removeEventListener('krynara-map-mode', handler);
   }, []);
 
   useEffect(() => {
@@ -416,7 +416,7 @@ export function WorldView() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'aegis-world-view.geojson';
+    link.download = 'krynara-world-view.geojson';
     link.click();
     URL.revokeObjectURL(url);
   };
