@@ -319,6 +319,25 @@ async function downloadMedia(message, socket) {
       WHERE jid = ? AND message_id = ?
     `).run(jid, messageId);
 
+    // Baileys derives decryption keys from the message's mediaKey. Channel (newsletter) messages
+    // often arrive without one, and attempting the download makes getMediaKeys throw
+    // "Cannot derive from empty media key". Validate it first and record a clear, retry-safe
+    // failure instead of crashing the download queue.
+    const mediaKey = mediaKeyFromMessage(message);
+    const mediaKeyBytes = typeof mediaKey === 'string' ? Buffer.from(mediaKey, 'base64') : mediaKey;
+    if (!mediaKeyBytes || mediaKeyBytes.length === 0) {
+      const reason = jid.endsWith('@newsletter')
+        ? 'Channel attachment has no decryption key. KRYNARA cannot decrypt it; ask the channel to repost the media.'
+        : 'WhatsApp did not deliver a decryption key for this attachment.';
+      console.warn(`[krynara-whatsapp] media skipped for ${jid}/${messageId}: ${reason}`);
+      db.prepare(`
+        UPDATE whatsapp_messages SET media_status = 'failed', media_error = ?
+        WHERE jid = ? AND message_id = ?
+      `).run(reason, jid, messageId);
+      broadcast('media', { jid, messageId, status: 'failed' });
+      return;
+    }
+
     const stream = await downloadMediaMessage(message, 'stream', {}, {
       logger: socket.logger ?? console,
       reuploadRequest: (updatedMessage) => socket.updateMediaMessage(updatedMessage),
@@ -348,6 +367,16 @@ async function downloadMedia(message, socket) {
       console.error('[krynara-whatsapp] incomplete media cleanup failed:', cleanupError);
     });
     const messageText = error instanceof Error ? error.message : String(error);
+    if (messageText.includes('empty media key')) {
+      // Known Baileys limitation for channel media without keys: fail cleanly, no retry loop.
+      console.warn(`[krynara-whatsapp] media skipped for ${jid}/${messageId}: attachment has no usable decryption key.`);
+      db.prepare(`
+        UPDATE whatsapp_messages SET media_status = 'failed', media_error = ?
+        WHERE jid = ? AND message_id = ?
+      `).run('Channel attachment has no decryption key. KRYNARA cannot decrypt it; ask the channel to repost the media.', jid, messageId);
+      broadcast('media', { jid, messageId, status: 'failed' });
+      return;
+    }
     console.error(`[krynara-whatsapp] media download failed for ${jid}/${messageId}:`, error);
     if (mediaKeyFromMessage(message)) {
       const key = `${jid}\u0000${messageId}`;
