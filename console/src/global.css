@@ -64,6 +64,39 @@
   --chat-in: oklch(0.31 0 106.6);
 }
 
+.moon,
+[data-theme="moon"] {
+  --background: oklch(0.96 0.01 96);
+  --foreground: oklch(0.35 0.02 96);
+  --card: oklch(0.96 0.01 96);
+  --card-foreground: oklch(0.2 0 100);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.28 0.02 98);
+  --primary: oklch(0.6 0.13 40);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.91 0.01 93);
+  --secondary-foreground: oklch(0.44 0.02 98);
+  --muted: oklch(0.92 0.02 91);
+  --muted-foreground: oklch(0.62 0.01 98);
+  --accent: oklch(0.91 0.01 93);
+  --accent-foreground: oklch(0.28 0.02 98);
+  --destructive: oklch(0.2 0 100);
+  --border: oklch(0.86 0.01 98);
+  --input: oklch(0.75 0.02 98);
+  --ring: oklch(0.58 0.16 254);
+  --sidebar: oklch(0.96 0.01 98);
+  --sidebar-foreground: oklch(0.37 0.01 107);
+  --sidebar-primary: oklch(0.6 0.13 40);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.91 0.01 93);
+  --sidebar-accent-foreground: oklch(0.34 0 0);
+  --sidebar-border: oklch(0.93 0 0);
+  --sidebar-ring: oklch(0.76 0 0);
+
+  --chat-out: oklch(90% 0.04 39);
+  --chat-in: oklch(1 0 0);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
