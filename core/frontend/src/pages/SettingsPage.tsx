@@ -480,23 +480,32 @@ export function SettingsPage() {
           {/* Appearance */}
           <Section title="Appearance">
             <SettingRow label="Theme" description="Choose how OpenJarvis looks">
-              <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: 'var(--color-bg-secondary)' }}>
+              <div className="flex flex-col gap-1 p-0.5 rounded-lg" style={{ background: 'var(--color-bg-secondary)' }}>
                 {themeOptions.map((opt) => {
                   const isActive = settings.theme === opt.value;
                   return (
-                    <button
+                    <label
                       key={opt.value}
                       onClick={() => { updateSettings({ theme: opt.value }); showSaved(); }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer"
                       style={{
                         background: isActive ? 'var(--color-surface)' : 'transparent',
                         color: isActive ? 'var(--color-text)' : 'var(--color-text-tertiary)',
                         boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
                       }}
                     >
+                      <input
+                        type="radio"
+                        name="theme"
+                        value={opt.value}
+                        checked={isActive}
+                        readOnly
+                        className="accent-primary shrink-0"
+                        style={{ accentColor: 'var(--color-accent)' }}
+                      />
                       <opt.icon size={14} />
                       {opt.label}
-                    </button>
+                    </label>
                   );
                 })}
               </div>
