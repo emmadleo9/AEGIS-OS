@@ -4,11 +4,16 @@ const fs = require('node:fs');
 const sharp = require(path.join(__dirname, '..', 'gateway', 'node_modules', 'sharp'));
 
 const publicDir = path.join(__dirname, '..', 'console', 'public');
-const source = path.join(publicDir, 'krynara-official.png');
+const source = path.join(publicDir, 'krynara-official-source.png');
+const official = path.join(publicDir, 'krynara-official.png');
 
 (async () => {
-  // The logo is a wide banner (1920x1280). The eclipse mark sits in the middle; crop a square
-  // around the mark so icons are the symbol itself, not the wordmark.
+  // Normalize the master source to a real PNG (the original may arrive as JPEG bytes).
+  await sharp(source).png().toFile(official);
+  console.log('wrote krynara-official.png (normalized PNG)');
+
+  // The logo is a wide banner. Crop a square around the eclipse mark so icons are the
+  // symbol itself, not the wordmark.
   const meta = await sharp(source).metadata();
   const side = Math.min(meta.width, meta.height);
   const left = Math.round((meta.width - side) / 2);
