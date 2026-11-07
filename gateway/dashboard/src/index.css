@@ -61,6 +61,46 @@ html[lang='ar'] {
   --radius: 8px;
 }
 
+[data-theme='moon'] {
+  color-scheme: light;
+  /* Krynara-OS theme: moon-inspired */
+  --krynara-bg: #f7f5f0;
+  --krynara-panel: rgba(247, 245, 240, 0.92);
+  --krynara-cyan: #c9a227;
+  --krynara-cyan-dim: rgba(201, 162, 39, 0.12);
+  --krynara-border: rgba(150, 136, 119, 0.22);
+  --krynara-text: #5a544a;
+  --krynara-muted: rgba(90, 84, 74, 0.54);
+  --krynara-green: #65a30d;
+  --krynara-amber: #d97706;
+  --krynara-red: #b91c1c;
+  --krynara-glow: 0 0 15px rgba(201, 162, 39, 0.35), 0 0 30px rgba(201, 162, 39, 0.15);
+
+  --bg-light: var(--krynara-bg);
+  --bg-white: var(--krynara-panel);
+  --bg-card: var(--krynara-panel);
+  --text-primary: var(--krynara-text);
+  --text-secondary: var(--krynara-muted);
+  --text-muted: var(--krynara-muted);
+  --border: var(--krynara-border);
+  --primary: var(--krynara-cyan);
+  --primary-text: var(--krynara-cyan);
+  --primary-hover: #b8941f;
+  --primary-soft: var(--krynara-cyan-dim);
+  --focus-ring: var(--krynara-cyan);
+  --error: var(--krynara-red);
+  --error-text: var(--krynara-red);
+  --success: var(--krynara-green);
+  --success-text: var(--krynara-green);
+  --warning: var(--krynara-amber);
+  --warning-text: var(--krynara-amber);
+  --info: var(--krynara-cyan);
+  --shadow-sm: 0 0 15px rgba(201, 162, 39, 0.25);
+  --shadow-md: 0 0 25px rgba(201, 162, 39, 0.3);
+  --shadow-lg: 0 0 40px rgba(201, 162, 39, 0.35);
+  --radius: 8px;
+}
+
 a {
   font-weight: 500;
   text-decoration: inherit;

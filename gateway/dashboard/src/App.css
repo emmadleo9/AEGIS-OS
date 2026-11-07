@@ -49,6 +49,33 @@
   color-scheme: light;
 }
 
+[data-theme='moon'] {
+  color-scheme: light;
+  --bg-light: #f7f5f0;
+  --bg-white: rgba(247, 245, 240, 0.92);
+  --bg-card: rgba(247, 245, 240, 0.9);
+  --text-primary: #5a544a;
+  --text-secondary: #8c8376;
+  --text-muted: rgba(90, 84, 74, 0.54);
+  --border: rgba(150, 136, 119, 0.22);
+  --primary: #c9a227;
+  --primary-text: #c9a227;
+  --primary-hover: #b8941f;
+  --primary-soft: rgba(201, 162, 39, 0.12);
+  --focus-ring: #c9a227;
+  --error: #b91c1c;
+  --error-text: #b91c1c;
+  --success: #65a30d;
+  --success-text: #65a30d;
+  --warning: #d97706;
+  --warning-text: #d97706;
+  --info: #c9a227;
+  --shadow-sm: 0 0 15px rgba(201, 162, 39, 0.25);
+  --shadow-md: 0 0 25px rgba(201, 162, 39, 0.3);
+  --shadow-lg: 0 0 40px rgba(201, 162, 39, 0.35);
+  --radius: 8px;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
