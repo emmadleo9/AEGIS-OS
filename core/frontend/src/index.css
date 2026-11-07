@@ -115,6 +115,58 @@
     color-scheme: dark;
   }
 
+  /* ── Moon theme ──────────────────────────────────────────────────
+     Off-white / milk surface, pale silver text, soft lunar gold
+     accent, crater-gray borders. Switch with data-theme="moon" or
+     the .moon class. ────────────────────────────────────────────── */
+  .moon,
+  [data-theme="moon"] {
+    --color-bg: #f7f5f0;
+    --color-bg-secondary: #efeae3;
+    --color-bg-tertiary: #e8e2d9;
+    --color-surface: #ffffff;
+    --color-sidebar: rgba(247, 245, 240, 0.85);
+    --color-border: rgba(150, 136, 119, 0.18);
+    --color-border-subtle: rgba(150, 136, 119, 0.09);
+
+    --color-text: #5a544a;
+    --color-text-secondary: #8c8376;
+    --color-text-tertiary: #b9b2a6;
+    --color-text-inverse: #f7f5f0;
+
+    --color-accent: #c9a227;
+    --color-accent-hover: #b8941f;
+    --color-accent-subtle: rgba(201, 162, 39, 0.12);
+    --color-accent-glow: rgba(201, 162, 39, 0.25);
+
+    --color-accent-amber: #d97706;
+    --color-accent-amber-hover: #b45309;
+    --color-accent-amber-subtle: rgba(217, 119, 6, 0.12);
+    --color-accent-purple: #a78bfa;
+    --color-accent-purple-hover: #8b5cf6;
+    --color-accent-purple-subtle: rgba(167, 139, 250, 0.12);
+    --color-accent-blue-subtle: rgba(8, 145, 178, 0.08);
+
+    --color-success: #65a30d;
+    --color-warning: #d97706;
+    --color-error: #b91c1c;
+
+    --color-code-bg: #efeae3;
+    --color-input-bg: #ffffff;
+    --color-input-border: #c7bca6;
+
+    --color-user-bubble: #c9a227;
+    --color-user-bubble-text: #ffffff;
+    --color-on-accent: #3a352c;
+    --color-disabled-bg: #e8e2d9;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+
+    color-scheme: light;
+  }
+
   @media (prefers-color-scheme: dark) {
     :root:not(.light) {
       --color-bg: #0a0a0b;

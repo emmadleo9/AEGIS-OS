@@ -16,10 +16,13 @@ function applyTheme() {
     const theme = settings.theme || 'system';
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
+      document.documentElement.classList.remove('light', 'moon');
     } else if (theme === 'light') {
       document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove('dark', 'moon');
+    } else if (theme === 'moon') {
+      document.documentElement.classList.add('moon');
+      document.documentElement.classList.remove('dark', 'light');
     }
   } catch { /* use system default */ }
 }

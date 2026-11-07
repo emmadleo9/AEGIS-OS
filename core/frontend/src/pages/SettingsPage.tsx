@@ -282,6 +282,7 @@ export function MemoryStatusRow({
 const themeOptions: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
   { value: 'light', label: 'Light', icon: Sun },
   { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'moon', label: 'Moon', icon: Moon },
   { value: 'system', label: 'System', icon: Monitor },
 ];
 
