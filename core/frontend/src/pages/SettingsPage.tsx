@@ -500,7 +500,7 @@ export function SettingsPage() {
                         value={opt.value}
                         checked={isActive}
                         readOnly
-                        className="accent-primary shrink-0"
+                        className="shrink-0"
                         style={{ accentColor: 'var(--color-accent)' }}
                       />
                       <opt.icon size={14} />
