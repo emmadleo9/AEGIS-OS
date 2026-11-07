@@ -1,13 +1,13 @@
 <div align="center">
 
-<img src="./console/public/krynara-official.png" alt="Krynara-OS official shield logo" width="240" />
+<img src="./console/public/krynara-official.png" alt="Krynara-OS official logo" width="240" />
 
-<img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1000&color=8AF8FF&center=true&width=600&lines=Krynara-OS+%2F%2F+TACTICAL+COMMAND;Local-first+AI+OS;One+OS+to+control+all+devices" alt="Krynara-OS // TACTICAL COMMAND — Local-first AI OS — One OS to control all devices" />
+<img src="https://readme-typing-svg.demolab.com?font=Share+Tech+Mono&size=24&pause=1000&color=8AF8FF&center=true&width=600&lines=Krynara-OS+%2F%2F+PERSONAL+OS+THAT+GROWS+WITH+YOU;Local-first+AI+OS;One+OS+to+control+all+devices" alt="Krynara-OS // PERSONAL OS THAT GROWS WITH YOU — Local-first AI OS — One OS to control all devices" />
 
 <h1>Krynara-OS</h1>
 
 <p><b>One OS to control WhatsApp, Instagram, Telegram, Discord — all devices.</b></p>
-<p><i>Local-first AI operating system with an obsidian glass shield core.</i></p>
+<p><i>Local-first AI operating system — the personal OS that grows with you.</i></p>
 
 <p>
   <img src="https://img.shields.io/badge/license-MIT-00C853?style=for-the-badge" alt="License: MIT" />
@@ -129,6 +129,6 @@ Built with open-source. See CREDITS.md for licenses.
 ---
 
 <div align="center">
-<i>Krynara-OS · obsidian glass shield core · status: ONLINE</i><br/>
-<img src="https://img.shields.io/badge/KRYNARA-TACTICAL%20COMMAND-8AF8FF?style=for-the-badge" alt="KRYNARA Tactical Command" />
+<i>Krynara-OS · personal OS that grows with you · status: ONLINE</i><br/>
+<img src="https://img.shields.io/badge/KRYNARA-PERSONAL%20OS-8AF8FF?style=for-the-badge" alt="KRYNARA Personal OS" />
 </div>
