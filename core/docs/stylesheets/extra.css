@@ -62,6 +62,20 @@
   --md-code-bg-color: #222222;
 }
 
+/* ── Color Overrides (Moon) ───────────────────────────────────────── */
+[data-md-color-scheme="moon"] {
+  --md-primary-fg-color: #5a544a;
+  --md-primary-fg-color--light: #8c8376;
+  --md-primary-fg-color--dark: #3a352c;
+  --md-accent-fg-color: #c9a227;
+  --md-accent-fg-color--transparent: rgba(201, 162, 39, 0.12);
+  --md-default-bg-color: #f7f5f0;
+  --md-default-fg-color: #5a544a;
+  --md-default-fg-color--light: #8c8376;
+  --md-typeset-a-color: #c9a227;
+  --md-code-bg-color: #efeae3;
+}
+
 /* ── Global Typography ───────────────────────────────────────────── */
 .md-typeset {
   font-size: 0.92rem;
